@@ -1,65 +1,129 @@
-# Chorono Solidworks Plugin - Installation and Usage Instructions
+# Chrono SolidWorks Plugin – Improved Installation and Usage Instructions
 
-The [chrono solidworks](https://api.projectchrono.org/9.0.0/chrono_solidworks_installation.html) is an add-in for [SolidWorks](https://www.solidworks.com/) that allows us to export models from solidworks for simulation in Chrono physics environment.
+The [Chrono::SolidWorks](https://api.projectchrono.org/9.0.0/chrono_solidworks_installation.html) add-in enables direct export of SolidWorks assemblies for multibody simulation in the Chrono C++ environment.
 
-**Requirements**:
+---
 
-- **OS** - Windows 10 or 11
-- **SolidWorks** - Supported version 2011 - 2023 later, 64bit. (As of time of writing)
-- **Add-in Installer** - Provided in `acsl-physics-sim/libraries/chrono-solidworks-plugin/`
+## Requirements
 
-## Installation 
-
-Once you have cloned the repository as specified in the main [README](/README.md), the installer will be downloaded onto your machine. The provided installer automatically detects the SolidWorks application running on the computer and registers the `Chrono::SolidWorks` add-in. After installation, the tool is available in the right panel of SolidWorks - this can be used to export CAD assemblies into Chrono-compatible formats.
+- **Operating System:** Windows 10 or 11  
+- **SolidWorks:** Supported versions 2011 onwards (64-bit)  
+- **Add-in Installer:** Provided in `acsl-physics-sim/libraries/chrono-solidworks-plugin/`  
 
 > [!IMPORTANT]
-> - Please note that you will need a system running Windows with a copy of Solidworks for this to work. The instructions in [chorno-installation](/manual/instructions/chrono-installation.md) are written for Ubuntu (Linux). Therefore, you will need a secondary OS instance of Windows inorder to export your models. Please note that Solidworks is not stable when run on a VM or through Wine on Linux.
-> - The version that is provided with this package corresponds to the Chrono 9.0.1 release. Please note that the add-in version may not be intercompatible with newer or older versions of Chrono. Release specific information regarding the plug-ins can be found [here](https://github.com/projectchrono/chrono/releases).
-> - SolidWorks v.2024 and v.2023 are tested and known to work at the moment, but other versions may work as well.
+> - You must use a Windows system with a native SolidWorks installation. SolidWorks is not stable on VMs or via Wine on Linux.
+> - The add-in provided is for Chrono 9.0.1. Compatibility with other Chrono versions is not guaranteed; see [Chrono releases](https://github.com/projectchrono/chrono/releases) for details.
+> - SolidWorks v2023 and v2024 are tested and supported; later version may also work.
 
+---
+
+## Installation
+
+1. **Clone the repository** as specified in the main [README](/README.md).
+2. **Run the installer** from `acsl-physics-sim/libraries/chrono-solidworks-plugin/`.  
+   - The installer auto-detects SolidWorks and registers the add-in.
+   - No need to change installation location or parameters.
 
 <p align="center">
-  <img src="../images/SWD_PLUGIN_1.png" alt="Solidworks Add-in Installer Prompt - Hit Next">
+  <img src="../images/SWD_PLUGIN_1.png" alt="SolidWorks Add-in Installer Prompt - Hit Next">
 </p>
-
-<p align="center"><em>Solidworks Add-in Installer Prompt - Hit Next</em></p>
+<p align="center"><em>SolidWorks Add-in Installer Prompt – Hit Next</em></p>
 
 > [!NOTE]
-> You do not need to change the installation location or any other parameters and the installer should install the plug-in by auto detecting solidworkds.
+> The installer should auto-detect SolidWorks. If not, ensure SolidWorks is installed and try again.
+
+After installation, look for the Chrono add-in icon in the right-side SolidWorks Task Pane.
 
 <p align="center">
-  <img src="../images/SWD_PLUGIN_2.png" alt="Solidworks Add-in Pane">
+  <img src="../images/SWD_PLUGIN_2.png" alt="SolidWorks Add-in Pane">
 </p>
+<p align="center"><em>SolidWorks Add-in Pane</em></p>
 
-<p align="center"><em>Solidworks Add-in Pane</em></p>
+---
 
-# Chorno Solidworks Plugin - Common Usage Instructions
+# Chrono SolidWorks Plugin – Usage Instructions
 
-> [!IMPORTANT] 
-> **Some prior information should be known to successfully export the model:**
-> - run the export only from _Assemblies_, not from single _Parts_;
-> - each _SubAssembly_ is considered as a single rigid body, unless it is set as _Flexible_;
-> - Chrono motors are specified through _Coordinate Systems_ objects that must be placed **at top level** (not inside _Parts_);
-> - **objects do not collide** by default;
-> - collision is set **on Solid Bodies**, not _Parts_;
-> - the creation of **Primitive** collision shapes will convert the material of the selected body to `Air`;
+> [!IMPORTANT]
+> **Before Exporting:**
+> - **Units**:  Please make sure your model is in SI units for easier workflow.
+> - **Export only from Assemblies:** Do not export from single Parts.
+> - **SubAssemblies:** Treated as single rigid bodies unless set as Flexible in SolidWorks.
+> - **Motors:** Defined via Coordinate Systems at the top assembly level (not inside Parts).
+> - **Collision:** Disabled by default; must be enabled per Solid Body (not per Part).
+> - **Primitive Collision Shapes:** Assigning a primitive collision shape will set the material of the selected body to `Air`.
+
+---
 
 ## Adding Collision Shapes
 
 > [!NOTE]
->  Collision detection and contacts are very expensive to perform in a simulation. Therefore, we need to flag only the nessary bodies as `collidable` to be be taken into consideration by collision algorithms.
+> Collision detection and contact calculations are computationally expensive. Only flag bodies as `collidable` if necessary.
 
-> [!NOTE]
->  To reduce computational load, it is good practive, whenever possible to **wrap complex bodies into primitive shaped** by crerating an additional simple body around the object (the material of this wrapping object is automattically set to `Air`).
+> [!TIP]
+>  If you encounter issues, consult the [Chrono::SolidWorks User Manual](https://api.projectchrono.org/9.0.0/manual_chrono_solidworks.html) or the [GitHub repository](https://github.com/projectchrono/chrono-solidworks)
+
+- **Best Practice:**  
+  For complex bodies, wrap them with a simple primitive (box, sphere, cylinder) as a separate solid body. The wrapper's material is set to `Air` to avoid double-counting mass or inertia.
+
+**To enable collision on a body:**
+1. Expand the Part tree in SolidWorks, locate the relevant Solid Body, and select it.
+2. In the Chrono add-in panel, choose the type of collision shape:
+   - **Primitive Shape (preferred):** Automatically detected if the body matches a basic shape. The body is set to air material and made semi-transparent.
+   - **Mesh (do not use unless necessary):** For complex shapes, a mesh is auto-generated. For best simulation performance, consider replacing the mesh with a hand-optimized one post-export.
+
+> [!TIP]
+> After enabling collision, a custom label is prefixed to the solid body name. Do not modify this prefix.
+> Undoing collision assignment may not be possible with the standard Undo function—double-check before applying.
+
+
+
+---
 
 ## Adding Motors
-Chrono motors can be added directly to the SolidWorks model by placing a `Coordinate Sytem` (in Assembly tab -> Reference Geometry). This will act as a placeholder where a proper [ChLinkMotor](https://api.projectchrono.org/9.0.0/classchrono_1_1_ch_link_motor.html) will be later placed durring the export phase.
 
-## Example Workflow 
+Chrono motors are defined by placing a `Coordinate System` (Assembly tab → Reference Geometry) at the top assembly level.
 
-This section provides an example with the quadrotor biplane designed at the Advanced Control Systems Lab (ACSL) at Virginia Tech.
+**To add a Chrono motor:**
+1. In the Chrono add-in, click **Motors**.
+2. Select the desired motor type and its governing function.
+3. Select a top-level Coordinate System and click **Add marker**.
+4. Select the slave and master Parts and assign them accordingly.
+5. Click **Create motor**.
 
+- A custom property appears under the selected Coordinate System. Use the **Motors > Select Marker** button to edit or remove motor properties.
+- These properties are ignored by SolidWorks installations lacking the Chrono add-in.
 
+---
+
+## Customize Export Settings
+
+- **Separate .obj for each subpart:**  
+  Assemblies or Parts with multiple solid bodies can export as individual mesh files or as a single combined mesh.
+- **Export Scale:**  
+  The plugin automatically converts units to SI (meters, kilograms, seconds). The scale setting allows further adjustment if needed.
+
+---
+
+## Example Workflow
+
+This example uses a quadrotor biplane designed at the Advanced Control Systems Lab (ACSL), Virginia Tech.
+
+> [!TIP]
+> Exported models can be imported into Chrono for simulation. However, color information from SolidWorks is not preserved in the `.obj` files. To restore colors, follow the [Blender post-processing instructions](/manual/instructions/blender-instructions.md).
+
+---
 
 ## 📝 License
-The Chrono Project Solidworks plug-in is licensed under the BSD 3-Clause License. See the [LICENSE](https://github.com/projectchrono/chrono-solidworks/blob/master/LICENSE) for more details.
+
+The Chrono Project SolidWorks plug-in is licensed under the BSD 3-Clause License. See the [![BSD License](https://img.shields.io/badge/License-BSD%203--Clause-blue.svg)](https://github.com/projectchrono/chrono-solidworks/blob/master/LICENSE) for details.
+
+---
+
+<!--
+# Additional Comments
+
+- Only export from Assemblies, not Parts.
+- For performance, use primitive collision shapes wherever possible.
+- Always double-check collision assignments before exporting.
+-.
+-->
