@@ -1,3 +1,6 @@
 [submodule "libraries/third-party/CMake"]
 	path = libraries/third-party/CMake
 	url = https://github.com/Kitware/CMake.git
+[submodule "libraries/third-party/boost"]
+	path = libraries/third-party/boost
+	url = https://github.com/boostorg/boost.git
