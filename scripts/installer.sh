@@ -47,7 +47,7 @@ ensure_whiptail() {
         install_whiptail
         if ! command -v whiptail &> /dev/null; then
             echo "Failed to install whiptail. Exiting."
-            exit 1
+        exit 1
         fi
     fi
 }
@@ -139,7 +139,7 @@ check_packages() {
     fi
 
     # GLFW
-    if pkg-config --exists glfw3 &> /dev/null; then
+    if pkg-config --exists glfw3 &> / dev/null; then
         output+="GLFW: Installed\n"
     else
         output+="GLFW: Not installed\n"
@@ -171,8 +171,14 @@ check_packages() {
     # Return to original directory
     cd "$ORIG_DIR" || { echo "Failed to return to original directory"; exit 1; }
 
-    # Display results
-    whiptail --title "Package Presence Check" --scrolltext --msgbox "$output" 25 80
+    # Display results with "Proceed" button
+    if whiptail --title "Package Presence Check" --yes-button "Proceed" --no-button "Cancel" \
+        --yesno "$output" 25 80; then
+        :
+    else
+        whiptail --title "Cancelled" --msgbox "Installation cancelled." 10 50
+        exit 1
+    fi
 }
 
 # Main installer function
@@ -190,6 +196,7 @@ run_installer() {
         "GLEW" " " OFF \
         "OpenGL" " " OFF \
         "OpenCASCADE" " " OFF \
+        --ok-button "Proceed" \
         3>&1 1>&2 2>&3)
 
     if [ $? -ne 0 ]; then
@@ -250,7 +257,7 @@ run_installer() {
                 sudo apt install libglfw3-dev libglu1-mesa-dev -y | tee /dev/tty
                 if [ "$XDG_SESSION_TYPE" = "x11" ]; then
                     echo "X11 detected. Installing xorg-dev..."
-                sudo apt install xorg-dev -y | tee /dev/tty
+                    sudo apt install xorg-dev -y | tee /dev/tty
                 else
                     echo "Not running X11. Skipping xorg-dev installation."
                 fi
@@ -281,7 +288,7 @@ run_installer() {
                     libtool autoconf automake gfortran gdebi \
                     gcc-multilib libxi-dev libxmu-dev libx11-dev \
                     mesa-common-dev libglu1-mesa-dev \
-                    libfontconfig1-dev \
+                    libfontconfig1_dev \
                     libfreetype6 libfreetype6-dev \
                     tcl tcl-dev tk tk-dev | tee /dev/tty
 
