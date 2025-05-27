@@ -47,7 +47,7 @@ ensure_whiptail() {
         install_whiptail
         if ! command -v whiptail &> /dev/null; then
             echo "Failed to install whiptail. Exiting."
-        exit 1
+            exit 1
         fi
     fi
 }
@@ -83,7 +83,33 @@ check_packages() {
     # Save current directory
     ORIG_DIR=$(pwd)
     # Initialize output
-    output="Package presence check results:\n\n"
+    output=""
+
+    # Detect and display Ubuntu version
+    if [ -f /etc/os-release ] && grep -q 'Ubuntu' /etc/os-release; then
+        UBUNTU_VERSION=$(lsb_release -rs)
+        output+="Operating System: Ubuntu ${UBUNTU_VERSION}\n\n"
+        
+        # Determine recommended ROS2 version
+        case $UBUNTU_VERSION in
+            "20.04") ROS2_RECOMMENDED="galactic" ;;
+            "22.04") ROS2_RECOMMENDED="humble" ;;
+            "24.04") ROS2_RECOMMENDED="jazzy" ;;
+            *) ROS2_RECOMMENDED="not recommended for this Ubuntu version" ;;
+        esac
+
+        # Check if recommended ROS2 is installed
+        ROS2_INSTALLED="Not installed"
+        if [ -d "/opt/ros/${ROS2_RECOMMENDED}" ]; then
+            ROS2_INSTALLED="Installed"
+        fi
+
+        output+="ROS2 (recommended version: ${ROS2_RECOMMENDED^}): ${ROS2_INSTALLED}\n\n"
+    else
+        output+="Operating System: Not Ubuntu\nROS2 check skipped\n\n"
+    fi
+
+    output+="Package presence check results:\n\n"
 
     # GCC
     if command -v gcc &> /dev/null && command -v g++ &> /dev/null; then
@@ -139,7 +165,7 @@ check_packages() {
     fi
 
     # GLFW
-    if pkg-config --exists glfw3 &> / dev/null; then
+    if pkg-config --exists glfw3 &> /dev/null; then
         output+="GLFW: Installed\n"
     else
         output+="GLFW: Not installed\n"
@@ -288,7 +314,7 @@ run_installer() {
                     libtool autoconf automake gfortran gdebi \
                     gcc-multilib libxi-dev libxmu-dev libx11-dev \
                     mesa-common-dev libglu1-mesa-dev \
-                    libfontconfig1_dev \
+                    libfontconfig1-dev \
                     libfreetype6 libfreetype6-dev \
                     tcl tcl-dev tk tk-dev | tee /dev/tty
 
