@@ -7,7 +7,6 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Function to update and upgrade the system
 update_system() {
     echo "Updating and upgrading the system..."
     if command -v apt &> /dev/null; then
@@ -68,7 +67,6 @@ show_license() {
     fi
 }
 
-# Set ON/OFF flags for each package based on presence
 check_packages() {
     ORIG_DIR=$(pwd)
     output=""
@@ -93,6 +91,20 @@ check_packages() {
     fi
 
     output+="Package presence check results:\n\n"
+
+    # Python3
+    if command -v python3 &> /dev/null; then
+        output+="Python3: Installed\n"; PYTHON3_FLAG=OFF
+    else
+        output+="Python3: Not installed\n"; PYTHON3_FLAG=ON
+    fi
+
+    # pip3
+    if command -v pip3 &> /dev/null; then
+        output+="pip3: Installed\n"; PIP3_FLAG=OFF
+    else
+        output+="pip3: Not installed\n"; PIP3_FLAG=ON
+    fi
 
     # GCC
     if command -v gcc &> /dev/null && command -v g++ &> /dev/null; then
@@ -193,7 +205,9 @@ check_packages() {
 
 run_installer() {
     selected=$(whiptail --title "Advanced Control Systems Lab Physics Simulator" \
-        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" 20 70 12 \
+        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" 22 70 14 \
+        "Python3" " " $PYTHON3_FLAG \
+        "pip3" " " $PIP3_FLAG \
         "GCC" " " $GCC_FLAG \
         "Clang" " " $CLANG_FLAG \
         "CMake" " " $CMAKE_FLAG \
@@ -218,6 +232,14 @@ run_installer() {
     for choice in $selected; do
         choice="${choice//\"}"
         case "$choice" in
+            "Python3")
+                echo "Installing Python3..."
+                sudo apt install -y python3 | tee /dev/tty
+                ;;
+            "pip3")
+                echo "Installing pip3..."
+                sudo apt install -y python3-pip | tee /dev/tty
+                ;;
             "GCC")
                 echo "Installing GCC (build-essential)..."
                 sudo apt install -y build-essential | tee /dev/tty
@@ -274,8 +296,28 @@ run_installer() {
                 sudo apt install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev | tee /dev/tty
                 ;;
             "OpenCASCADE")
-                echo "Installing OpenCASCADE..."
-                sudo apt install -y libocct-dev | tee /dev/tty
+                echo "Installing OpenCASCADE dependencies..."
+                sudo apt-get update && sudo apt-get install -y \
+                    libtool autoconf automake gfortran gdebi \
+                    gcc-multilib libxi-dev libxmu-dev libxmu-headers \
+                    libx11-dev mesa-common-dev libglu1-mesa-dev \
+                    libfontconfig1-dev \
+                    libfreetype6 libfreetype6-dev \
+                    tcl tcl-dev tk tk-dev | tee /dev/tty
+
+                OCCT_DIR="../libraries/third-party/opencascade-7.4.0/"
+                if [ ! -d "$OCCT_DIR" ]; then
+                    echo "OpenCASCADE source directory not found: $OCCT_DIR"
+                    exit 1
+                fi
+                TMP_BUILD_DIR="$OCCT_DIR/build"
+                mkdir -p "$TMP_BUILD_DIR"
+                cd "$TMP_BUILD_DIR" || { echo "Failed to change directory to $TMP_BUILD_DIR"; exit 1; }
+                cmake .. | tee /dev/tty
+                make -j$(nproc) | tee /dev/tty
+                sudo make install | tee /dev/tty
+                cd "$ORIG_DIR" || { echo "Failed to return to original directory"; exit 1; }
+                rm -rf "$TMP_BUILD_DIR" | tee /dev/tty
                 ;;
             "Librealsense")
                 echo "Installing Librealsense and dependencies..."
