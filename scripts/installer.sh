@@ -2,6 +2,7 @@
 
 set -x # Enable debug mode
 
+# Dynamically set whiptail size to fit terminal
 read WHIPTAIL_ROWS WHIPTAIL_COLS < <(stty size)
 
 if [ "$EUID" -ne 0 ]; then
@@ -375,9 +376,29 @@ install_ros2() {
         sudo apt install -y ros-jazzy-desktop python3-argcomplete ros-dev-tools | tee /dev/tty
     fi
 
-    echo "source /opt/ros/$ROS2_VERSION/setup.bash" >> ~/.bashrc
-
+    ROS2_VERSION_INSTALLED="$ROS2_VERSION"
     whiptail --title "ROS2 Install" --msgbox "ROS2 $ROS2_VERSION installation complete." $WHIPTAIL_ROWS $WHIPTAIL_COLS
+}
+
+ros2_bashrc_prompt() {
+    if [ -n "$ROS2_VERSION_INSTALLED" ]; then
+        local bashrc_line="\n# Source ROS2 $ROS2_VERSION_INSTALLED for every terminal instance\nsource /opt/ros/$ROS2_VERSION_INSTALLED/setup.bash"
+        local warning="You can automatically source ROS2 $ROS2_VERSION_INSTALLED for every terminal by adding the following to your ~/.bashrc:\n\n$bashrc_line\n\n\
+WARNING:\nIf you have multiple ROS2 versions installed, sourcing more than one in your ~/.bashrc can break your environment and cause unexpected issues. \
+Only add this if you do not plan to use multiple ROS2 versions on this machine.\n\n\
+If you are unsure, it is safer to source ROS2 manually in each terminal session."
+
+        if whiptail --title "Add ROS2 to .bashrc?" --yesno "$warning" $WHIPTAIL_ROWS $WHIPTAIL_COLS; then
+            if [ "$SUDO_USER" ]; then
+                USER_BASHRC="/home/$SUDO_USER/.bashrc"
+                sudo -u "$SUDO_USER" bash -c "grep -Fxq 'source /opt/ros/$ROS2_VERSION_INSTALLED/setup.bash' \"$USER_BASHRC\" || echo -e '$bashrc_line' >> \"$USER_BASHRC\""
+            else
+                USER_BASHRC="$HOME/.bashrc"
+                grep -Fxq "source /opt/ros/$ROS2_VERSION_INSTALLED/setup.bash" "$USER_BASHRC" || echo -e "$bashrc_line" >> "$USER_BASHRC"
+            fi
+            whiptail --title "Done" --msgbox "Added to $USER_BASHRC:\n\n$bashrc_line" 12 80
+        fi
+    fi
 }
 
 ros2_prompt_and_install() {
@@ -385,10 +406,10 @@ ros2_prompt_and_install() {
         if whiptail --title "ROS2 Installation" \
             --yesno "ROS2 ($ROS2_RECOMMENDED) is not installed. Would you like to install the recommended ROS2 version for your system now?\n\nThis will install the full desktop version and development tools." $WHIPTAIL_ROWS $WHIPTAIL_COLS; then
             install_ros2
+            ros2_bashrc_prompt
         fi
     fi
 }
-
 
 # -------------------- Main Script Execution --------------------
 update_system
