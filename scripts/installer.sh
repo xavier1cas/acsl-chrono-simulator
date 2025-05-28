@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -x  # Enable debug mode
+set -x # Enable debug mode
+
+read WHIPTAIL_ROWS WHIPTAIL_COLS < <(stty size)
 
 if [ "$EUID" -ne 0 ]; then
     echo "Please run as root or with sudo"
@@ -51,18 +53,18 @@ ensure_whiptail() {
 show_license() {
     LICENSE_PATH="$(realpath $(dirname "$0")/../LICENSE)"
     if [ ! -f "$LICENSE_PATH" ]; then
-        whiptail --title "Error" --msgbox "License file not found at: $LICENSE_PATH" 10 60
+        whiptail --title "Error" --msgbox "License file not found at: $LICENSE_PATH" $WHIPTAIL_ROWS $WHIPTAIL_COLS
         exit 1
     fi
     LICENSE_CONTENT=$(tr -d '\r' < "$LICENSE_PATH")
     whiptail --title "Advanced Control Systems Lab Physics Simulator" \
         --scrolltext \
         --yesno "$LICENSE_CONTENT\n\nDo you accept the license agreement?" \
-        25 80 \
+        $WHIPTAIL_ROWS $WHIPTAIL_COLS \
         --yes-button "I Accept" \
         --no-button "I Decline"
     if [ $? -ne 0 ]; then
-        whiptail --title "License Declined" --msgbox "Installation cannot continue without accepting the license agreement." 10 60
+        whiptail --title "License Declined" --msgbox "Installation cannot continue without accepting the license agreement." $WHIPTAIL_ROWS $WHIPTAIL_COLS
         exit 1
     fi
 }
@@ -88,6 +90,8 @@ check_packages() {
         output+="ROS2 (recommended version: ${ROS2_RECOMMENDED^}): ${ROS2_INSTALLED}\n\n"
     else
         output+="Operating System: Not Ubuntu\nROS2 check skipped\n\n"
+        ROS2_RECOMMENDED=""
+        ROS2_INSTALLED="Not installed"
     fi
 
     output+="Package presence check results:\n\n"
@@ -196,16 +200,19 @@ check_packages() {
 
     cd "$ORIG_DIR" || exit 1
 
+    export ROS2_INSTALLED
+    export ROS2_RECOMMENDED
+
     if ! whiptail --title "Package Presence Check" --yes-button "Proceed" --no-button "Cancel" \
-        --yesno "$output" 25 80; then
-        whiptail --title "Cancelled" --msgbox "Installation cancelled." 10 50
+        --yesno "$output" $WHIPTAIL_ROWS $WHIPTAIL_COLS; then
+        whiptail --title "Cancelled" --msgbox "Installation cancelled." $WHIPTAIL_ROWS $WHIPTAIL_COLS
         exit 1
     fi
 }
 
 run_installer() {
     selected=$(whiptail --title "Advanced Control Systems Lab Physics Simulator" \
-        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" 22 70 14 \
+        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" $WHIPTAIL_ROWS $WHIPTAIL_COLS 14 \
         "Python3" " " $PYTHON3_FLAG \
         "pip3" " " $PIP3_FLAG \
         "GCC" " " $GCC_FLAG \
@@ -224,7 +231,7 @@ run_installer() {
         3>&1 1>&2 2>&3)
 
     if [ $? -ne 0 ]; then
-        whiptail --title "Cancelled" --msgbox "Installation cancelled." 10 50
+        whiptail --title "Cancelled" --msgbox "Installation cancelled." $WHIPTAIL_ROWS $WHIPTAIL_COLS
         exit 1
     fi
 
@@ -341,9 +348,52 @@ run_installer() {
     done
 }
 
+install_ros2() {
+    UBUNTU_VERSION=$(lsb_release -rs)
+    case $UBUNTU_VERSION in
+        "20.04") ROS2_VERSION="galactic" ;;
+        "22.04") ROS2_VERSION="humble" ;;
+        "24.04") ROS2_VERSION="jazzy" ;;
+        *)
+            whiptail --title "ROS2 Install" --msgbox "No recommended ROS2 version for Ubuntu $UBUNTU_VERSION. Skipping ROS2 install." $WHIPTAIL_ROWS $WHIPTAIL_COLS
+            return
+            ;;
+    esac
+
+    sudo apt update
+    sudo apt install -y curl gnupg2 lsb-release | tee /dev/tty
+    sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/ros2.list > /dev/null
+
+    sudo apt update && sudo apt upgrade -y | tee /dev/tty
+
+    if [ "$ROS2_VERSION" = "galactic" ]; then
+        sudo apt install -y ros-galactic-desktop python3-argcomplete ros-dev-tools | tee /dev/tty
+    elif [ "$ROS2_VERSION" = "humble" ]; then
+        sudo apt install -y ros-humble-desktop python3-argcomplete ros-dev-tools | tee /dev/tty
+    elif [ "$ROS2_VERSION" = "jazzy" ]; then
+        sudo apt install -y ros-jazzy-desktop python3-argcomplete ros-dev-tools | tee /dev/tty
+    fi
+
+    echo "source /opt/ros/$ROS2_VERSION/setup.bash" >> ~/.bashrc
+
+    whiptail --title "ROS2 Install" --msgbox "ROS2 $ROS2_VERSION installation complete." $WHIPTAIL_ROWS $WHIPTAIL_COLS
+}
+
+ros2_prompt_and_install() {
+    if [ "$ROS2_INSTALLED" = "Not installed" ] && [[ "$ROS2_RECOMMENDED" =~ ^(galactic|humble|jazzy)$ ]]; then
+        if whiptail --title "ROS2 Installation" \
+            --yesno "ROS2 ($ROS2_RECOMMENDED) is not installed. Would you like to install the recommended ROS2 version for your system now?\n\nThis will install the full desktop version and development tools." $WHIPTAIL_ROWS $WHIPTAIL_COLS; then
+            install_ros2
+        fi
+    fi
+}
+
+
 # -------------------- Main Script Execution --------------------
 update_system
 ensure_whiptail
 show_license
 check_packages
 run_installer
+ros2_prompt_and_install
