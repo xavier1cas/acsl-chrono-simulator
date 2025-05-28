@@ -411,6 +411,35 @@ ros2_prompt_and_install() {
     fi
 }
 
+compile_chrono_ros_messages() {
+    # Only proceed if ROS2 was installed or detected
+    if [ -n "$ROS2_VERSION_INSTALLED" ]; then
+        local ros2_version="$ROS2_VERSION_INSTALLED"
+    else
+        # Try to detect installed version from ROS2_RECOMMENDED if already installed
+        if [ "$ROS2_INSTALLED" = "Installed" ] && [[ "$ROS2_RECOMMENDED" =~ ^(galactic|humble|jazzy)$ ]]; then
+            local ros2_version="$ROS2_RECOMMENDED"
+        else
+            # Fallback: try to detect any installed ROS2 version
+            for v in jazzy humble galactic; do
+                if [ -d "/opt/ros/$v" ]; then
+                    local ros2_version="$v"
+                    break
+                fi
+            done
+        fi
+    fi
+
+    if [ -n "$ros2_version" ] && [ -d "/opt/ros/$ros2_version" ]; then
+        whiptail --title "Compiling chrono-ros-message dependencies" --msgbox "Now compiling chrono-ros-message dependencies. Press OK to continue." $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        ORIG_DIR=$(pwd)
+        # Source ROS2, build using all cores, and return
+        bash -c "source /opt/ros/$ros2_version/setup.bash && cd ../libraries/chrono-ros-messages/ && colcon build --parallel-workers $(nproc)"
+        cd "$ORIG_DIR" || exit 1
+        whiptail --title "Compilation Complete" --msgbox "chrono-ros-message dependencies have been compiled." $WHIPTAIL_ROWS $WHIPTAIL_COLS
+    fi
+}
+
 # -------------------- Main Script Execution --------------------
 update_system
 ensure_whiptail
@@ -418,3 +447,4 @@ show_license
 check_packages
 run_installer
 ros2_prompt_and_install
+compile_chrono_ros_messages
