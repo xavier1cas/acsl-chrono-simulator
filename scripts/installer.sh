@@ -97,11 +97,18 @@ check_packages() {
 
     output+="Package presence check results:\n\n"
 
-    # Ncurses dev package for ccmake
-    if dpkg -l | grep -qw libncurses5-dev || dpkg -l | grep -qw libncurses-dev; then
-        output+="ncurses development library: Installed\n"; NCURSES_FLAG=OFF
+    # GLM
+    if dpkg -l | grep -qw libglm-dev; then
+        output+="GLM: Installed\n"; GLM_FLAG=OFF
     else
-        output+="ncurses development library: Not installed (required for ccmake)\n"; NCURSES_FLAG=ON
+        output+="GLM: Not installed\n"; GLM_FLAG=ON
+    fi
+
+    # Thrust
+    if dpkg -l | grep -qw thrust || dpkg -l | grep -qw libthrust-dev; then
+        output+="Thrust: Installed\n"; THRUST_FLAG=OFF
+    else
+        output+="Thrust: Not installed\n"; THRUST_FLAG=ON
     fi
 
     # Python3
@@ -220,8 +227,9 @@ check_packages() {
 
 run_installer() {
     selected=$(whiptail --title "Advanced Control Systems Lab Physics Simulator" \
-        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" $WHIPTAIL_ROWS $WHIPTAIL_COLS 15 \
-        "ncurses-dev" " " $NCURSES_FLAG \
+        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" $WHIPTAIL_ROWS $WHIPTAIL_COLS 16 \
+        "GLM" " " $GLM_FLAG \
+        "Thrust" " " $THRUST_FLAG \
         "Python3" " " $PYTHON3_FLAG \
         "pip3" " " $PIP3_FLAG \
         "GCC" " " $GCC_FLAG \
@@ -248,9 +256,13 @@ run_installer() {
     for choice in $selected; do
         choice="${choice//\"}"
         case "$choice" in
-            "ncurses-dev")
-                echo "Installing ncurses development library..."
-                sudo apt install -y libncurses5-dev | tee /dev/tty
+            "GLM")
+                echo "Installing GLM (libglm-dev)..."
+                sudo apt install -y libglm-dev | tee /dev/tty
+                ;;
+            "Thrust")
+                echo "Installing Thrust (libthrust-dev)..."
+                sudo apt install -y libthrust-dev | tee /dev/tty
                 ;;
             "Python3")
                 echo "Installing Python3..."
@@ -269,11 +281,7 @@ run_installer() {
                 sudo apt install -y clang | tee /dev/tty
                 ;;
             "CMake")
-                echo "Installing CMake from source (with ccmake)..."
-                # Ensure ncurses dev is present
-                if ! dpkg -l | grep -qw libncurses5-dev && ! dpkg -l | grep -qw libncurses-dev; then
-                    sudo apt install -y libncurses5-dev | tee /dev/tty
-                fi
+                echo "Installing CMake from source..."
                 cd ../libraries/third-party/CMake || exit 1
                 ./bootstrap | tee /dev/tty
                 make -j$(nproc) | tee /dev/tty
@@ -290,7 +298,7 @@ run_installer() {
                 ;;
             "Blaze")
                 echo "Installing Blaze headers..."
-                sudo cp -r ../libraries/third-party/blaze/ /usr/local/include/ | tee /dev/tty
+                sudo cp -r ../libraries/third-party/blaze/blaze /usr/local/include/ | tee /dev/tty
                 ;;
             "Boost")
                 echo "Installing Boost..."
@@ -363,6 +371,10 @@ run_installer() {
                 ;;
         esac
     done
+
+    # <<<<<< ADD THESE LINES HERE >>>>>>
+    echo "Refreshing linker cache (ldconfig)..."
+    sudo ldconfig
 }
 
 
