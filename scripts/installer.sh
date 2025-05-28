@@ -97,6 +97,13 @@ check_packages() {
 
     output+="Package presence check results:\n\n"
 
+    # Ncurses dev package for ccmake
+    if dpkg -l | grep -qw libncurses5-dev || dpkg -l | grep -qw libncurses-dev; then
+        output+="ncurses development library: Installed\n"; NCURSES_FLAG=OFF
+    else
+        output+="ncurses development library: Not installed (required for ccmake)\n"; NCURSES_FLAG=ON
+    fi
+
     # Python3
     if command -v python3 &> /dev/null; then
         output+="Python3: Installed\n"; PYTHON3_FLAG=OFF
@@ -213,7 +220,8 @@ check_packages() {
 
 run_installer() {
     selected=$(whiptail --title "Advanced Control Systems Lab Physics Simulator" \
-        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" $WHIPTAIL_ROWS $WHIPTAIL_COLS 14 \
+        --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" $WHIPTAIL_ROWS $WHIPTAIL_COLS 15 \
+        "ncurses-dev" " " $NCURSES_FLAG \
         "Python3" " " $PYTHON3_FLAG \
         "pip3" " " $PIP3_FLAG \
         "GCC" " " $GCC_FLAG \
@@ -240,6 +248,10 @@ run_installer() {
     for choice in $selected; do
         choice="${choice//\"}"
         case "$choice" in
+            "ncurses-dev")
+                echo "Installing ncurses development library..."
+                sudo apt install -y libncurses5-dev | tee /dev/tty
+                ;;
             "Python3")
                 echo "Installing Python3..."
                 sudo apt install -y python3 | tee /dev/tty
@@ -257,7 +269,11 @@ run_installer() {
                 sudo apt install -y clang | tee /dev/tty
                 ;;
             "CMake")
-                echo "Installing CMake from source..."
+                echo "Installing CMake from source (with ccmake)..."
+                # Ensure ncurses dev is present
+                if ! dpkg -l | grep -qw libncurses5-dev && ! dpkg -l | grep -qw libncurses-dev; then
+                    sudo apt install -y libncurses5-dev | tee /dev/tty
+                fi
                 cd ../libraries/third-party/CMake || exit 1
                 ./bootstrap | tee /dev/tty
                 make -j$(nproc) | tee /dev/tty
@@ -349,6 +365,7 @@ run_installer() {
     done
 }
 
+
 install_ros2() {
     UBUNTU_VERSION=$(lsb_release -rs)
     case $UBUNTU_VERSION in
@@ -433,12 +450,45 @@ compile_chrono_ros_messages() {
     if [ -n "$ros2_version" ] && [ -d "/opt/ros/$ros2_version" ]; then
         whiptail --title "Compiling chrono-ros-message dependencies" --msgbox "Now compiling chrono-ros-message dependencies. Press OK to continue." $WHIPTAIL_ROWS $WHIPTAIL_COLS
         ORIG_DIR=$(pwd)
-        # Source ROS2, build using all cores, and return
         bash -c "source /opt/ros/$ros2_version/setup.bash && cd ../libraries/chrono-ros-messages/ && colcon build --parallel-workers $(nproc)"
         cd "$ORIG_DIR" || exit 1
         whiptail --title "Compilation Complete" --msgbox "chrono-ros-message dependencies have been compiled." $WHIPTAIL_ROWS $WHIPTAIL_COLS
     fi
 }
+
+final_compilation_prompt() {
+    whiptail --title "Ready for Compilation" --ok-button "Proceed" \
+        --msgbox "ACSL Physics Simulator is ready for compilation\n\n*** Press proceed to open a new terminal window for compilation ***" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+
+    # Determine ROS2 version as before
+    local ros2_version=""
+    if [ -n "$ROS2_VERSION_INSTALLED" ]; then
+        ros2_version="$ROS2_VERSION_INSTALLED"
+    elif [ "$ROS2_INSTALLED" = "Installed" ] && [[ "$ROS2_RECOMMENDED" =~ ^(galactic|humble|jazzy)$ ]]; then
+        ros2_version="$ROS2_RECOMMENDED"
+    else
+        for v in jazzy humble galactic; do
+            if [ -d "/opt/ros/$v" ]; then
+                ros2_version="$v"
+                break
+            fi
+        done
+    fi
+
+    local compile_cmd="cd ../libraries/chrono-build/ && source /opt/ros/$ros2_version/setup.bash && source ../chrono-ros-messages/install/local_setup.bash && ccmake ../chrono; exec bash"
+
+    if [ -n "$ros2_version" ] && [ -d "/opt/ros/$ros2_version" ]; then
+        if [ "$SUDO_USER" ]; then
+            sudo -u "$SUDO_USER" gnome-terminal -- bash -c "$compile_cmd"
+        else
+            gnome-terminal -- bash -c "$compile_cmd"
+        fi
+    else
+        whiptail --title "Open Terminal" --msgbox "Could not determine installed ROS2 version. Please open a terminal and run:\n\ncd ../libraries/chrono-build/\nsource /opt/ros/<version>/setup.bash\nsource ../chrono-ros-messages/install/local_setup.bash\nccmake ../chrono" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        return
+    fi
+}
+
 
 # -------------------- Main Script Execution --------------------
 update_system
@@ -448,3 +498,4 @@ check_packages
 run_installer
 ros2_prompt_and_install
 compile_chrono_ros_messages
+final_compilation_prompt
