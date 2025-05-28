@@ -97,13 +97,6 @@ check_packages() {
 
     output+="Package presence check results:\n\n"
 
-    # GLM
-    if dpkg -l | grep -qw libglm-dev; then
-        output+="GLM: Installed\n"; GLM_FLAG=OFF
-    else
-        output+="GLM: Not installed\n"; GLM_FLAG=ON
-    fi
-
     # Thrust
     if dpkg -l | grep -qw thrust || dpkg -l | grep -qw libthrust-dev; then
         output+="Thrust: Installed\n"; THRUST_FLAG=OFF
@@ -176,16 +169,23 @@ check_packages() {
         output+="Boost: Not installed\n"; BOOST_FLAG=ON
     fi
 
-    # GLFW
-    if pkg-config --exists glfw3 &> /dev/null; then
-        output+="GLFW: Installed\n"; GLFW_FLAG=OFF
+    # GLM (header-only, check for /usr/local/include/glm)
+    if [ -d "/usr/local/include/glm" ]; then
+        output+="GLM: Installed (from source)\n"; GLM_FLAG=OFF
+    else
+        output+="GLM: Not installed\n"; GLM_FLAG=ON
+    fi
+
+    # GLFW (check for /usr/local/include/GLFW and /usr/local/lib/libglfw3.a or .so)
+    if [ -d "/usr/local/include/GLFW" ] && (ls /usr/local/lib/libglfw* &> /dev/null); then
+        output+="GLFW: Installed (from source)\n"; GLFW_FLAG=OFF
     else
         output+="GLFW: Not installed\n"; GLFW_FLAG=ON
     fi
 
-    # GLEW
-    if pkg-config --exists glew &> /dev/null; then
-        output+="GLEW: Installed\n"; GLEW_FLAG=OFF
+    # GLEW (check for /usr/local/include/GL/glew.h and /usr/local/lib/libGLEW.a or .so)
+    if [ -f "/usr/local/include/GL/glew.h" ] && (ls /usr/local/lib/libGLEW* &> /dev/null); then
+        output+="GLEW: Installed (from source)\n"; GLEW_FLAG=OFF
     else
         output+="GLEW: Not installed\n"; GLEW_FLAG=ON
     fi
@@ -228,7 +228,6 @@ check_packages() {
 run_installer() {
     selected=$(whiptail --title "Advanced Control Systems Lab Physics Simulator" \
         --checklist "Configure pre-requisites for compiling Project Chrono\n\nSelect packages to install:" $WHIPTAIL_ROWS $WHIPTAIL_COLS 16 \
-        "GLM" " " $GLM_FLAG \
         "Thrust" " " $THRUST_FLAG \
         "Python3" " " $PYTHON3_FLAG \
         "pip3" " " $PIP3_FLAG \
@@ -239,6 +238,7 @@ run_installer() {
         "Irrlicht" " " $IRRLICHT_FLAG \
         "Blaze" " " $BLAZE_FLAG \
         "Boost" " " $BOOST_FLAG \
+        "GLM" " " $GLM_FLAG \
         "GLFW" " " $GLFW_FLAG \
         "GLEW" " " $GLEW_FLAG \
         "OpenGL" " " $OPENGL_FLAG \
@@ -256,10 +256,6 @@ run_installer() {
     for choice in $selected; do
         choice="${choice//\"}"
         case "$choice" in
-            "GLM")
-                echo "Installing GLM (libglm-dev)..."
-                sudo apt install -y libglm-dev | tee /dev/tty
-                ;;
             "Thrust")
                 echo "Installing Thrust (libthrust-dev)..."
                 sudo apt install -y libthrust-dev | tee /dev/tty
@@ -309,18 +305,36 @@ run_installer() {
                 sudo ./b2 install -j$(nproc) | tee /dev/tty
                 cd "$ORIG_DIR" || exit 1
                 ;;
+            "GLM")
+                echo "Installing GLM (from source)..."
+                GLM_SRC=../libraries/third-party/glm-0.9.9.8
+                sudo cp -r "$GLM_SRC/glm" /usr/local/include/ | tee /dev/tty
+                ;;
             "GLFW")
-                echo "Installing GLFW..."
-                sudo apt install -y libglfw3-dev libgl1-mesa-dev libglu1-mesa-dev | tee /dev/tty
-                if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-                    sudo apt install -y xorg-dev | tee /dev/tty
-                fi
+                echo "Installing GLFW (from source)..."
+                GLFW_SRC=../libraries/third-party/glfw-3.3.8
+                TEMP_DIR="$GLFW_SRC/temp"
+                mkdir -p "$TEMP_DIR"
+                cd "$TEMP_DIR" || exit 1
+                cmake .. | tee /dev/tty
+                make -j$(nproc) | tee /dev/tty
+                sudo make install | tee /dev/tty
+                cd "$ORIG_DIR" || exit 1
+                rm -rf "$TEMP_DIR" | tee /dev/tty
                 ;;
             "GLEW")
-                echo "Installing GLEW..."
-                sudo apt install -y libglew-dev libglu1-mesa-dev | tee /dev/tty
-                if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-                    sudo apt install -y xorg-dev | tee /dev/tty
+                echo "Installing GLEW (from source)..."
+                GLEW_SRC=../libraries/third-party/glew-2.1.0
+                TEMP_DIR="$GLEW_SRC/temp"
+                mkdir -p "$TEMP_DIR"
+                cd "$TEMP_DIR" || exit 1
+                cmake ../build/cmake | tee /dev/tty
+                make -j$(nproc) | tee /dev/tty
+                sudo make install | tee /dev/tty
+                cd "$ORIG_DIR" || exit 1
+                rm -rf "$TEMP_DIR" | tee /dev/tty
+                if [ -f "$GLEW_SRC/glew.pc" ]; then
+                    rm -f "$GLEW_SRC/glew.pc" | tee /dev/tty
                 fi
                 ;;
             "OpenGL")
