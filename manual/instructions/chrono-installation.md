@@ -51,6 +51,9 @@ The installation is divided into **three major steps** and **requires access to 
 
 This step installs all dependencies required for both Chrono and the ACSL Physics Simulator. The script also sets up environment variables and system configurations.
 
+> [!CAUTION]
+> Make sure you are inside the `acsl-physics-sim/scripts` directory before executing the installer script. **It must be run from this location**.
+
 **Instructions:**
 
 1. Open a terminal.
@@ -58,8 +61,6 @@ This step installs all dependencies required for both Chrono and the ACSL Physic
    ```bash
    cd path/to/acsl-physics-sim/scripts/
    ```
-   > [!CAUTION]
-   > Make sure you are inside the `acsl-physics-sim/scripts` directory before executing the installer script. **It must be run from this location**.
 3. Make the script executable:
    ```bash
    chmod +x scripts/installer.sh
@@ -116,6 +117,6 @@ Once Chrono is compiled, we are ready to compile the ACSL Physics Simulator code
 
 ## 🛠️ Troubleshooting
 
-- **Compilation errors?** Double-check that all dependencies were successfully installed via `installer.sh`.
+- **Compilation errors?** Double-check that all dependencies were successfully installed via `installer.sh`. Debug with the generated log file in `scripts/cache/installer-log.log`.
 - **Chrono build issues?** Check the [google group](https://groups.google.com/g/projectchrono?pli=1) maintained by Project Chrono.
 
