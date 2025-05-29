@@ -5,11 +5,6 @@ set -x # Enable debug mode
 # Dynamically set whiptail size to fit terminal
 read WHIPTAIL_ROWS WHIPTAIL_COLS < <(stty size)
 
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run as root or with sudo"
-    exit 1
-fi
-
 update_system() {
     echo "Updating and upgrading the system..."
     if command -v apt &> /dev/null; then
@@ -50,6 +45,62 @@ ensure_whiptail() {
         fi
     fi
 }
+
+check_security_root_and_directory() {
+    # Security notice message
+    SECURITY_NOTICE="This script requires root access and installs packages directly onto your system. Never run scripts from the internet without reviewing them first.\n\n\
+    By executing installer.sh, you acknowledge that you do so at your own discretion and risk. The Advanced Control Systems Lab (ACSL) is not responsible for any damage, misconfiguration, or data loss resulting from the use of this script.\n\n\
+    We strongly recommend opening scripts/installer.sh in a text editor and inspecting its contents before running it.\n\n\
+    Do you accept these terms and wish to proceed?"
+
+    # Show the security notice
+    if whiptail --title "Security Notice" --yesno "$SECURITY_NOTICE" $WHIPTAIL_ROWS $WHIPTAIL_COLS --yes-button "Accept" --no-button "Decline"; then
+        echo "User accepted the security notice."
+    else
+        whiptail --title "Notice Declined" --msgbox "You declined the security notice. Installation will now exit." $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        exit 1
+    fi
+
+    # Check for root privileges
+    if [ "$EUID" -ne 0 ]; then
+        whiptail --title "Root Privileges Required" --msgbox "Please run this script with sudo:\n\n sudo ./installer.sh" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        exit 1
+    fi
+
+    # Verify directory location
+    LAST_DIR_NAME=$(basename "$PWD")
+    EXPECTED_DIR_NAME="scripts"
+    if [ "$LAST_DIR_NAME" != "$EXPECTED_DIR_NAME" ]; then
+        whiptail --title "Wrong Directory" --msgbox "Please run this script from a directory named '$EXPECTED_DIR_NAME'.\n\nCurrent directory: $PWD" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        exit 1
+    fi
+
+    # Clean cache directory (moved from clean_cache_directory)
+    echo "Cleaning cache directory..."
+    CACHE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/cache"
+    if [ -d "$CACHE_DIR" ]; then
+        find "$CACHE_DIR" -mindepth 1 ! -name '.gitkeep' ! -name '.gitignore' -exec rm -rf {} +
+    else
+        echo "Warning: cache directory not found at $CACHE_DIR"
+    fi
+
+    # --------------------------
+    # START LOGGING AFTER CHECKS
+    # --------------------------
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    LOG_FILE="$CACHE_DIR/installer-log.log"
+    if [ ! -d "$CACHE_DIR" ]; then
+        whiptail --title "Error" --msgbox "Cache directory not found at:\n$CACHE_DIR" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        exit 1
+    fi
+    exec > >(tee -a "$LOG_FILE") 2>&1
+    exec 5>>"$LOG_FILE"
+    export BASH_XTRACEFD=5
+    export PS4='+ $(date "+%Y-%m-%d %H:%M:%S") ${BASH_SOURCE}:${LINENO}: '
+    set -x
+    echo "=== Logging started at $(date) ==="
+}
+
 
 show_license() {
     LICENSE_PATH="$(realpath $(dirname "$0")/../LICENSE)"
@@ -484,7 +535,7 @@ compile_chrono_ros_messages() {
 
 final_compilation_prompt() {
     whiptail --title "Ready for Compilation" --ok-button "Proceed" \
-        --msgbox "ACSL Physics Simulator is ready for compilation\n\n*** Press proceed to open a new terminal window for compilation ***" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+    --msgbox "ACSL Physics Simulator is ready for compilation\n\n*** Press Proceed to open a new terminal window for compilation ***" $WHIPTAIL_ROWS $WHIPTAIL_COLS
 
     # Determine ROS2 version as before
     local ros2_version=""
@@ -510,16 +561,22 @@ final_compilation_prompt() {
             gnome-terminal -- bash -c "$compile_cmd"
         fi
     else
-        whiptail --title "Open Terminal" --msgbox "Could not determine installed ROS2 version. Please open a terminal and run:\n\ncd ../libraries/chrono-build/\nsource /opt/ros/<version>/setup.bash\nsource ../chrono-ros-messages/install/local_setup.bash\nccmake ../chrono" $WHIPTAIL_ROWS $WHIPTAIL_COLS
+        whiptail --title "Open Terminal" --msgbox "Could not determine installed ROS2 version. Please open a terminal and run:\n\ncd ../libraries/chrono-build/\nsource /opt/ros//setup.bash\nsource ../chrono-ros-messages/install/local_setup.bash\nccmake ../chrono" $WHIPTAIL_ROWS $WHIPTAIL_COLS
         return
     fi
+
+    # Final professional completion message
+    whiptail --title "Installation Complete" --msgbox \
+    "Pre-requisite packages have been successfully installed.\n\nThe ACSL Physics Simulator installer has completed.\n\nYou may now close this terminal window." \
+    $WHIPTAIL_ROWS $WHIPTAIL_COLS
 }
 
 
 # -------------------- Main Script Execution --------------------
-update_system
 ensure_whiptail
+check_security_root_and_directory
 show_license
+update_system
 check_packages
 run_installer
 ros2_prompt_and_install
