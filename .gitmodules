@@ -16,3 +16,6 @@
 [submodule "libraries/chrono-ros-messages/src/px4_msgs"]
 	path = libraries/chrono-ros-messages/src/px4_msgs
 	url = https://github.com/PX4/px4_msgs.git
+[submodule "libraries/third-party/fkYAML"]
+	path = libraries/third-party/fkYAML
+	url = https://github.com/fktn-k/fkYAML.git
