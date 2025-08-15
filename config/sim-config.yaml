@@ -23,46 +23,47 @@
 # **********************************************************************************************************************
 
 ########################################################################################################################
-# Visualization & Simulation Display Options
+# UAV Simulator config
 #
-# This YAML file configures the appearance and interactivity of the ACSL Physics
-# Simulator visualization window. Fine-tune rendering, camera, and frame overlays 
-# to suit your simulation needs and preferred workflow.
+# This YAML file defines which UAV model/platform the ACSL Physics Simulator
+# should load. For each new UAV type:
+#   1. Add the platform entry in this file.
+#   2. Make sure the platform's include file is present in sim-platforms.hpp
+#   2. Update `sim-bridge.hpp` and `sim-bridge.cpp` accordingly.
+#   3. Make sure the platform exists in the ACSL Physics Sim database with clear .hpp and .cpp files for 
+#      the derived class.
+#
+# This file also configures the simulator to start in the SIL/HIL modes or to run in MIL mode.
+#
+#
+# NOTE:
+# - Only one UAV platform should be enabled at a time for simulation.
 ########################################################################################################################
 
+# ============================================================================
+# Simulation Mode
+# ============================================================================
+# Set to true to run in SOFTWARE-IN-THE-LOOP / HARDWARE-IN-THE-LOOP mode
+# Set to false to run in MODEL-IN-THE-LOOP mode
+mode:
+  enable_flightstack_loop: false
 
 # ============================================================================
-# Main Visualization Toggles
+# UAV Platform Selection
+# !!! IMPORTANT: Only one platform should be imported at a time !!!
 # ============================================================================
-main:
-  # Enable the interactive visualization window --------------------
-  # Set to false for headless/speed mode
-  enable_vis: true
-
-  # Camera options -------------------------------------------------
-  # true: fixed viewpoint; false: dynamic/follow
-  enable_static_cam: true
-
-  # Frame overlays -------------------------------------------------
-  # Show NED reference frame axes in the scene
-  render_ned_frame: true
-  # Show body-fixed UAV frame axes
-  render_body_frame: true
-
-  # Rendering effects ----------------------------------------------
-  # Toggle shadow rendering (GPU-intensive)
-  render_shadows: true
-  # Visualize collision/contact boundaries
-  render_collision_zones: true
-
+platform:
+  # Set to true to import the QRBP
+  qrbp: true
+  # Set to true to import the x8copter
+  x8copter: false
+  # Set to true to import the acsl quadcopter test drone
+  acslquad: false
 
 # ============================================================================
-# Window & UI Options
+# SIMULATION Environment Selection
+# !!! IMPORTANT: Only one environment should be imported at a time !!!
 # ============================================================================
-window:
-  # (px) Window width for the display
-  width: 1600
-  # (px) Window height for the display
-  height: 1200
-  # Title bar text for visualization window
-  title: "ACSL PHYSICS SIMULATOR"
+environment:
+  # Set to true to import the Flat Platform environment 
+  flat: true

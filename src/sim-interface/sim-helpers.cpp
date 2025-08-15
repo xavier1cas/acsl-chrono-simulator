@@ -61,4 +61,15 @@ chrono::ChQuaternion<> GetChronoOrientaitonFromNED(const chrono::ChQuaternion<>&
 
 }   // namespace _transformations_
 
+
+namespace _conversions_
+{
+
+// Converts radians to degrees
+double rad2deg(double rad) { return rad * 180.0 / chrono::CH_PI; }
+
+}
+
+
+
 }   // namespace _acsl_

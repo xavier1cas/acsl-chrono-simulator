@@ -41,145 +41,363 @@ namespace _acsl_
 namespace _system_
 {
 
-// Function to load in the configuration of the physics system
+// =====================================================================================================================
+// ReadPhysicsConfigFile()
+//
+// Purpose:
+//   Loads and parses the physics configuration YAML file for the simulation.
+//   This configuration defines core physics engine parameters such as:
+//     - Gravity enable/disable in NED frame
+//     - Solver type and iteration limits
+//     - Collision system settings and tuning parameters
+//
+// Workflow:
+//   1. Open the YAML file from the hardcoded path (`phy_config_filename`).
+//   2. Validate that the file exists and is accessible.
+//   3. Parse (deserialize) the YAML into a `fkyaml::node` object.
+//   4. Extract specific physics, solver, and collision parameters
+//      into the `phyconfig` struct for later use in SetupPhysicsSystem().
+//
+// Notes:
+//   - This uses the fkyaml library for YAML deserialization.
+//   - If the file is missing, a simulator runtime error will be triggered.
+// =====================================================================================================================
 void simsystem::ReadPhysicsConfigFile()
 {
-    // open a YAML file. Other streams or strings are also usable as an input
+    // ------------------------------------------------------------------------
+    // STEP 1 – Open the physics configuration YAML file
+    //   Uses phy_config_filename, which is set in the class as a constant path.
+    //   `std::ifstream` is used for file input streaming.
+    // ------------------------------------------------------------------------
     std::ifstream ifs(this->phy_config_filename);
 
-    // Check if the configuration file exists
-    if (!ifs) { _message_::SIMULATOR_ERROR("COULD NOT OPEN PHYSICS CONFIG FILE:" + this->phy_config_filename); }
+    // ------------------------------------------------------------------------
+    // STEP 2 – Check that the file exists and opened successfully
+    //   If not, trigger a simulator error message (likely halts execution).
+    // ------------------------------------------------------------------------
+    if (!ifs) {
+        _message_::SIMULATOR_ERROR(
+            "COULD NOT OPEN PHYSICS CONFIG FILE: " + this->phy_config_filename
+        );
+    }
 
-    // deserialize the loaded file contents.
+    // ------------------------------------------------------------------------
+    // STEP 3 – Deserialize the YAML configuration into memory
+    //   fkyaml::node::deserialize() parses the YAML into a navigable tree.
+    // ------------------------------------------------------------------------
     fkyaml::node config_file = fkyaml::node::deserialize(ifs);
 
-    // Access values and set them as needed
-    phyconfig.gravity = config_file["physics"]["gravity"].as_bool();
+    // ------------------------------------------------------------------------
+    // STEP 4 – Extract top-level physics parameters
+    // ------------------------------------------------------------------------
+    phyconfig.gravity = config_file["physics"]["gravity"].as_bool(); // Enable/disable gravity
 
-    phyconfig.PSOR = config_file["solver"]["PSOR"].as_bool();
-    phyconfig.MaxIterations = config_file["solver"]["MaxIterations"].as_int();
-    phyconfig.EnableWarmStart = config_file["solver"]["EnableWarmStart"].as_bool();
+    // ------------------------------------------------------------------------
+    // STEP 5 – Extract solver-related parameters
+    // ------------------------------------------------------------------------
+    phyconfig.PSOR           = config_file["solver"]["PSOR"].as_bool();          // Solver type flag
+    phyconfig.MaxIterations  = config_file["solver"]["MaxIterations"].as_int();  // Max solver iterations
+    phyconfig.EnableWarmStart = config_file["solver"]["EnableWarmStart"].as_bool(); // Warm start toggle
 
-    phyconfig.BULLET = config_file["collision"]["BULLET"].as_bool();
-    phyconfig.MULTICORE = config_file["collision"]["MULTICORE"].as_bool();
+    // ------------------------------------------------------------------------
+    // STEP 6 – Extract collision system parameters
+    // ------------------------------------------------------------------------
+    phyconfig.BULLET                  = config_file["collision"]["BULLET"].as_bool();    // Bullet collision system toggle
+    phyconfig.MULTICORE                = config_file["collision"]["MULTICORE"].as_bool();// Multicore collision system toggle
     phyconfig.DefaultSuggestedEnvelope = static_cast<double>(config_file["collision"]["DefaultSuggestedEnvelope"].as_float());
-    phyconfig.DefaultSuggestedMargin = static_cast<double>(config_file["collision"]["DefaultSuggestedMargin"].as_float());
+    phyconfig.DefaultSuggestedMargin   = static_cast<double>(config_file["collision"]["DefaultSuggestedMargin"].as_float());
     phyconfig.ContactBreakingThreshold = static_cast<double>(config_file["collision"]["ContactBreakingThreshold"].as_float());
 }
 
-// Funciton to load in the configuration of the vision system
+
+// =====================================================================================================================
+// ReadVisionConfigFile()
+//
+// Purpose:
+//   Loads and parses the visualization configuration YAML file for the
+//   simulation. This configuration defines how the simulator's visualization
+//   behaves, including:
+//     - Whether visualization is enabled
+//     - Camera settings
+//     - Frame overlays (NED, body frame)
+//     - Rendering options (shadows, collision zones)
+//     - Visualization window size and title
+//
+// Workflow:
+//   1. Open the YAML config file from the class constant path
+//      (`vis_config_filename`).
+//   2. Validate file existence.
+//   3. Parse (deserialize) the YAML file into a fkyaml::node object.
+//   4. Extract all relevant settings into the `visconfig` struct for later use
+//      in SetupVisualizationSystem().
+//
+// Notes:
+//   - Uses the fkyaml library for simple YAML access.
+//   - If the file does not exist, an error message is logged and (likely) 
+//     simulation will not proceed.
+// =====================================================================================================================
 void simsystem::ReadVisionConfigFile()
 {
-    // open a YAML file. Other streams or strings are also usable as an input.
+    // ------------------------------------------------------------------------
+    // STEP 1 – Open the visualization configuration YAML file
+    //   Uses vis_config_filename set in the simsystem class.
+    // ------------------------------------------------------------------------
     std::ifstream ifs(this->vis_config_filename);
 
-    // Check if the configuration file exists
-    if (!ifs) { _message_::SIMULATOR_ERROR("COULD NOT OPEN VISUALIZATION CONFIG FILE:" + this->vis_config_filename); }
+    // ------------------------------------------------------------------------
+    // STEP 2 – Ensure the file exists and is readable
+    //   If not, trigger a simulator-level error message.
+    // ------------------------------------------------------------------------
+    if (!ifs) {
+        _message_::SIMULATOR_ERROR(
+            "COULD NOT OPEN VISUALIZATION CONFIG FILE: " + this->vis_config_filename
+        );
+    }
 
-    // deserialize the loaded file contents.
+    // ------------------------------------------------------------------------
+    // STEP 3 – Deserialize the YAML file into a fkyaml node hierarchy
+    //   Allows key-based access to configuration entries.
+    // ------------------------------------------------------------------------
     fkyaml::node config_file = fkyaml::node::deserialize(ifs);
 
-    // Access values and set them as needed
-    visconfig.enable_vis = config_file["main"]["enable_vis"].as_bool();
-    visconfig.enable_static_cam = config_file["main"]["enable_static_cam"].as_bool();
-    visconfig.render_ned_frame = config_file["main"]["render_ned_frame"].as_bool();
-    visconfig.render_body_frame = config_file["main"]["render_body_frame"].as_bool();
-    visconfig.render_shadows = config_file["main"]["render_shadows"].as_bool();
-    visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();
+    // ------------------------------------------------------------------------
+    // STEP 4 – Extract visualization "main" options
+    //   These control the overall visualization behavior, camera, and overlays.
+    // ------------------------------------------------------------------------
+    visconfig.enable_vis             = config_file["main"]["enable_vis"].as_bool();              // Enable 3D window
+    visconfig.enable_static_cam      = config_file["main"]["enable_static_cam"].as_bool();       // Fixed camera view
+    visconfig.render_ned_frame       = config_file["main"]["render_ned_frame"].as_bool();        // Draw NED axes
+    visconfig.render_body_frame      = config_file["main"]["render_body_frame"].as_bool();       // Draw UAV body axes
+    visconfig.render_shadows         = config_file["main"]["render_shadows"].as_bool();          // Enable shadow rendering
+    visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();  // Show collision zone meshes
 
-    visconfig.width = static_cast<uint>(config_file["window"]["width"].as_int());
-    visconfig.height = static_cast<uint>(config_file["window"]["height"].as_int());
-    visconfig.title = config_file["window"]["title"].as_str();
+    // ------------------------------------------------------------------------
+    // STEP 5 – Extract "window" options
+    //   Defines resolution and window title for the visualization.
+    // ------------------------------------------------------------------------
+    visconfig.width  = static_cast<uint>(config_file["window"]["width"].as_int());   // Window width in pixels
+    visconfig.height = static_cast<uint>(config_file["window"]["height"].as_int());  // Window height in pixels
+    visconfig.title  = config_file["window"]["title"].as_str();                      // Window title text
 }
 
-// Function to setup the chrono physics system
+
+// =====================================================================================================================
+// SetupPhysicsSystem()
+//
+// Purpose:
+//   Initializes and configures the Chrono physics system (`m_physics`) 
+//   using parameters loaded from the `phyconfig` struct.
+//
+//   Key tasks:
+//     1. Verify collision system configuration (only one type active).
+//     2. Set gravitational acceleration (NED → Chrono conversion).
+//     3. Select and configure collision system type.
+//     4. Select and configure solver type and parameters.
+//     5. Apply collision model tuning parameters.
+//     6. Assign solver to the Chrono physics system.
+//     7. Output configuration details to the simulator log.
+//
+// Preconditions:
+//   - The physics configuration file (`phyconfig`) must already be loaded 
+//     via ReadPhysicsConfigFile().
+//   - This must be called before adding simulation bodies/links.
+//
+// Notes:
+//   - Errors here generally stop the simulation because without a properly
+//     configured physics core, nothing can run correctly.
+// =====================================================================================================================
 void simsystem::SetupPhysicsSystem()
 {
-    // Preliminary checks
-    if (phyconfig.BULLET && phyconfig.MULTICORE) { _message_::SIMULATOR_ERROR("PICK ONE COLLISION SYSTEM AT A TIME. ENDING SIMULATION"); }
+    // ------------------------------------------------------------------------
+    // STEP 1 – Preliminary validation: Check collision system flags
+    //   Exactly ONE collision system must be enabled.
+    // ------------------------------------------------------------------------
+    if (phyconfig.BULLET && phyconfig.MULTICORE) {
+        _message_::SIMULATOR_ERROR("PICK ONE COLLISION SYSTEM AT A TIME. ENDING SIMULATION");
+    }
+    else if (!phyconfig.BULLET && !phyconfig.MULTICORE) {
+        _message_::SIMULATOR_ERROR("BOTH COLLISION SYSTEMS ARE NOT ACTIVE. ENDING SIMULATION");
+    }
 
-    // Assign the gravity vector
-    if (phyconfig.gravity) { m_physics.SetGravitationalAcceleration(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0,0,9.8))); }
-    else { m_physics.SetGravitationalAcceleration(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0,0,0))); }
-            
-    // Assign the collision system
-    if (phyconfig.BULLET) { m_physics.SetCollisionSystemType(chrono::ChCollisionSystem::Type::BULLET); }
-    else if (phyconfig.MULTICORE) { m_physics.SetCollisionSystemType(chrono::ChCollisionSystem::Type::MULTICORE); }
-  
+    // ------------------------------------------------------------------------
+    // STEP 2 – Assign gravity vector
+    //   - Gravity vector provided in NED frame [0, 0, 9.8] m/s² 
+    //     or zero if disabled.
+    //   - Converted to Chrono coordinates using transformation utilities.
+    // ------------------------------------------------------------------------
+    if (phyconfig.gravity) {
+        m_physics.SetGravitationalAcceleration(
+            _transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 9.8))
+        );
+    } else {
+        m_physics.SetGravitationalAcceleration(
+            _transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0))
+        );
+    }
 
-    // Assign the physics solver type ----------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // STEP 3 – Set collision system type
+    //   - BULLET: single-threaded Bullet engine
+    //   - MULTICORE: multi-threaded collision
+    // ------------------------------------------------------------------------
+    if (phyconfig.BULLET) {
+        m_physics.SetCollisionSystemType(chrono::ChCollisionSystem::Type::BULLET);
+    } 
+    else if (phyconfig.MULTICORE) {
+        m_physics.SetCollisionSystemType(chrono::ChCollisionSystem::Type::MULTICORE);
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 4 – Select and configure solver type
+    //   Example: PSOR solver is the active one here.
+    //   Additional solver types can be added as `else if` cases.
+    // ------------------------------------------------------------------------
     if (phyconfig.PSOR) 
     { 
-        // Assign the PSOR solver
+        // Create a PSOR solver instance
         auto psor_solver = std::make_shared<chrono::ChSolverPSOR>();
+
+        // Configure solver parameters from config file
         psor_solver->SetMaxIterations(phyconfig.MaxIterations);
         psor_solver->EnableWarmStart(phyconfig.EnableWarmStart);
         
-        // Assign the solver to the object owned by the class
+        // Store for later reference and pass to the physics system (Step 6)
         m_solver = psor_solver;            
     }
-    // Add additional else if(config.MINRES) {...} blocks here for other solvers, using appropriate downcast
+    else {
+        _message_::SIMULATOR_ERROR("NO SOLVER PICKED. ENDING SIMULATION");
+    }
 
-    // Assign the collision model params -------------------------------------------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // STEP 5 – Set collision model parameters
+    //   These values influence contact surface tolerances and stability.
+    // ------------------------------------------------------------------------
     chrono::ChCollisionModel::SetDefaultSuggestedEnvelope(phyconfig.DefaultSuggestedEnvelope);
     chrono::ChCollisionModel::SetDefaultSuggestedMargin(phyconfig.DefaultSuggestedMargin);
     chrono::ChCollisionSystemBullet::SetContactBreakingThreshold(phyconfig.ContactBreakingThreshold);
 
-    // Pass on the solver to the system
+    // ------------------------------------------------------------------------
+    // STEP 6 – Pass the configured solver to the Chrono physics system
+    // ------------------------------------------------------------------------
     m_physics.SetSolver(m_solver);
 
+    // ------------------------------------------------------------------------
+    // STEP 7 – Log current configuration to the simulator console/log
+    // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("SIMULATOR PHYSICS SYSTEM ACTIVE");
-    _message_::SIMULATOR_INFO("STARTING NSC SYSTEM");
-    _message_::SIMULATOR_INFO("SYSTEM [GRAVITY]: " + std::to_string(phyconfig.gravity));
+    _message_::SIMULATOR_INFO(" - STARTING NSC SYSTEM");
     
-    _message_::SIMULATOR_INFO("SOLVER [PSOR]: " + std::to_string(phyconfig.PSOR));
-    _message_::SIMULATOR_INFO("SOLVER [MaxIterations]: " + std::to_string(phyconfig.MaxIterations));
-    _message_::SIMULATOR_INFO("SOLVER [EnableWarmStart]: " + std::to_string(phyconfig.EnableWarmStart));
+    // Physics core settings
+    _message_::SIMULATOR_INFO(" - SYSTEM [GRAVITY]: " + std::to_string(phyconfig.gravity));
+    
+    // Solver settings
+    _message_::SIMULATOR_INFO(" - SOLVER [PSOR]: " + std::to_string(phyconfig.PSOR));
+    _message_::SIMULATOR_INFO(" - SOLVER [MaxIterations]: " + std::to_string(phyconfig.MaxIterations));
+    _message_::SIMULATOR_INFO(" - SOLVER [EnableWarmStart]: " + std::to_string(phyconfig.EnableWarmStart));
 
-    _message_::SIMULATOR_INFO("COLLISION [BULLET]: " + std::to_string(phyconfig.BULLET));
-    _message_::SIMULATOR_INFO("COLLISION [MULTICORE]: " + std::to_string(phyconfig.MULTICORE));
-    _message_::SIMULATOR_INFO("COLLISION [DefaultSuggestedEnvelope]: " + std::to_string(phyconfig.DefaultSuggestedEnvelope));
-    _message_::SIMULATOR_INFO("COLLISION [DefaultSuggestedMargin]: " + std::to_string(phyconfig.DefaultSuggestedMargin));
-    _message_::SIMULATOR_INFO("COLLISION [ContactBreakingThreshold]: " + std::to_string(phyconfig.ContactBreakingThreshold));
-
+    // Collision settings
+    _message_::SIMULATOR_INFO(" - COLLISION [BULLET]: " + std::to_string(phyconfig.BULLET));
+    _message_::SIMULATOR_INFO(" - COLLISION [MULTICORE]: " + std::to_string(phyconfig.MULTICORE));
+    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedEnvelope]: " 
+                               + std::to_string(phyconfig.DefaultSuggestedEnvelope));
+    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedMargin]: " 
+                               + std::to_string(phyconfig.DefaultSuggestedMargin));
+    _message_::SIMULATOR_INFO(" - COLLISION [ContactBreakingThreshold]: " 
+                               + std::to_string(phyconfig.ContactBreakingThreshold));
 }
 
-// Function to setup the visualization for the physics system
+// =====================================================================================================================
+// SetupVisualizationSystem()
+//
+// Purpose:
+//   Configures and initializes the Irrlicht-based visualization system for the
+//   ACSL Physics Simulator, using options loaded from the visconfig struct.
+//
+//   Features controlled:
+//     - Window size and title
+//     - Initialization and standard scene setup (logo, sky, lights)
+//     - Rendering toggles (shadows, collision zone highlighting)
+//     - Camera selection (static or dynamic)
+//     - Logging of visualization options to the simulator output
+//     - Attaches Chrono physics system for real-time rendering
+//
+// Workflow:
+//   1. Check if visualization is enabled; early-return if not.
+//   2. Set window size and title, then initialize the visualization engine.
+//   3. Add scene elements (logo, skybox, lights).
+//   4. Enable and configure rendering options as chosen in config.
+//   5. Output visualization setup parameters to the log.
+//   6. Attach the Chrono system for rendering simulation objects.
+//
+// Notes:
+//   - If visualization is disabled, prints a message and returns immediately;
+//     nothing further is set up or drawn.
+//   - Shadow rendering and collision zone overlay can have significant GPU impact.
+// =====================================================================================================================
 void simsystem::SetupVisualizationSystem()
 {
-    // If visualization is disabled return
-    if (!visconfig.enable_vis) { _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM INACTIVE"); return; }
+    // ------------------------------------------------------------------------
+    // STEP 1 – Check if visualization is enabled
+    //   If not, log status and exit early; simulation will run headless.
+    // ------------------------------------------------------------------------
+    if (!visconfig.enable_vis) {
+        _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM INACTIVE");
+        return;
+    }
 
-    // Else setup the visualization
-    m_irrlicht.SetWindowSize(800, 600);       // Set the window size
-    m_irrlicht.SetWindowTitle(visconfig.title);                        // Set the window title
-    m_irrlicht.Initialize();                                           // Initialize the visualization
-    m_irrlicht.AddLogo();                                              // Add the Project chrono logo
-    m_irrlicht.AddSkyBox();                                            // Add the sky box textures
-    m_irrlicht.AddTypicalLights();                                     // Add typical lighting
+    // ------------------------------------------------------------------------
+    // STEP 2 – Main window setup: size, title, and initialization
+    // ------------------------------------------------------------------------
+    m_irrlicht.SetWindowSize(visconfig.width, visconfig.height); // Set window size (pixels)
+    m_irrlicht.SetWindowTitle(visconfig.title);                  // Set window title string
+    m_irrlicht.Initialize();                                     // Initialize Irrlicht for drawing
 
-    // If shadows is enabled
-    if (visconfig.render_shadows) { m_irrlicht.EnableShadows(); }
-    
-    // If static cam is enabled
-    if (visconfig.enable_static_cam) { m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0)); }
+    // ------------------------------------------------------------------------
+    // STEP 3 – Scene elements: add logo, skybox, and lights to environment
+    // ------------------------------------------------------------------------
+    m_irrlicht.AddLogo();        // Overlay Project Chrono logo (optional branding)
+    m_irrlicht.AddSkyBox();      // Add skybox textures for realistic environment
+    m_irrlicht.AddTypicalLights(); // Populate scene with typical lighting presets
 
-    // If collision zone renderineg is enabled
-    if (visconfig.render_collision_zones) { m_irrlicht.EnableCollisionShapeDrawing(true); }
+    // ------------------------------------------------------------------------
+    // STEP 4 – Optional rendering features (shadows, camera, collision zones)
+    // ------------------------------------------------------------------------
 
-    // Print messages
+    // Enable shadow rendering if requested
+    if (visconfig.render_shadows) {
+        m_irrlicht.EnableShadows();
+    }
+
+    // Add a static camera if requested
+    // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
+    if (visconfig.enable_static_cam) {
+        m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
+    }
+
+    // Enable visualization of collision zones/boundaries if requested
+    if (visconfig.render_collision_zones) {
+        m_irrlicht.EnableCollisionShapeDrawing(true);
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 5 – Log visualization configuration to the simulator output/log
+    // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM ACTIVE");
-    _message_::SIMULATOR_INFO("STARTED WINDOW OF SIZE: " + std::to_string(visconfig.width) + " x " + std::to_string(visconfig.height));
-    _message_::SIMULATOR_INFO("STARTED WINDOW WITH TITLE: " + visconfig.title);
-    _message_::SIMULATOR_INFO("RENDER NED FRAME: ", visconfig.render_ned_frame);
-    _message_::SIMULATOR_INFO("RENDER BODY FRAME: ", visconfig.render_ned_frame);
-    _message_::SIMULATOR_INFO("RENDER COLLISION ZONES: ", visconfig.render_collision_zones);
-    _message_::SIMULATOR_INFO("RENDER SHADOWS: ", visconfig.render_shadows);
-    _message_::SIMULATOR_INFO("ENABLE STATIC CAM: ", visconfig.enable_static_cam);
+    _message_::SIMULATOR_INFO(" - STARTED WINDOW OF SIZE: " +
+                              std::to_string(visconfig.width) + " x " +
+                              std::to_string(visconfig.height));
+    _message_::SIMULATOR_INFO(" - STARTED WINDOW WITH TITLE: " + visconfig.title);
+    _message_::SIMULATOR_INFO(" - RENDER NED FRAME: ", visconfig.render_ned_frame);
+    _message_::SIMULATOR_INFO(" - RENDER BODY FRAME: ", visconfig.render_body_frame);
+    _message_::SIMULATOR_INFO(" - RENDER COLLISION ZONES: ", visconfig.render_collision_zones);
+    _message_::SIMULATOR_INFO(" - RENDER SHADOWS: ", visconfig.render_shadows);
+    _message_::SIMULATOR_INFO(" - ENABLE STATIC CAM: ", visconfig.enable_static_cam);
 
-    // Attach the physics system
+    // ------------------------------------------------------------------------
+    // STEP 6 – Attach the Chrono physics system for real-time rendering
+    //   This connects the visualization window to the simulation world.
+    // ------------------------------------------------------------------------
     m_irrlicht.AttachSystem(&this->m_physics);
-
 }
 
 }   // namespace _system_

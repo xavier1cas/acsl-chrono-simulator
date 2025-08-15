@@ -22,36 +22,60 @@
  # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # **********************************************************************************************************************
 
-# Chrono Physics Settings
+########################################################################################################################
+# Chrono Physics Engine Configuration
 #
-# This YAML file configures the main physics system for use in chrono
+# This YAML file defines the main parameters for the Chrono physics system.
+# Use it to configure gravity, solvers, and collision settings for UAV simulation.
+#
+# NOTE: Boolean flags below use `true`/`false` — YAML is case-insensitive.
+########################################################################################################################
 
-# Main parameter for choosing the physics system
+
+# ============================================================================
+# Physics Settings
+# ============================================================================
 physics:
-  # (bool) Set true if you want to enable the gravitational force [0,0,9.8] in the NED frame
+  # Enable gravity in NED frame [0, 0, 9.81]
+  # true  → Apply Earth gravity
+  # false → Zero-gravity simulation
   gravity: false
-  
-# Solver parameters for the chorno physics system
-# !!! IMPORTANT !!! : You can only set one solver to be (true) at one time. 
+
+
+# ============================================================================
+# Solver Settings
+# !!! IMPORTANT: Only one solver should be enabled at a time !!!
+# ============================================================================
 solver:
-  # (bool) Set true if you want to choose the PSOR solver
+  # Choose solver type
+  # Projected SOR solver (set true to enable)
   PSOR: true
-  # (int) The maximum iterations for the solver
-  MaxIterations: 1000
-  # (bool) Warm start 
+  
+  # Solver iteration settings - Maximum solver iterations per timestep
+  MaxIterations: 1000 
+  
+  # Warm start option — speeds up convergence by using previous solutions
   EnableWarmStart: true
 
-# Collision parameters for the solver
+
+# ============================================================================
+# Collision Settings
+# !!! IMPORTANT: Only one collision system should be enabled at a time !!!
+# ============================================================================
 collision:
-  # (bool) Set true if picking the BULLET collision system model
+  # Select collision detection system
+  # Bullet collision system (recommended for general use)
+  # Multicore collision system (set true for parallel CPU use)
   BULLET: true
-  # (bool) Set true if picking the MULTICORE collision system model
   MULTICORE: false
-  # (double) The default envolope
+  
+  # Contact distance and tolerance parameters ----------------------
+  # Collision envelope thickness
   DefaultSuggestedEnvelope: 0.003
-  # (double) The default margin
-  DefaultSuggestedMargin: 0.003
-  # (double) Contact breaking threshold
+  # Minimum distance before contact triggers
+  DefaultSuggestedMargin:   0.003
+  # Separation distance at which contact is broken
   ContactBreakingThreshold: 0.002
+
 
 

@@ -133,6 +133,15 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/fkYAML/sin
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-interface)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-main)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-system)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene/sim-locales)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene/sim-locales/sim-flat)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-bridge/)
 
 #-----------------------------------------------------------------------------
 # Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen
@@ -162,6 +171,9 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-main/sim-main.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-system/sim-system.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-helpers.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/sim-qrbp.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene/sim-locales/sim-flat/sim-flat.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-bridge/sim-bridge.cpp
    )
 
 add_executable(acsl_sim ${SOURCES})

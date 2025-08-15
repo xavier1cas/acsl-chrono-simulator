@@ -1,0 +1,146 @@
+/***********************************************************************************************************************
+ * Copyright (c) 2025 Giri M. Kumar, Mattia Gramuglia, Andrea L'Afflitto. All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *    disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
+ *    products derived from this software without specific prior written permission.
+ * 
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ **********************************************************************************************************************/
+
+ /***********************************************************************************************************************
+ * File:        sim-bridge.hpp
+ * Author:      Giri Mugundan Kumar
+ * Date:        June 13, 2025
+ * For info:    Andrea L'Afflitto 
+ *              a.lafflitto@vt.edu
+ * 
+ * Description: The brains of the acsl physics simulator. This file is responsible for running the simulation mode
+ *              (HIL, SIL, MIL simulations) and loading the appropirate uav into the simulation.
+ * 
+ * GitHub:    https://github.com/girimugundankumar/acsl-physics-sim.git
+ **********************************************************************************************************************/
+
+#ifndef SIM_BRIDGE_HPP_
+#define SIM_BRIDGE_HPP_
+
+#include "sim-system.hpp"       // Import the physics and visual system
+#include "sim-platforms.hpp"    // Import the header file will all the platforms
+#include "sim-uav.hpp"          // Import the header file for the UAV API
+
+namespace _acsl_
+{
+
+namespace _bridge_
+{
+
+// =====================================================================================================================
+// class simbridge
+//
+// Purpose:
+//   - Encapsulates high-level simulation runtime setup.
+//   - Reads simulation configuration (YAML) from file.
+//   - Determines which simulation mode (HIL, SIL, MIL) to run in.
+//   - Instantiates the correct UAV platform and integrates it into the
+//     simulation system.
+//
+// Usage:
+//   simbridge bridge;
+//   // automatically reads sim-config.yaml upon construction
+//   // later methods will handle UAV platform load & simulation start.
+//
+// Notes:
+//   - Configuration file is expected at: ../config/sim-config.yaml
+//   - Actual simulation mode execution logic will be in sim-bridge.cpp.
+// =====================================================================================================================
+class simbridge
+{
+public:
+
+    // ------------------------------------------------------------------------
+    // Constructor:
+    //   - Initializes the core simulation subsystems upon object creation.
+    //   - Step 1: Call m_sys.SetupPhysicsSystem() to initialize the Chrono 
+    //             physics environment.
+    //   - Step 2: Read the simulator configuration file and determine which 
+    //             UAV platform should be active.
+    //   - Step 3: Instantiate the selected UAV platform and attach it to the 
+    //             initialized physics system.
+    // ------------------------------------------------------------------------
+    simbridge()
+    {
+        // Initialize the Chrono physics/visual environment
+        m_sys.SetupPhysicsSystem();
+        
+        // Load config, select platform, and attach it to the physics system
+        ConfigureSimulatorFromConfig();
+    }
+
+    // ------------------------------------------------------------------------
+    // Chrono Physics and Visual system object.
+    // ------------------------------------------------------------------------
+    ::_acsl_::_system_::simsystem m_sys;
+
+    // ------------------------------------------------------------------------
+    // Unique pointer to store the UAV object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_uav_::simuavbase> uav;
+
+private:
+
+    // ------------------------------------------------------------------------
+    // Hardcoded path to the simulation configuration YAML.
+    // Stores settings for:
+    //   - Active simulation mode (model/software/hardware-in-loop)
+    //   - Active UAV platform
+    // ------------------------------------------------------------------------
+    const std::string& sim_config_filename = "../config/sim-config.yaml";
+
+    // ------------------------------------------------------------------------
+    // Reads YAML settings for the simulator:
+    //   - Mode selection (HIL, SIL, MIL)
+    //   - UAV platform choice
+    //   - Other runtime parameters as needed.
+    //
+    // Implementation: sim-bridge.cpp
+    // ------------------------------------------------------------------------
+    void ConfigureSimulatorFromConfig();
+
+    // ------------------------------------------------------------------------
+    // Boolean for telling the system if it's in HIL/SIL mode
+    // ------------------------------------------------------------------------
+    bool efsl;          // <- Stands for enable flightstack loop.
+
+
+    // ------------------------------------------------------------------------
+    // Structure from sim-platforms that holds all the platforms that are 
+    // available.
+    // ------------------------------------------------------------------------
+    platforms available_uavs;
+
+};
+
+
+
+
+}   // namespace _bridge_
+
+}   // namespace _acsl_
+
+
+
+#endif // SIM_BRIDGE_HPP_

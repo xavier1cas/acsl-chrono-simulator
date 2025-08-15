@@ -37,17 +37,22 @@
 #ifndef SIM_SYSTEM_HPP_
 #define SIM_SYSTEM_HPP_
 
+// System includes
+#include <fstream>
+#include <iostream>
+#include <string>
+
+// ACSL physics sim includes
+#include "sim-messages.hpp"
+#include "sim-helpers.hpp"
+#include "fkYAML/node.hpp"
+
+// Chrono includes
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/solver/ChSolverPSOR.h"
 #include "chrono/collision/bullet/ChCollisionSystemBullet.h"
-#include "sim-messages.hpp"
-#include "sim-helpers.hpp"
-#include "fkYAML/node.hpp"
-#include <fstream>
-#include <iostream>
-#include <string>
 
 namespace _acsl_
 {
@@ -81,65 +86,117 @@ struct visionconfig {
     bool render_collision_zones;
 };
 
+// =====================================================================================================================
+// simsystem
+//
+// Purpose:
+//   Encapsulates and manages the core ACSL Physics Simulator systems,
+//   including the Chrono physics engine and the Irrlicht visualization engine.
+//   This class is responsible for reading configuration files, setting up
+//   the simulation environment, and providing access to the underlying
+//   systems and configuration data.
+//
+// Usage:
+//   - Create an instance of simsystem at program start.
+//   - It will automatically load physics and vision settings from YAML configs.
+//   - Call SetupPhysicsSystem() and SetupVisualizationSystem() to build systems.
+//   - Use getters to access the Chrono and visualization systems.
+// =====================================================================================================================
 class simsystem
 {
-
 public:
-    // Constructor: Sets up the chrono system
+
+    // ------------------------------------------------------------------------
+    // Constructor:
+    //   - Reads in both physics (.yaml) and visualization (.yaml) config files
+    //     when the simulator system object is created.
+    // ------------------------------------------------------------------------
     simsystem()
     {
-        // Read in the config file at initialization
         ReadPhysicsConfigFile();
         ReadVisionConfigFile();
     }
 
-    // Function to setup the chrono physics system
+    // ------------------------------------------------------------------------
+    // Sets up the Chrono physics system based on loaded config parameters.
+    // Example: gravity, solver type, solver iterations, collision settings.
+    // ------------------------------------------------------------------------
     void SetupPhysicsSystem();
 
-    // Function to setup the visualization for the physics system
+    // ------------------------------------------------------------------------
+    // Sets up the Irrlicht visualization system for rendering the simulation
+    // based on loaded vision configuration (window size, camera settings, etc.).
+    // ------------------------------------------------------------------------
     void SetupVisualizationSystem();
 
-    // Accessor for the underlying chrono system
+    // ------------------------------------------------------------------------
+    // Accessor: Returns a reference to the underlying Chrono physics system
+    // so that external modules can add bodies, links, etc.
+    // ------------------------------------------------------------------------
     chrono::ChSystemNSC& GetPhysicsSystem() { return m_physics; }
 
-    // Accessor for the underlying irrlicht system
+    // ------------------------------------------------------------------------
+    // Accessor: Returns a reference to the underlying Irrlicht visualization
+    // system for customizing the viewing environment.
+    // ------------------------------------------------------------------------
     chrono::irrlicht::ChVisualSystemIrrlicht& GetVisionSystem() { return m_irrlicht; }
 
-    // Accessor for the configuration of the system
+    // ------------------------------------------------------------------------
+    // Accessor: Returns the loaded physics configuration struct.
+    // ------------------------------------------------------------------------
     physicsonfig GetPhyConfig() { return phyconfig; }
 
-    // Accessor for the configuration of the vision system
+    // ------------------------------------------------------------------------
+    // Accessor: Returns the loaded vision configuration struct.
+    // ------------------------------------------------------------------------
     visionconfig GetVisConfig() { return visconfig; }
 
 private:
-    // Hardcoded configuration filename for the system config
-    const std::string& phy_config_filename = "../config/phy-config.yaml";
 
-    // Hardcoded configuration filename for the vision config
+    // ------------------------------------------------------------------------
+    // Constants: Hardcoded file paths to the YAML configuration files.
+    // These define initial physics and visualization settings.
+    // ------------------------------------------------------------------------
+    const std::string& phy_config_filename = "../config/phy-config.yaml";
     const std::string& vis_config_filename = "../config/vis-config.yaml";
 
-    // Create a chrono system
+    // ------------------------------------------------------------------------
+    // The main Chrono physics simulation system (non-smooth contact variant).
+    // ------------------------------------------------------------------------
     chrono::ChSystemNSC m_physics;
 
-    // Create the irrlicht visualization system object
+    // ------------------------------------------------------------------------
+    // The Irrlicht-based visualization system for rendering the simulation.
+    // ------------------------------------------------------------------------
     chrono::irrlicht::ChVisualSystemIrrlicht m_irrlicht;
 
-    // Create the solver
+    // ------------------------------------------------------------------------
+    // Pointer to the physics solver used by the simulation.
+    // Configured according to the physics config YAML.
+    // ------------------------------------------------------------------------
     std::shared_ptr<chrono::ChSolver> m_solver;
 
-    // Create a system config structure object
+    // ------------------------------------------------------------------------
+    // Physics configuration data structure loaded from `phy-config.yaml`.
+    // ------------------------------------------------------------------------
     physicsonfig phyconfig;
 
-    // Createa a vision config structure object
+    // ------------------------------------------------------------------------
+    // Visualization configuration data structure loaded from `vis-config.yaml`.
+    // ------------------------------------------------------------------------
     visionconfig visconfig;
 
-    // Function to load in the configuration of the physics system
+    // ------------------------------------------------------------------------
+    // Reads and loads physics configuration from `phy_config_filename`.
+    // ------------------------------------------------------------------------
     void ReadPhysicsConfigFile();
 
-    // Function to load in the configuraion of the visualization system
+    // ------------------------------------------------------------------------
+    // Reads and loads visualization configuration from `vis_config_filename`.
+    // ------------------------------------------------------------------------
     void ReadVisionConfigFile();
-
 };
+
 
 
 }   // namespace _system_

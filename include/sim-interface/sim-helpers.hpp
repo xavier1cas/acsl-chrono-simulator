@@ -58,6 +58,15 @@ chrono::ChQuaternion<> GetChronoOrientaitonFromNED(const chrono::ChQuaternion<>&
 
 }   // namespace _transformations_
 
+// All the unit conversions
+namespace _conversions_
+{
+
+// Converts radians to degrees
+double rad2deg(double rad);
+
+}   // namespace _conversions_
+
 }   // namespace _acsl_
 
 #endif // SIM_HELPERS_HPP_
