@@ -105,10 +105,10 @@ int main(int argc, char* argv[]) {
     chrono::ChRealtimeStepTimer realtime_timer;
     double step_size = 5e-3;
     bool display{false};
-    bool display_drone{true};
+    bool display_drone{false};
 
     realtime_timer.start();
-
+    
     while (m_bridge.m_sys.GetVisionSystem().Run()) {
         // Render scene
         if(m_bridge.m_sys.GetVisConfig().enable_vis) {

@@ -230,7 +230,11 @@ void simuav<nop>::InitiateUAV()
     //   - Each is added to the ChSystemNSC instance so it participates in 
     //     physics simulation (forces, collisions, integration).
     // ------------------------------------------------------------------------
-    for (auto& body : bodylist) { m_physics_.Add(body); }
+    for (auto& body : bodylist) {
+        if (body) {
+            m_physics_.Add(body);
+        }
+    }
 
     // ------------------------------------------------------------------------
     // STEP 2 – Add links (joints/constraints) to the physics system
@@ -238,7 +242,11 @@ void simuav<nop>::InitiateUAV()
     //     that connect bodies (e.g., propeller hubs to chassis, fixed joints).
     //   - Adding these ensures that the kinematic/dynamic constraints are enforced.
     // ------------------------------------------------------------------------
-    for (auto& link : linklist) { m_physics_.Add(link); }
+    for (auto& link : linklist) {
+        if (link) {
+            m_physics_.Add(link);
+        }
+    }
 
     // UAV is now fully part of the simulation world
 }

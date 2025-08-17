@@ -39,8 +39,10 @@
 #define SIM_BRIDGE_HPP_
 
 #include "sim-system.hpp"       // Import the physics and visual system
-#include "sim-platforms.hpp"    // Import the header file will all the platforms
+#include "sim-platforms.hpp"    // Import the header file with all the platforms
 #include "sim-uav.hpp"          // Import the header file for the UAV API
+#include "sim-locales.hpp"      // Import the header file with all the environments
+#include "sim-environment.hpp"  // Import the header file for the ENV API
 
 namespace _acsl_
 {
@@ -100,6 +102,11 @@ public:
     // ------------------------------------------------------------------------
     std::unique_ptr<::_acsl_::_uav_::simuavbase> uav;
 
+    // ------------------------------------------------------------------------
+    // Unique pointer to store the ENV object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_environment_::simenvbase> env;
+
 private:
 
     // ------------------------------------------------------------------------
@@ -132,6 +139,11 @@ private:
     // ------------------------------------------------------------------------
     platforms available_uavs;
 
+    // ------------------------------------------------------------------------
+    // Structure from sim-locales that holds all the locales that are 
+    // available.
+    // ------------------------------------------------------------------------
+    locales available_locals;
 };
 
 

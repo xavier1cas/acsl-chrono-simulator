@@ -53,7 +53,7 @@ main:
   # Toggle shadow rendering (GPU-intensive)
   render_shadows: true
   # Visualize collision/contact boundaries
-  render_collision_zones: true
+  render_collision_zones: false
 
 
 # ============================================================================

@@ -325,9 +325,9 @@ void simsystem::SetupPhysicsSystem()
 //   1. Check if visualization is enabled; early-return if not.
 //   2. Set window size and title, then initialize the visualization engine.
 //   3. Add scene elements (logo, skybox, lights).
-//   4. Enable and configure rendering options as chosen in config.
-//   5. Output visualization setup parameters to the log.
-//   6. Attach the Chrono system for rendering simulation objects.
+//   4. Output visualization setup parameters to the log.
+//   5. Attach the Chrono system for rendering simulation objects.
+//   6. Enable and configure rendering options as chosen in config.
 //
 // Notes:
 //   - If visualization is disabled, prints a message and returns immediately;
@@ -355,32 +355,19 @@ void simsystem::SetupVisualizationSystem()
     // ------------------------------------------------------------------------
     // STEP 3 – Scene elements: add logo, skybox, and lights to environment
     // ------------------------------------------------------------------------
-    m_irrlicht.AddLogo();        // Overlay Project Chrono logo (optional branding)
-    m_irrlicht.AddSkyBox();      // Add skybox textures for realistic environment
-    m_irrlicht.AddTypicalLights(); // Populate scene with typical lighting presets
+    m_irrlicht.AddLogo();          // Overlay Project Chrono logo (optional branding)
+    m_irrlicht.AddSkyBox();        // Add skybox textures for realistic environment
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, 80)), 
+                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, 80)), 
+                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, 80)), 
+                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, 80)), 
+                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
 
     // ------------------------------------------------------------------------
-    // STEP 4 – Optional rendering features (shadows, camera, collision zones)
-    // ------------------------------------------------------------------------
-
-    // Enable shadow rendering if requested
-    if (visconfig.render_shadows) {
-        m_irrlicht.EnableShadows();
-    }
-
-    // Add a static camera if requested
-    // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
-    if (visconfig.enable_static_cam) {
-        m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
-    }
-
-    // Enable visualization of collision zones/boundaries if requested
-    if (visconfig.render_collision_zones) {
-        m_irrlicht.EnableCollisionShapeDrawing(true);
-    }
-
-    // ------------------------------------------------------------------------
-    // STEP 5 – Log visualization configuration to the simulator output/log
+    // STEP 4 – Log visualization configuration to the simulator output/log
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM ACTIVE");
     _message_::SIMULATOR_INFO(" - STARTED WINDOW OF SIZE: " +
@@ -394,10 +381,30 @@ void simsystem::SetupVisualizationSystem()
     _message_::SIMULATOR_INFO(" - ENABLE STATIC CAM: ", visconfig.enable_static_cam);
 
     // ------------------------------------------------------------------------
-    // STEP 6 – Attach the Chrono physics system for real-time rendering
+    // STEP 5 – Attach the Chrono physics system for real-time rendering
     //   This connects the visualization window to the simulation world.
     // ------------------------------------------------------------------------
     m_irrlicht.AttachSystem(&this->m_physics);
+
+    // ------------------------------------------------------------------------
+    // STEP 6 – Optional rendering features (shadows, camera, collision zones)
+    // ------------------------------------------------------------------------
+
+    // Enable shadow rendering if requested
+    if (visconfig.render_shadows) {
+        auto bodies = m_physics.GetBodies(); for (auto& body : bodies) { m_irrlicht.EnableShadows(body); }        
+    }
+
+    // Add a static camera if requested
+    // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
+    if (visconfig.enable_static_cam) {
+        m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
+    }
+
+    // Enable visualization of collision zones/boundaries if requested
+    if (visconfig.render_collision_zones) {
+        m_irrlicht.EnableCollisionShapeDrawing(true);
+    }
 }
 
 }   // namespace _system_

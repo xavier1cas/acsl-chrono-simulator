@@ -44,27 +44,36 @@ namespace _bridge_
 {
 
 // =====================================================================================================================
-// ReadSimulatorConfigFile()
+// ConfigureSimulatorFromConfig()
 //
 // Purpose:
-//   Loads the core simulator configuration file (sim-config.yaml) that defines:
-//     - Simulation mode (model_in_loop, software_in_loop, hardware_in_loop)
-//     - Which UAV platform is active/enabled
-//   Instantiates the selected UAV platform object and stores it in the simbridge.
+//   Loads the main simulator configuration from sim-config.yaml, dynamically selects and instantiates:
+//     - The simulation mode (e.g., SIL/HIL setting)
+//     - The UAV platform to fly
+//     - The environment locale (scene) to use
+//   This function configures the simbridge by parsing the YAML config and relying on registry structs
+//   (platforms and locales) to update, validate, and instantiate the appropriate UAV and environment classes.
 //
 // Workflow:
-//   1. Open file from `sim_config_filename`.
-//   2. Validate that the file exists.
-//   3. Parse YAML via fkyaml.
-//   4. Extract "mode" and populate platform values dynamically via asVectorRef().
-//   5. Validate that exactly one platform is active and get its name.
-//   6. Use platforms::createSelectedUAV() to instantiate the selected UAV.
-//   7. Log the loaded config and the instantiated platform.
+//   1. Open the simulator configuration file (`sim_config_filename`).
+//   2. Validate file existence and handle errors if missing.
+//   3. Parse the YAML configuration into memory using fkyaml.
+//   4. Extract the simulation mode (software/hardware-in-the-loop).
+//   5. Populate all available UAV platforms by dynamically iterating the YAML config and registry.
+//      - Validates that one and only one platform is set true.
+//      - Instantiates the selected UAV via factory (createSelectedUAV).
+//   6. Populate all available environment locales from YAML and registry.
+//      - Validates that one and only one locale is set true.
+//      - Instantiates the selected locale via factory (createSelectedLocale).
+//   7. Log success messages about the loaded config, mode, and UAV/locale instantiation.
 //
 // Notes:
-//   - No hardcoding of platform names here — only sim-platforms.hpp + sim-config.yaml
-//     need updates when adding/removing platforms.
-//   - `m_sys` in this function refers to your _acsl_::_system_::simsystem instance.
+//   - There is no hardcoding of platform or environment names in this function: all lookups and instantiation
+//     logic are handled by iterating struct registries and using the YAML keys.
+//   - To add a new UAV/platform or environment/locale, only sim-platforms.hpp, sim-locales.hpp, and sim-config.yaml
+//     need updating — not this function.
+//   - `m_sys` refers to the physics system object; `uav` and `env` are unique_ptrs owned by simbridge.
+//   - Errors (e.g., missing config, invalid selection) are reported via SIMULATOR_ERROR and halt execution.
 // =====================================================================================================================
 void simbridge::ConfigureSimulatorFromConfig()
 {
@@ -73,7 +82,9 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     std::ifstream ifs(sim_config_filename);
 
+    // ------------------------------------------------------------------------
     // STEP 2 – Check that the file exists
+    // ------------------------------------------------------------------------
     if (!ifs) {
         _message_::SIMULATOR_ERROR(
             "COULD NOT OPEN SIMULATOR CONFIG FILE: " + sim_config_filename
@@ -104,18 +115,39 @@ void simbridge::ConfigureSimulatorFromConfig()
     std::string active_platform = available_uavs.validateExclusiveSelection();
 
     // ------------------------------------------------------------------------
-    // STEP 6 – Instantiate the selected UAV platform using the factory in platforms
+    // STEP 5.2 – Instantiate the selected UAV using the factory in platforms
     //   - Pass in the Chrono physics system from m_sys for UAV construction.
     //   - Store the UAV in simbridge::uav (std::unique_ptr<simuavbase>).
     // ------------------------------------------------------------------------
     uav = available_uavs.createSelectedUAV(m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
+    // STEP 6 – Populate available_locales dynamically from YAML
+    //   asVectorRef() iterates all platform bools by name without hardcoding.
+    // ------------------------------------------------------------------------
+    for (auto& [name, ref] : available_locals.asVectorRef()) {
+        ref = config_file["environment"][name].as_bool();
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 6.1 – Validate and get the active locale name
+    // ------------------------------------------------------------------------
+    std::string active_locale = available_locals.validateExclusiveSelection();
+
+    // ------------------------------------------------------------------------
+    // STEP 6.2 – Instantiate the selected locale using the factory in locales
+    //   - Pass in the Chrono physics system from m_sys for ENV construction.
+    //   - Store the ENV in simbridge::locale (std::unique_ptr<simenvbase>).
+    // ------------------------------------------------------------------------
+    env = available_locals.createSelectedLocale(m_sys.GetPhysicsSystem());
+    
+    // ------------------------------------------------------------------------
     // STEP 7 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO(" - HIL / SIL MODE : " + std::to_string(efsl));
     _message_::SIMULATOR_INFO(" - ACTIVE PLATFORM: " + active_platform);
+    _message_::SIMULATOR_INFO(" - ACTIVE LOCALE: " + active_locale);
 }
 
 
