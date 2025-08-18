@@ -36,7 +36,6 @@
 
 #include "sim-main.hpp"
 #include "chrono/physics/ChBodyEasy.h"
-#include "qrbp.h"
 
 // Helper to pretty-print small values as zero
 double pretty(double x, double tol = 1e-10) {

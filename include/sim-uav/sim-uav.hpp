@@ -70,17 +70,19 @@ namespace _uav_
 // Structure: chassisstruct
 //
 // Purpose:
-//   Holds the rigid body parameters and properties for the UAV's main chassis.
+//   Defines the rigid body representation and physical properties of the UAV's 
+//   main chassis.
 //
 // Members:
-//   body          - Shared pointer to Chrono body representing the chassis.
-//   init_pos      - Initial position in Chrono coordinates.
-//   init_rot      - Initial orientation quaternion in Chrono coordinates.
-//   mass          - Total mass of the chassis body.
-//   InertiaXX     - Principal moments of inertia.
-//   InertiaXY     - Products of inertia.
-//   COM           - Center of mass offset frame.
-//   vis_obj_name  - Name of the visualization mesh file (.obj) for the chassis.
+//   body          - Shared pointer to the Chrono body (AuxRef) for the chassis.
+//   init_pos      - Initial position of the chassis in Chrono coordinates.
+//   init_rot      - Initial orientation of the chassis (quaternion).
+//   mass          - Mass of the chassis body.
+//   InertiaXX     - Principal moments of inertia about the chassis axes.
+//   InertiaXY     - Products of inertia of the chassis body.
+//   COM           - Center of mass reference frame (offset from body origin).
+//   vis_obj_name  - Filename of the visualization mesh (.obj).
+//   collision     - List of collision shapes with their associated frames.
 // ----------------------------------------------------------------------------
 struct chassisstruct {
     std::shared_ptr<chrono::ChBodyAuxRef> body;
@@ -91,7 +93,9 @@ struct chassisstruct {
     chrono::ChVector3d InertiaXY;
     chrono::ChFramed COM;
     std::string vis_obj_name;
+    std::vector<std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>> collision;
 };
+
 
 // ----------------------------------------------------------------------------
 // Structure: propstruct
@@ -220,6 +224,10 @@ protected:
     // Set chassis visualization mesh filename.
     virtual void ConfigureUAVChassisOBJName(std::string name) = 0;
 
+    // Set chassis collision shapes
+    virtual void ConfigureUAVChassisCollisionShapes(
+    const std::vector<std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>>& list) = 0;
+
     // Create, initialize, and register chassis body in internal body list.
     virtual void InitiateUAVChassis() = 0;
 
@@ -277,7 +285,13 @@ protected:
     void ConfigureUAVChassisInertiaXY(chrono::ChVector3d IXY) override { chassis.InertiaXY = IXY; }
     void ConfigureUAVChassisCOM(chrono::ChFrame<> COM) override { chassis.COM = COM; }
     void ConfigureUAVChassisOBJName(std::string name) override { chassis.vis_obj_name = name; }
+    
+    void ConfigureUAVChassisCollisionShapes
+    (const std::vector<std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>>& list) override
+    {   chassis.collision = list;   }
+
     void InitiateUAVChassis() override;
+
     int GetPropCount() override { return nop; }
 
 private:

@@ -200,7 +200,24 @@ void simuav<nop>::InitiateUAVChassis()
     );
 
     // ------------------------------------------------------------------------
-    // STEP 4 – Register chassis body into the UAV's internal body list
+    // STEP 4 - Add all the collision shapes to the chassis (IF present)
+    // ------------------------------------------------------------------------
+    if (!this->chassis.collision.empty()) {
+        // Create the collision model
+        chassis.body->AddCollisionModel(chrono_types::make_shared<chrono::ChCollisionModel>());
+
+        // Iterate through the shapes and frames in the collision tuple and add it to the model
+        for (const auto& [shape, frame] : this->chassis.collision) {
+            chassis.body->GetCollisionModel()->AddShape(shape, frame);
+        }
+
+        // Set chassis body as colliable
+        chassis.body->EnableCollision(true);
+    }
+
+
+    // ------------------------------------------------------------------------
+    // STEP 5 – Register chassis body into the UAV's internal body list
     //   This list will later be added to the physics system in InitiateUAV()
     // ------------------------------------------------------------------------
     bodylist.push_back(chassis.body);
