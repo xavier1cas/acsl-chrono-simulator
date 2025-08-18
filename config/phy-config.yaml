@@ -57,6 +57,9 @@ solver:
   # Warm start option — speeds up convergence by using previous solutions
   EnableWarmStart: true
 
+  # Step size - Size of each iteration step
+  StepSize: 5e-3
+
 
 # ============================================================================
 # Collision Settings

@@ -37,7 +37,7 @@ double sphereswept_r = 0.001;
 // chrono::ChCollisionModel::SetDefaultSuggestedMargin(0.003);
 // chrono::ChCollisionSystemBullet::SetContactBreakingThreshold(0.002);
 
-std::string shapes_dir = "../chrono-assets/qrbp/qrbp-chrono-export/chrono-qrbp_shapes/";
+std::string shapes_dir = "../chrono-assets/qrbp/qrbp_shapes/";
 
 // Prepare some data for later use
 std::shared_ptr<chrono::ChVisualShapeModelFile> body_shape;

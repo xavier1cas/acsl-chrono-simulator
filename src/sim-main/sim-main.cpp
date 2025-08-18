@@ -36,11 +36,24 @@
 
 #include "sim-main.hpp"
 #include "chrono/physics/ChBodyEasy.h"
+#include "qrbp.h"
 
 // Helper to pretty-print small values as zero
 double pretty(double x, double tol = 1e-10) {
     return (std::abs(x) < tol) ? 0.0 : x;
 }
+
+#define FLOOR_LENGTH 5
+#define FLOOR_WIDTH 5
+#define FLOOR_HEIGHT 0.1
+#define FLOOR_DENSITY 1000
+#define FLOOR_VISIBILITY true
+#define FLOOR_COLLIDABLE true
+#define FLOOR_PLACEMENT_X 0.0
+#define FLOOR_PLACEMENT_Y 0.0
+#define FLOOR_PLACEMENT_Z -0.5
+#define FLOOR_FRICTION_COEFF 1.0
+#define FLOOR_DAMPING_FACTOR 0.5
 
 int main(int argc, char* argv[]) {
 
@@ -50,7 +63,7 @@ int main(int argc, char* argv[]) {
     // // Create a Chrono physical system
     // ChSystemNSC sys;
     // sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-    // auto solver = std::make_shared<chrono::ChSolverPSOR>();
+    // auto solver = chrono_types::make_shared<chrono::ChSolverPSOR>();
     // solver->SetMaxIterations(1000);
     // solver->EnableWarmStart(true);
     // chrono::ChCollisionModel::SetDefaultSuggestedEnvelope(0.001);
@@ -77,57 +90,87 @@ int main(int argc, char* argv[]) {
     double floor_length = 0.25; // NED x
     double floor_thickness = 0.25; // NED y (vertical in NED)
     double floor_width = 0.5; // NED z
+    auto contact_material = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    contact_material->SetFriction(1.0); 
+    contact_material->SetDampingF(0.5);
 
-    auto floorBody = std::make_shared<chrono::ChBodyEasyBox>(
-        floor_length, floor_thickness, floor_width, // size in NED frame
-        3000, true, true
-    );
+    auto floorBody = chrono_types::make_shared<chrono::ChBodyEasyBox>(
+                        floor_length, floor_thickness, floor_width, // size in NED frame
+                        1000, true, true, contact_material);
 
     // Set the floor's frame to match the NED frame
+	floorBody->SetName("spinny");
     floorBody->SetPos(_acsl_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0,0,-1))); // Place at NED origin, or set as needed
     floorBody->SetRot(_acsl_::_transformations_::GetChronoOrientaitonFromNED()); // Align with NED axes
     floorBody->SetFixed(false); // Not fixed; will be fixed by constraint
     floorBody->GetVisualShape(0)->SetColor(chrono::ChColor(1.0f, 0.0f, 0.0f));
-    m_bridge.m_sys.GetPhysicsSystem().Add(floorBody);
+    m_bridge.GetSimSystem().GetPhysicsSystem().Add(floorBody);
     
     // Apply a torque of (Tx, Ty, Tz) in the body frame
     chrono::ChVector3d torque_local(0, 1, 0);
     
-
     // Apply a force of (Fx, Fy, Fz) in the body frame
     chrono::ChVector3d force_local(0, 0, 0);
-    
-    
+
+	auto contact_material_ball = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+	auto ballBody = chrono_types::make_shared<chrono::ChBodyEasySphere>(
+	0.0254,                 // Radius
+	7850,                   // Density
+	true,                   // Visual asset
+	true,                   // Enable collision
+	contact_material_ball   // Material
+	);
+	ballBody->SetName("ball");
+	ballBody->SetPos(_acsl_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0,0,-0.7)));
+	ballBody->SetFixed(false);
+	ballBody->GetVisualShape(0)->SetTexture(chrono::GetChronoDataFile("textures/redwhite.png"));
+	m_bridge.GetSimSystem().GetPhysicsSystem().Add(ballBody);
+
     // Setup the visualization system
-    m_bridge.m_sys.SetupVisualizationSystem();
+    m_bridge.GetSimSystem().SetupVisualizationSystem();
 
      // 5 - Simulation loop
     chrono::ChRealtimeStepTimer realtime_timer;
-    double step_size = 5e-3;
+    double step_size = m_bridge.GetSimSystem().GetPhyConfig().StepSize;
     bool display{false};
     bool display_drone{false};
 
     realtime_timer.start();
     
-    while (m_bridge.m_sys.GetVisionSystem().Run()) {
-        // Render scene
-        if(m_bridge.m_sys.GetVisConfig().enable_vis) {
-            m_bridge.m_sys.GetVisionSystem().BeginScene();
-            m_bridge.m_sys.GetVisionSystem().Render();
-            m_bridge.m_sys.GetVisionSystem().RenderFrame(m_bridge.uav->GetInertialNEDFrame(), 1);
-            m_bridge.m_sys.GetVisionSystem().RenderFrame(floorBody->GetFrameRefToAbs(), 1);
-            m_bridge.m_sys.GetVisionSystem().EndScene();
-            m_bridge.m_sys.GetVisionSystem().RenderCOGFrames();
-            // m_sys.GetVisionSystem().EnableBodyFrameDrawing(true);
-        }
+    while (m_bridge.GetSimSystem().GetVisionSystem().Run()) {
+				
+        // // Render scene
+        // if(m_bridge.GetSimSystem().GetVisConfig().enable_vis) {
+        //     m_bridge.GetSimSystem().GetVisionSystem().BeginScene();
+        //     m_bridge.GetSimSystem().GetVisionSystem().Render();
+        //     m_bridge.GetSimSystem().GetVisionSystem().RenderFrame(m_bridge.GetUAV()->GetInertialNEDFrame(), 1);
+        //     m_bridge.GetSimSystem().GetVisionSystem().RenderFrame(floorBody->GetFrameRefToAbs(), 1);
+        //     m_bridge.GetSimSystem().GetVisionSystem().EndScene();
+        //     // m_bridge.GetSimSystem().GetVisionSystem().RenderCOGFrames();
+        //     // m_sys.GetVisionSystem().EnableBodyFrameDrawing(true);
 
-         // Perform the integration stpe
-        m_bridge.m_sys.GetPhysicsSystem().DoStepDynamics(step_size);
+        //     // IF moving camera then,
+        //     if (!m_bridge.GetSimSystem().GetVisConfig().enable_static_cam)
+        //     {
+        //         m_bridge.GetSimSystem().GetCamera()->Update(step_size);
+        //         m_bridge.GetSimSystem().GetVisionSystem().GetActiveCamera()->setPosition(irr::core::vector3dfCH(m_bridge.GetSimSystem().GetCamera()->GetCameraPos()));
+        //         m_bridge.GetSimSystem().GetVisionSystem().GetActiveCamera()->setTarget(irr::core::vector3dfCH(m_bridge.GetSimSystem().GetCamera()->GetTargetPos()));
+        //     }
+        // }
+
+        m_bridge.UpdateVisualizationSystem();
+
+        // Do the physics
+		floorBody->EmptyAccumulators();
+        floorBody->AccumulateForce(force_local, chrono::ChVector3d(0,0,0), true);
+        floorBody->AccumulateTorque(torque_local, true);
+
+		m_bridge.GetSimSystem().GetPhysicsSystem().DoStepDynamics(step_size);
 
         // Spin in place to maintain soft real-time
         realtime_timer.Spin(step_size);
 
-        chrono::ChFrame<> ned_abs = m_bridge.uav->GetInertialNEDFrame();
+        chrono::ChFrame<> ned_abs = m_bridge.GetUAV()->GetInertialNEDFrame();
         chrono::ChFrame<> floor_abs = floorBody->GetFrameRefToAbs();
         chrono::ChFrame<> floor_in_ned = ned_abs.GetInverse() * floor_abs;
         chrono::ChVector3d pos_in_ned = floor_in_ned.GetPos();
@@ -140,13 +183,10 @@ int main(int argc, char* argv[]) {
         chrono::ChVector3d v_in_ned =  R_ned.transpose() * v_abs;
 
         // After the loop, get the overall elapsed time (in seconds)
-        double sim_time = m_bridge.m_sys.GetPhysicsSystem().GetChTime();
-        floorBody->EmptyAccumulators();
-        floorBody->AccumulateForce(force_local, chrono::ChVector3d(0,0,0), true);
-        floorBody->AccumulateTorque(torque_local, true);
-
+        double sim_time = m_bridge.GetSimSystem().GetPhysicsSystem().GetChTime();
+        
         // Get the UAV's states
-        auto states = m_bridge.uav->GetUAVStateData();
+        auto states = m_bridge.GetUAV()->GetUAVStateData();
 
         if (display)
         {

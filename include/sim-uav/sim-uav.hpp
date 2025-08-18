@@ -172,6 +172,9 @@ public:
     // Return the inertial NED frame as a Chrono ChFrame object.
     virtual chrono::ChFrame<> GetInertialNEDFrame() = 0;
 
+    // Access the chassisstruct for modifying chassis parameters directly.
+    virtual chassisstruct& GetUAVChassis() = 0;
+
     // Return all Chrono body pointers belonging to the UAV.
     virtual std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() = 0;
 
@@ -195,9 +198,6 @@ protected:
 
     // Create and set up the inertial NED frame in the simulation.
     virtual void SetupInertialNEDFrame() = 0;
-
-    // Access the chassisstruct for modifying chassis parameters directly.
-    virtual chassisstruct& GetUAVChassis() = 0;
 
     // Configure the chassis initial position (converted from NED to Chrono coordinates).
     virtual void ConfigureUAVChassisInitPos(chrono::ChVector3d pos) = 0;
@@ -254,6 +254,7 @@ public:
     std::string GetUAVShapesDir() const override { return shapes_dir; }
 
     chrono::ChFrame<> GetInertialNEDFrame() override;
+    chassisstruct& GetUAVChassis() override { return chassis; }
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
     void InitiateUAV() override;
@@ -265,7 +266,6 @@ protected:
     void SetUAVShapesDir(std::string dir) override { shapes_dir = dir; }
     std::shared_ptr<chrono::ChBodyAuxRef> GetInertialNEDFrameAuxBody() override { return InertialFrameNED; }
     void SetupInertialNEDFrame() override;
-    chassisstruct& GetUAVChassis() override { return chassis; }
 
     void ConfigureUAVChassisInitPos(chrono::ChVector3d pos) override { 
          chassis.init_pos = _transformations_::GetChronoPosFromNED(pos); }

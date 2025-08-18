@@ -47,19 +47,30 @@ namespace _flat_
 void simflat::ConfigureFlatGround()
 {
     // Convert the dimensions into the Chrono frame
-    auto floorDimAbs = _transformations_::GetChronoPosFromNED(chrono::ChVector3d(FLOOR_LENGTH, FLOOR_HEIGHT, FLOOR_WIDTH));
-    auto floorPlacementAbs = _transformations_::GetChronoPosFromNED(chrono::ChVector3d(FLOOR_PLACEMENT_X, FLOOR_PLACEMENT_Y, FLOOR_PLACEMENT_Z));
+    auto floorPlacementAbs = _transformations_::GetChronoPosFromNED(chrono::ChVector3d(::_acsl_::_flat_::FLOOR_PLACEMENT_X, 
+                                                                                       ::_acsl_::_flat_::FLOOR_PLACEMENT_Y, 
+                                                                                       ::_acsl_::_flat_::FLOOR_PLACEMENT_Z));
+    
+    // Create a contact material for the floor
+    auto contact_material = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    contact_material->SetFriction(::_acsl_::_flat_::FLOOR_FRICTION_COEFF);
+    contact_material->SetDampingF(::_acsl_::_flat_::FLOOR_DAMPING_FACTOR);
 
-    // Create the floor body in the NED frame
-    auto floorBody = std::make_shared<chrono::ChBodyEasyBox>(floorDimAbs.x(), floorDimAbs.y(), floorDimAbs.z(), 
-                                                             FLOOR_DENSITY, FLOOR_VISIBILITY, FLOOR_COLLIDABLE);
-
-    // Set the floors initial position
+    // Create the floor body
+    auto floorBody = chrono_types::make_shared<chrono::ChBodyEasyBox>(
+                        ::_acsl_::_flat_::FLOOR_LENGTH, ::_acsl_::_flat_::FLOOR_WIDTH, ::_acsl_::_flat_::FLOOR_HEIGHT, // Dimensions in NED frame
+                        ::_acsl_::_flat_::FLOOR_DENSITY,                   // Floor Density
+                        ::_acsl_::_flat_::FLOOR_VISIBILITY,                // Visual Asset Creation
+                        ::_acsl_::_flat_::FLOOR_COLLIDABLE,                // Collision model
+                        contact_material);                                 // Surface contact material
+    
+    // Set the properties of the floorBody
     floorBody->SetPos(floorPlacementAbs);
-    floorBody->SetRot(_acsl_::_transformations_::GetChronoOrientaitonFromNED());
+    floorBody->SetRot(_transformations_::GetChronoOrientaitonFromNED());
     floorBody->SetFixed(true);
-    floorBody->GetVisualShape(0)->SetOpacity(1.0);
-    floorBody->GetVisualShape(0)->SetTexture(chrono::GetChronoDataFile("textures/concrete.jpg"), floorDimAbs.x(), floorDimAbs.y());
+    floorBody->GetVisualShape(0)->SetTexture(chrono::GetChronoDataFile("textures/concrete.jpg"), // Texture file path
+                                             ::_acsl_::_flat_::FLOOR_LENGTH,                     // Texture scale x
+                                             ::_acsl_::_flat_::FLOOR_WIDTH);                     // Texture scale y
 
     // Construct parameter vectors for all environment bodies
     std::vector<std::shared_ptr<chrono::ChBody>> body_vec;

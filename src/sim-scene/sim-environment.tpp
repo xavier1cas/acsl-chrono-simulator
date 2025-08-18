@@ -297,6 +297,7 @@ void simenv<nxb, nxd>::InitiateEnv() {
                                       + " | CANNOT INITIALIZE OR REGISTER THIS BODY.");
             continue;
         }
+        envbodies.defbody[i]->SetName("env_defbody_" + std::to_string(i));
         defbodylist.push_back(envbodies.defbody[i]);
     }
 
@@ -305,6 +306,7 @@ void simenv<nxb, nxd>::InitiateEnv() {
     // ------------------------------------------------------------------------------
     for (auto& body : auxbodylist) {
         if (body) {
+            _message_::SIMULATOR_INFO("[SIMENV]: ADDING " + body->GetName() + " TO SYSTEM"); 
             m_physics_.Add(body);
         }
     }
@@ -315,6 +317,7 @@ void simenv<nxb, nxd>::InitiateEnv() {
     }
     for (auto& body : defbodylist) {
         if (body) {
+            _message_::SIMULATOR_INFO("[SIMENV]: ADDING " + body->GetName() + " TO SYSTEM");
             m_physics_.Add(body);
         }
     }

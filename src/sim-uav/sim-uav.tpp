@@ -73,6 +73,7 @@ void simuav<nop>::SetupInertialNEDFrame()
     //   - ChBodyAuxRef allows for a reference frame at an arbitrary pose
     // ------------------------------------------------------------------------
     InertialFrameNED = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+    InertialFrameNED->SetName("ned-frame");
 
     // ------------------------------------------------------------------------
     // STEP 2 – Mark this frame as fixed (does not move during simulation)
@@ -120,7 +121,7 @@ chrono::ChFrame<> simuav<nop>::GetInertialNEDFrame()
     // ------------------------------------------------------------------------
     // STEP 1 – Safety check: Ensure the Inertial Frame NED has been set up
     // ------------------------------------------------------------------------
-    if (!InertialFrameNED) { _message_::SIMULATOR_ERROR("INERTIAL FRAME NED IS NOT FOUND"); }
+    if (!InertialFrameNED) { _message_::SIMULATOR_ERROR("[SIMUAV]: INERTIAL FRAME NED IS NOT FOUND"); }
 
     // ------------------------------------------------------------------------
     // STEP 2 – Construct a ChFrame based on NED body's current position/rotation
@@ -165,7 +166,7 @@ void simuav<nop>::InitiateUAVChassis()
     // ------------------------------------------------------------------------
     // STEP 2 – Apply basic identifying and initial state properties
     // ------------------------------------------------------------------------
-    chassis.body->SetName(name_);                 // Set body name
+    chassis.body->SetName("chassis");             // Set body name - Always constant
     chassis.body->SetPos(chassis.init_pos);       // Initial position (Chrono coords)
     chassis.body->SetRot(chassis.init_rot);       // Initial orientation (Chrono quat)
     chassis.body->SetMass(chassis.mass);          // Mass in kg
@@ -232,6 +233,7 @@ void simuav<nop>::InitiateUAV()
     // ------------------------------------------------------------------------
     for (auto& body : bodylist) {
         if (body) {
+            _message_::SIMULATOR_INFO("[SIMUAV]: ADDING " + body->GetName() + " TO SYSTEM"); 
             m_physics_.Add(body);
         }
     }

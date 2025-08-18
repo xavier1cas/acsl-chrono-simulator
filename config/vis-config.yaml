@@ -42,12 +42,18 @@ main:
   # Camera options -------------------------------------------------
   # true: fixed viewpoint; false: dynamic/follow
   enable_static_cam: true
-
+  # (m) Distance the camera is placed in z (NED)
+  mv_cam_chase_ht: 0.75
+  # (m) Distance the camera is placed in x (NED) 
+  mv_cam_chase_dt: 3.0
+  
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene
   render_ned_frame: true
   # Show body-fixed UAV frame axes
   render_body_frame: true
+  # Show all COG frames in the scene
+  render_all_COG_frames: false
 
   # Rendering effects ----------------------------------------------
   # Toggle shadow rendering (GPU-intensive)

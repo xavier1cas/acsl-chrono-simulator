@@ -53,6 +53,8 @@
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/solver/ChSolverPSOR.h"
 #include "chrono/collision/bullet/ChCollisionSystemBullet.h"
+#include "chrono/utils/ChUtils.h"
+#include "chrono/utils/ChUtilsChaseCamera.h"
 
 namespace _acsl_
 {
@@ -71,6 +73,7 @@ struct physicsonfig {
     double DefaultSuggestedEnvelope;
     double DefaultSuggestedMargin;
     double ContactBreakingThreshold;
+    double StepSize;
 };
 
 // Structure for storing the visualization configurations
@@ -84,6 +87,9 @@ struct visionconfig {
     bool render_body_frame;
     bool render_shadows;
     bool render_collision_zones;
+    double mv_cam_chase_ht;
+    double mv_cam_chase_dt;
+    bool render_all_COG_frames;
 };
 
 // =====================================================================================================================
@@ -151,6 +157,11 @@ public:
     // ------------------------------------------------------------------------
     visionconfig GetVisConfig() { return visconfig; }
 
+    // ------------------------------------------------------------------------
+    // Accessor: Returns the camera of the system
+    // ------------------------------------------------------------------------
+    std::shared_ptr<chrono::utils::ChChaseCamera> GetCamera() { return m_camera; }
+
 private:
 
     // ------------------------------------------------------------------------
@@ -169,6 +180,11 @@ private:
     // The Irrlicht-based visualization system for rendering the simulation.
     // ------------------------------------------------------------------------
     chrono::irrlicht::ChVisualSystemIrrlicht m_irrlicht;
+
+    // ------------------------------------------------------------------------
+    // The Irrlicht-based system camera for viewing the simulation.
+    // ------------------------------------------------------------------------
+    std::shared_ptr<chrono::utils::ChChaseCamera> m_camera;
 
     // ------------------------------------------------------------------------
     // Pointer to the physics solver used by the simulation.

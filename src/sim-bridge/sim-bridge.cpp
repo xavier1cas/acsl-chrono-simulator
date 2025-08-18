@@ -59,12 +59,12 @@ namespace _bridge_
 //   2. Validate file existence and handle errors if missing.
 //   3. Parse the YAML configuration into memory using fkyaml.
 //   4. Extract the simulation mode (software/hardware-in-the-loop).
-//   5. Populate all available UAV platforms by dynamically iterating the YAML config and registry.
-//      - Validates that one and only one platform is set true.
-//      - Instantiates the selected UAV via factory (createSelectedUAV).
-//   6. Populate all available environment locales from YAML and registry.
+//   5. Populate all available environment locales from YAML and registry.
 //      - Validates that one and only one locale is set true.
 //      - Instantiates the selected locale via factory (createSelectedLocale).
+//   6. Populate all available UAV platforms by dynamically iterating the YAML config and registry.
+//      - Validates that one and only one platform is set true.
+//      - Instantiates the selected UAV via factory (createSelectedUAV).
 //   7. Log success messages about the loaded config, mode, and UAV/locale instantiation.
 //
 // Notes:
@@ -102,27 +102,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
 
     // ------------------------------------------------------------------------
-    // STEP 5 – Populate available_uavs dynamically from YAML
-    //   asVectorRef() iterates all platform bools by name without hardcoding.
-    // ------------------------------------------------------------------------
-    for (auto& [name, ref] : available_uavs.asVectorRef()) {
-        ref = config_file["platform"][name].as_bool();
-    }
-
-    // ------------------------------------------------------------------------
-    // STEP 5.1 – Validate and get the active platform name
-    // ------------------------------------------------------------------------
-    std::string active_platform = available_uavs.validateExclusiveSelection();
-
-    // ------------------------------------------------------------------------
-    // STEP 5.2 – Instantiate the selected UAV using the factory in platforms
-    //   - Pass in the Chrono physics system from m_sys for UAV construction.
-    //   - Store the UAV in simbridge::uav (std::unique_ptr<simuavbase>).
-    // ------------------------------------------------------------------------
-    uav = available_uavs.createSelectedUAV(m_sys.GetPhysicsSystem());
-
-    // ------------------------------------------------------------------------
-    // STEP 6 – Populate available_locales dynamically from YAML
+    // STEP 5 – Populate available_locales dynamically from YAML
     //   asVectorRef() iterates all platform bools by name without hardcoding.
     // ------------------------------------------------------------------------
     for (auto& [name, ref] : available_locals.asVectorRef()) {
@@ -130,17 +110,37 @@ void simbridge::ConfigureSimulatorFromConfig()
     }
 
     // ------------------------------------------------------------------------
-    // STEP 6.1 – Validate and get the active locale name
+    // STEP 5.1 – Validate and get the active locale name
     // ------------------------------------------------------------------------
     std::string active_locale = available_locals.validateExclusiveSelection();
 
     // ------------------------------------------------------------------------
-    // STEP 6.2 – Instantiate the selected locale using the factory in locales
+    // STEP 5.2 – Instantiate the selected locale using the factory in locales
     //   - Pass in the Chrono physics system from m_sys for ENV construction.
     //   - Store the ENV in simbridge::locale (std::unique_ptr<simenvbase>).
     // ------------------------------------------------------------------------
-    env = available_locals.createSelectedLocale(m_sys.GetPhysicsSystem());
-    
+    env = available_locals.createSelectedLocale(this->m_sys.GetPhysicsSystem());
+
+    // ------------------------------------------------------------------------
+    // STEP 6 – Populate available_uavs dynamically from YAML
+    //   asVectorRef() iterates all platform bools by name without hardcoding.
+    // ------------------------------------------------------------------------
+    for (auto& [name, ref] : available_uavs.asVectorRef()) {
+        ref = config_file["platform"][name].as_bool();
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 6.1 – Validate and get the active platform name
+    // ------------------------------------------------------------------------
+    std::string active_platform = available_uavs.validateExclusiveSelection();
+
+    // ------------------------------------------------------------------------
+    // STEP 6.2 – Instantiate the selected UAV using the factory in platforms
+    //   - Pass in the Chrono physics system from m_sys for UAV construction.
+    //   - Store the UAV in simbridge::uav (std::unique_ptr<simuavbase>).
+    // ------------------------------------------------------------------------
+    uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
+
     // ------------------------------------------------------------------------
     // STEP 7 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
@@ -151,7 +151,54 @@ void simbridge::ConfigureSimulatorFromConfig()
 }
 
 
+void simbridge::UpdateVisualizationSystem()
+{
+    // If the visualization system is active
+    if (this->m_sys.GetVisConfig().enable_vis)
+    {
+        // Being the scene
+        this->m_sys.GetVisionSystem().BeginScene();
 
+        // Render the scene
+        this->m_sys.GetVisionSystem().Render();
+
+        // Render the NED inertial frame of reference if requested
+        if (this->m_sys.GetVisConfig().render_ned_frame) {
+            this->m_sys.GetVisionSystem().RenderFrame(uav->GetInertialNEDFrame(), 1);
+        }
+
+        // Render the NED body frame of reference if requested
+        if (this->m_sys.GetVisConfig().render_body_frame) {
+            this->m_sys.GetVisionSystem().RenderFrame(uav->GetUAVChassis().body->GetFrameRefToAbs(), 1);
+        }
+
+        // Render all the COG frames of reference if requested
+        if (this->m_sys.GetVisConfig().render_all_COG_frames) {
+            this->m_sys.GetVisionSystem().RenderCOGFrames(1);
+        }
+
+        // Enable shadow rendering if requested
+        if (this->m_sys.GetVisConfig().render_shadows) {
+            // Get all the bodies from the simulator
+            auto bodies = this->m_sys.GetPhysicsSystem().GetBodies(); 
+            // Enable shadows for all the bodies in the physics system
+            for (auto& body : bodies) { this->m_sys.GetVisionSystem().EnableShadows(body); }
+        }
+
+        // IF moving camera is enabled them,
+        if (!this->m_sys.GetVisConfig().enable_static_cam)
+        {
+            this->m_sys.GetCamera()->Update(this->m_sys.GetPhyConfig().StepSize);
+            this->m_sys.GetVisionSystem().GetActiveCamera()->setPosition(irr::core::vector3dfCH(this->m_sys.GetCamera()->GetCameraPos()));
+            this->m_sys.GetVisionSystem().GetActiveCamera()->setTarget(irr::core::vector3dfCH(this->m_sys.GetCamera()->GetTargetPos()));
+        }
+
+        // End the scene
+        this->m_sys.GetVisionSystem().EndScene();
+
+
+    }
+}
 
 
 }   // namespace _bridge_

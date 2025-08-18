@@ -55,6 +55,11 @@
 #include "chrono/geometry/ChTriangleMeshConnected.h"
 #include "chrono/assets/ChVisualShapeTriangleMesh.h"
 #include "chrono/physics/ChBodyEasy.h"
+#include "chrono/physics/ChSystem.h"
+#include "chrono/physics/ChBody.h"
+#include "chrono/physics/ChContactMaterialNSC.h"
+#include "chrono/physics/ChContactMaterialSMC.h"
+#include "chrono/assets/ChVisualShapeBox.h"
 
 namespace _acsl_
 {
@@ -415,8 +420,8 @@ protected:
     void ConfigureEnvDefBodyList(const std::vector<std::shared_ptr<chrono::ChBody>>& bodies) override;
     int GetEnvBodyCount() override { return envbodies.countTotalBodies(); }
 
-private:
     chrono::ChSystemNSC& m_physics_;
+private:
     std::string name_;
     std::string shapes_dir;
     environmentstruct<nxb, nxd> envbodies;

@@ -91,21 +91,29 @@ public:
         // Load config, select platform, and attach it to the physics system
         ConfigureSimulatorFromConfig();
     }
+    
+    // ------------------------------------------------------------------------
+    // Accessor: Returns a reference to the underlying simulator system class
+    // so that external changes can me made
+    // ------------------------------------------------------------------------
+    ::_acsl_::_system_::simsystem& GetSimSystem() { return m_sys; }
 
     // ------------------------------------------------------------------------
-    // Chrono Physics and Visual system object.
+    // Accessor: Returns a reference to the UAV unique pointer so that
+    // the external code can access or reset the UAV object.
     // ------------------------------------------------------------------------
-    ::_acsl_::_system_::simsystem m_sys;
+    std::unique_ptr<:: _acsl_:: _uav_::simuavbase>& GetUAV() { return uav; }
 
     // ------------------------------------------------------------------------
-    // Unique pointer to store the UAV object.
+    // Accessor: Returns a reference to the ENV unique pointer so that
+    // the external code can access or reset the ENV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_uav_::simuavbase> uav;
+    std::unique_ptr<:: _acsl_:: _environment_::simenvbase>& GetEnv() { return env; }
 
     // ------------------------------------------------------------------------
-    // Unique pointer to store the ENV object.
+    // Function: Updates the visual system for the acsl physics simulator
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_environment_::simenvbase> env;
+    void UpdateVisualizationSystem();
 
 private:
 
@@ -132,6 +140,10 @@ private:
     // ------------------------------------------------------------------------
     bool efsl;          // <- Stands for enable flightstack loop.
 
+    // ------------------------------------------------------------------------
+    // Chrono Physics and Visual system object.
+    // ------------------------------------------------------------------------
+    ::_acsl_::_system_::simsystem m_sys;
 
     // ------------------------------------------------------------------------
     // Structure from sim-platforms that holds all the platforms that are 
@@ -144,6 +156,16 @@ private:
     // available.
     // ------------------------------------------------------------------------
     locales available_locals;
+
+    // ------------------------------------------------------------------------
+    // Unique pointer to store the UAV object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_uav_::simuavbase> uav;
+
+    // ------------------------------------------------------------------------
+    // Unique pointer to store the ENV object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_environment_::simenvbase> env;
 };
 
 

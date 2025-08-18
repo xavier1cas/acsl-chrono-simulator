@@ -68,21 +68,24 @@ namespace _flat_
 //   - FLOOR_PLACEMENT_X   : X-coordinate of floor center in world frame (m).
 //   - FLOOR_PLACEMENT_Y   : Y-coordinate of floor center in world frame (m).
 //   - FLOOR_PLACEMENT_Z   : Z-coordinate of floor center in world frame (m).
+//   - FLOOR_FRICTION_COEFF: Friction coeff [-]
+//   - FLOOR_DAMPING_FACTOR: Damping factor [-]
 //
 // Notes:
 //   - These values are only altered by changing the source code; they are
 //     NOT loaded from YAML or any external configuration.
 // ============================================================================
-constexpr double FLOOR_LENGTH      = 20;
-constexpr double FLOOR_WIDTH       = 20;
-constexpr double FLOOR_HEIGHT      = 0.15;
-constexpr double FLOOR_DENSITY     = 3000;
-constexpr bool   FLOOR_VISIBILITY  = true;
-constexpr bool   FLOOR_COLLIDABLE  = true;
-constexpr double FLOOR_PLACEMENT_X = 0.0;
-constexpr double FLOOR_PLACEMENT_Y = 0.0;
-constexpr double FLOOR_PLACEMENT_Z = 1.0;
-
+constexpr double FLOOR_LENGTH         = 5;
+constexpr double FLOOR_WIDTH          = 5;
+constexpr double FLOOR_HEIGHT         = 0.1;
+constexpr double FLOOR_DENSITY        = 1000;
+constexpr bool   FLOOR_VISIBILITY     = true;
+constexpr bool   FLOOR_COLLIDABLE     = true;
+constexpr double FLOOR_PLACEMENT_X    = 0.0;
+constexpr double FLOOR_PLACEMENT_Y    = 0.0;
+constexpr double FLOOR_PLACEMENT_Z    = 0.4;
+constexpr float  FLOOR_FRICTION_COEFF = 1.0;
+constexpr float  FLOOR_DAMPING_FACTOR = 0.5;
 
 // ============================================================================
 // simflat class

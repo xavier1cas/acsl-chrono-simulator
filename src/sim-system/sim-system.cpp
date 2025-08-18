@@ -95,9 +95,10 @@ void simsystem::ReadPhysicsConfigFile()
     // ------------------------------------------------------------------------
     // STEP 5 – Extract solver-related parameters
     // ------------------------------------------------------------------------
-    phyconfig.PSOR           = config_file["solver"]["PSOR"].as_bool();          // Solver type flag
-    phyconfig.MaxIterations  = config_file["solver"]["MaxIterations"].as_int();  // Max solver iterations
-    phyconfig.EnableWarmStart = config_file["solver"]["EnableWarmStart"].as_bool(); // Warm start toggle
+    phyconfig.PSOR           = config_file["solver"]["PSOR"].as_bool();                     // Solver type flag
+    phyconfig.MaxIterations  = config_file["solver"]["MaxIterations"].as_int();             // Max solver iterations
+    phyconfig.EnableWarmStart = config_file["solver"]["EnableWarmStart"].as_bool();         // Warm start toggle
+    phyconfig.StepSize = static_cast<double>(config_file["solver"]["StepSize"].as_float()); // Step size 
 
     // ------------------------------------------------------------------------
     // STEP 6 – Extract collision system parameters
@@ -164,12 +165,15 @@ void simsystem::ReadVisionConfigFile()
     // STEP 4 – Extract visualization "main" options
     //   These control the overall visualization behavior, camera, and overlays.
     // ------------------------------------------------------------------------
-    visconfig.enable_vis             = config_file["main"]["enable_vis"].as_bool();              // Enable 3D window
-    visconfig.enable_static_cam      = config_file["main"]["enable_static_cam"].as_bool();       // Fixed camera view
-    visconfig.render_ned_frame       = config_file["main"]["render_ned_frame"].as_bool();        // Draw NED axes
-    visconfig.render_body_frame      = config_file["main"]["render_body_frame"].as_bool();       // Draw UAV body axes
-    visconfig.render_shadows         = config_file["main"]["render_shadows"].as_bool();          // Enable shadow rendering
-    visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();  // Show collision zone meshes
+    visconfig.enable_vis             = config_file["main"]["enable_vis"].as_bool();                      // Enable 3D window
+    visconfig.enable_static_cam      = config_file["main"]["enable_static_cam"].as_bool();               // Fixed camera view
+    visconfig.mv_cam_chase_ht = static_cast<double>(config_file["main"]["mv_cam_chase_ht"].as_float());  // Moving camera chase height
+    visconfig.mv_cam_chase_dt = static_cast<double>(config_file["main"]["mv_cam_chase_dt"].as_float());  // Moving camera chase distance
+    visconfig.render_ned_frame       = config_file["main"]["render_ned_frame"].as_bool();                // Draw NED axes
+    visconfig.render_body_frame      = config_file["main"]["render_body_frame"].as_bool();               // Draw UAV body axes
+    visconfig.render_shadows         = config_file["main"]["render_shadows"].as_bool();                  // Enable shadow rendering
+    visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();          // Show collision zone meshes
+    visconfig.render_all_COG_frames  = config_file["main"]["render_all_COG_frames"].as_bool();           // Draw all COG frames
 
     // ------------------------------------------------------------------------
     // STEP 5 – Extract "window" options
@@ -213,10 +217,10 @@ void simsystem::SetupPhysicsSystem()
     //   Exactly ONE collision system must be enabled.
     // ------------------------------------------------------------------------
     if (phyconfig.BULLET && phyconfig.MULTICORE) {
-        _message_::SIMULATOR_ERROR("PICK ONE COLLISION SYSTEM AT A TIME. ENDING SIMULATION");
+        _message_::SIMULATOR_ERROR("[SIMSYS]: PICK ONE COLLISION SYSTEM AT A TIME. ENDING SIMULATION");
     }
     else if (!phyconfig.BULLET && !phyconfig.MULTICORE) {
-        _message_::SIMULATOR_ERROR("BOTH COLLISION SYSTEMS ARE NOT ACTIVE. ENDING SIMULATION");
+        _message_::SIMULATOR_ERROR("[SIMSYS]: BOTH COLLISION SYSTEMS ARE NOT ACTIVE. ENDING SIMULATION");
     }
 
     // ------------------------------------------------------------------------
@@ -262,10 +266,10 @@ void simsystem::SetupPhysicsSystem()
         psor_solver->EnableWarmStart(phyconfig.EnableWarmStart);
         
         // Store for later reference and pass to the physics system (Step 6)
-        m_solver = psor_solver;            
+        m_solver = psor_solver;         
     }
     else {
-        _message_::SIMULATOR_ERROR("NO SOLVER PICKED. ENDING SIMULATION");
+        _message_::SIMULATOR_ERROR("[SIMSYS]: NO SOLVER PICKED. ENDING SIMULATION");
     }
 
     // ------------------------------------------------------------------------
@@ -288,22 +292,20 @@ void simsystem::SetupPhysicsSystem()
     _message_::SIMULATOR_INFO(" - STARTING NSC SYSTEM");
     
     // Physics core settings
-    _message_::SIMULATOR_INFO(" - SYSTEM [GRAVITY]: " + std::to_string(phyconfig.gravity));
+    _message_::SIMULATOR_INFO(" - SYSTEM [GRAVITY]: ", phyconfig.gravity);
     
     // Solver settings
-    _message_::SIMULATOR_INFO(" - SOLVER [PSOR]: " + std::to_string(phyconfig.PSOR));
-    _message_::SIMULATOR_INFO(" - SOLVER [MaxIterations]: " + std::to_string(phyconfig.MaxIterations));
-    _message_::SIMULATOR_INFO(" - SOLVER [EnableWarmStart]: " + std::to_string(phyconfig.EnableWarmStart));
+    _message_::SIMULATOR_INFO(" - SOLVER [PSOR]: ", phyconfig.PSOR);
+    _message_::SIMULATOR_INFO(" - SOLVER [MaxIterations]: ", phyconfig.MaxIterations);
+    _message_::SIMULATOR_INFO(" - SOLVER [EnableWarmStart]: ", phyconfig.EnableWarmStart);
+    _message_::SIMULATOR_INFO(" - SOLVER [StepSize]: ", phyconfig.StepSize); 
 
     // Collision settings
-    _message_::SIMULATOR_INFO(" - COLLISION [BULLET]: " + std::to_string(phyconfig.BULLET));
-    _message_::SIMULATOR_INFO(" - COLLISION [MULTICORE]: " + std::to_string(phyconfig.MULTICORE));
-    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedEnvelope]: " 
-                               + std::to_string(phyconfig.DefaultSuggestedEnvelope));
-    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedMargin]: " 
-                               + std::to_string(phyconfig.DefaultSuggestedMargin));
-    _message_::SIMULATOR_INFO(" - COLLISION [ContactBreakingThreshold]: " 
-                               + std::to_string(phyconfig.ContactBreakingThreshold));
+    _message_::SIMULATOR_INFO(" - COLLISION [BULLET]: ", phyconfig.BULLET);
+    _message_::SIMULATOR_INFO(" - COLLISION [MULTICORE]: ", phyconfig.MULTICORE);
+    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedEnvelope]: ", phyconfig.DefaultSuggestedEnvelope);
+    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedMargin]: ", phyconfig.DefaultSuggestedMargin);
+    _message_::SIMULATOR_INFO(" - COLLISION [ContactBreakingThreshold]: ", phyconfig.ContactBreakingThreshold);
 }
 
 // =====================================================================================================================
@@ -316,7 +318,7 @@ void simsystem::SetupPhysicsSystem()
 //   Features controlled:
 //     - Window size and title
 //     - Initialization and standard scene setup (logo, sky, lights)
-//     - Rendering toggles (shadows, collision zone highlighting)
+//     - Rendering toggles (collision zone highlighting)
 //     - Camera selection (static or dynamic)
 //     - Logging of visualization options to the simulator output
 //     - Attaches Chrono physics system for real-time rendering
@@ -332,7 +334,7 @@ void simsystem::SetupPhysicsSystem()
 // Notes:
 //   - If visualization is disabled, prints a message and returns immediately;
 //     nothing further is set up or drawn.
-//   - Shadow rendering and collision zone overlay can have significant GPU impact.
+//   - Collision zone overlay can have significant GPU impact.
 // =====================================================================================================================
 void simsystem::SetupVisualizationSystem()
 {
@@ -357,14 +359,14 @@ void simsystem::SetupVisualizationSystem()
     // ------------------------------------------------------------------------
     m_irrlicht.AddLogo();          // Overlay Project Chrono logo (optional branding)
     m_irrlicht.AddSkyBox();        // Add skybox textures for realistic environment
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, 80)), 
-                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, 80)), 
-                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, 80)), 
-                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, 80)), 
-                                                         280, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, -100)), 
+                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, -100)), 
+                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, -100)), 
+                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, -100)), 
+                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
 
     // ------------------------------------------------------------------------
     // STEP 4 – Log visualization configuration to the simulator output/log
@@ -376,9 +378,12 @@ void simsystem::SetupVisualizationSystem()
     _message_::SIMULATOR_INFO(" - STARTED WINDOW WITH TITLE: " + visconfig.title);
     _message_::SIMULATOR_INFO(" - RENDER NED FRAME: ", visconfig.render_ned_frame);
     _message_::SIMULATOR_INFO(" - RENDER BODY FRAME: ", visconfig.render_body_frame);
+    _message_::SIMULATOR_INFO(" - RENDER ALL COG FRAMES: ", visconfig.render_all_COG_frames);
     _message_::SIMULATOR_INFO(" - RENDER COLLISION ZONES: ", visconfig.render_collision_zones);
     _message_::SIMULATOR_INFO(" - RENDER SHADOWS: ", visconfig.render_shadows);
     _message_::SIMULATOR_INFO(" - ENABLE STATIC CAM: ", visconfig.enable_static_cam);
+    _message_::SIMULATOR_INFO(" - CAMERA CHASE HEIGHT: ", visconfig.mv_cam_chase_ht);
+    _message_::SIMULATOR_INFO(" - CAMERA CHASE DISTANCE: ", visconfig.mv_cam_chase_dt);
 
     // ------------------------------------------------------------------------
     // STEP 5 – Attach the Chrono physics system for real-time rendering
@@ -387,18 +392,33 @@ void simsystem::SetupVisualizationSystem()
     m_irrlicht.AttachSystem(&this->m_physics);
 
     // ------------------------------------------------------------------------
-    // STEP 6 – Optional rendering features (shadows, camera, collision zones)
+    // STEP 6 – Optional rendering features (camera, collision zones)
     // ------------------------------------------------------------------------
-
-    // Enable shadow rendering if requested
-    if (visconfig.render_shadows) {
-        auto bodies = m_physics.GetBodies(); for (auto& body : bodies) { m_irrlicht.EnableShadows(body); }        
-    }
 
     // Add a static camera if requested
     // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
     if (visconfig.enable_static_cam) {
         m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
+    }
+    // Add a moving camera if requested
+    // Camera is placed placed at a 
+    else
+    {
+        // Create the following camera attached to the chassis of the UAV. It is always names chassis
+        m_camera = chrono_types::make_shared<chrono::utils::ChChaseCamera>(this->m_physics.SearchBody("chassis"));
+        // Set the camera to always follow the chassis
+        m_camera->SetState(chrono::utils::ChChaseCamera::State::Follow);
+        // Intializet the camera
+        m_camera->Initialize(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0)),    // Attached to the COM of the drone
+                             this->m_physics.SearchBody("chassis")->GetCoordsys(),                   // Attached to the COM coordsys of the drone
+                             this->GetVisConfig().mv_cam_chase_dt,                                   // Chase distance
+                             this->GetVisConfig().mv_cam_chase_ht,                                   // Chase height
+                             _transformations_::GetChronoPosFromNED(chrono::ChVector3d(0 , 0, -1)),  // The up direction for the camera
+                             _transformations_::GetChronoPosFromNED(chrono::ChVector3d(1 , 0,  0))   // The fws direction for the camera
+        );
+
+        // Add the camera to the system
+        m_irrlicht.AddCamera(m_camera->GetCameraPos(), m_camera->GetTargetPos());
     }
 
     // Enable visualization of collision zones/boundaries if requested
