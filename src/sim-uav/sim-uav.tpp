@@ -150,7 +150,7 @@ chrono::ChFrame<> simuav<nop>::GetInertialNEDFrame()
 // Notes:
 //   - This function only sets up the chassis object in memory and stores it in
 //     `bodylist`. It does NOT add it to the physics system — that is done later 
-//     in InitiateUAV().
+//     in AddUAVToSystem().
 //   - All chassis configuration parameters (mass, inertia, COM, initial pose,
 //     visual file name, etc.) must be set before calling this function.
 // =========================================================================================================
@@ -218,7 +218,7 @@ void simuav<nop>::InitiateUAVChassis()
 
     // ------------------------------------------------------------------------
     // STEP 5 – Register chassis body into the UAV's internal body list
-    //   This list will later be added to the physics system in InitiateUAV()
+    //   This list will later be added to the physics system in AddUAVToSystem()
     // ------------------------------------------------------------------------
     bodylist.push_back(chassis.body);
 }
@@ -507,7 +507,7 @@ void simuav<nop>::InitiateUAVProp()
 
         // ------------------------------------------------------------------------
         // STEP 5 – Register propeller body into the UAV's internal body list
-        //   This list will later be added to the physics system in InitiateUAV()
+        //   This list will later be added to the physics system in AddUAVToSystem()
         // ------------------------------------------------------------------------
         bodylist.push_back(props[idx].body);
     }
@@ -515,7 +515,7 @@ void simuav<nop>::InitiateUAVProp()
 
 
 // =========================================================================================================
-// InitiateUAV()
+// AddUAVToSystem()
 // 
 // Purpose:
 //   Finalize the UAV's addition to the Chrono simulation by registering all 
@@ -530,7 +530,7 @@ void simuav<nop>::InitiateUAVProp()
 //     (integration, collision detection, constraints).
 // =========================================================================================================
 template <int nop>
-void simuav<nop>::InitiateUAV()
+void simuav<nop>::AddUAVToSystem()
 {
     // ------------------------------------------------------------------------
     // STEP 1 – Add rigid bodies to the physics system

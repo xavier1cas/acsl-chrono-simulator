@@ -210,7 +210,7 @@ public:
     virtual std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() = 0;
 
     // Finalize and add all UAV components into the Chrono physics system.
-    virtual void InitiateUAV() = 0;
+    virtual void AddUAVToSystem() = 0;
 
     // Retrieve the UAV's full state data in the NED frame.
     virtual m_states GetUAVStateData() = 0;
@@ -227,10 +227,10 @@ protected:
     // Create and set up the inertial NED frame in the simulation.
     virtual void SetupInertialNEDFrame() = 0;
 
-    // Configure the chassis initial position (converted from NED to Chrono coordinates).
+    // Configure the chassis initial position.
     virtual void ConfigureUAVChassisInitPos(chrono::ChVector3d pos) = 0;
 
-    // Configure the chassis initial orientation quaternion (from NED to Chrono coords).
+    // Configure the chassis initial orientation quaternion.
     virtual void ConfigureUAVChassisInitRot(chrono::ChQuaternion<> rot) = 0;
 
     // Set the chassis mass (kg).
@@ -261,10 +261,10 @@ protected:
     // Check the propeller request (starts at 1 and not 0)
     virtual void CheckUAVPropRequest(size_t idx) = 0;
 
-    // Configure the propeller initial position (converted from NED to Chrono Coordinates).
+    // Configure the propeller initial position.
     virtual void ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos) = 0;
 
-    // Configure the prop initial orientation quaternion (from NED to Chrono coords).
+    // Configure the prop initial orientation quaternion.
     virtual void ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot) = 0;
 
     // Set the propeller mass (kg).
@@ -301,7 +301,7 @@ protected:
 //   number of propellers (nop) and implements all functions from simuavbase.
 //
 // Notes:
-//   - Implements both high-level control API (e.g., InitiateUAV) and
+//   - Implements both high-level control API (e.g., AddUAVToSystem) and
 //     lower-level setup/configuration API from the base.
 //   - Designed to be extended by platform-specific UAV classes that call
 //     protected setup methods in their constructors.
@@ -323,7 +323,7 @@ public:
     propstruct& GetUAVProp(size_t idx) override;
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
-    void InitiateUAV() override;
+    void AddUAVToSystem() override;
     m_states GetUAVStateData() override;
 
 protected:
@@ -355,7 +355,7 @@ protected:
     
 	void ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos) override;
     void ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot) override;
-	
+
     void ConfigureUAVPropMass(size_t idx, double mass) override;
     void ConfigureUAVPropInertiaXX(size_t idx, chrono::ChVector3d IXX) override;
     void ConfigureUAVPropInertiaXY(size_t idx, chrono::ChVector3d IXY) override;
@@ -373,7 +373,7 @@ private:
     chrono::ChSystemNSC& m_physics_;                             // Reference to Chrono physics system
     std::string name_;                                           // UAV name
     std::string shapes_dir;                                      // Path to visual shape files (.obj)
-    std::shared_ptr<chrono::ChBodyAuxRef> InertialFrameNED;      // Inertial NED frame body
+    std::shared_ptr<chrono::ChBodyAuxRef> InertialFrameNED;      // Inertial NED frame chrono-body
     chassisstruct chassis;                                       // Chassis data
     std::array<propstruct, nop> props;                           // Propeller data
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> bodylist; // All body pointers for registration

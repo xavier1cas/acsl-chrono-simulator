@@ -49,10 +49,10 @@ void simqrbp::ConfigureQRBPChassis()
     // Create the struct for processing the uav chassis properties
     ::_acsl_::_uav_::chassisstruct chassis_properties;
 
-    // Configure the initial position of the chassis (NED FRAME) -----------------------------------------------------
+    // Configure the initial position of the chassis ------------ -----------------------------------------------------
     chassis_properties.init_pos = chrono::ChVector3d(0.0984471609373536,0.187071795527612,0.17256855449029);
     
-    // Configure the initial rotation of the chasssis (0 ROTATION IN NED FRAME) ---------------------------------------
+    // Configure the initial rotation of the chasssis -----------------------------------------------------------------
     chassis_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
     
     // Configure the mass of the chassis ------------------------------------------------------------------------------
@@ -126,6 +126,113 @@ void simqrbp::ConfigureQRBPChassis()
     InitiateUAVChassis();
 }
 
+// Compulsary derived class function that initiates the propellers with all the necessary parameters
+void simqrbp::ConfigureQRBPProps()
+{
+    // Create the struct for processing the uav propeller properties
+    ::_acsl_::_uav_::propstruct prop_properties;
+
+    // ------------------------------------------------ 1 ------------------------------------------------ //
+    // Configure the intial position of the propeller
+
+    // Configure the initial rotation of the propeller
+
+    // Configure the mass of the propeller
+
+    // Configure the propeller Interia vectors
+
+    // Configure the propeller COM along with it's auxilliary frame at the COM
+    
+    // Configure the name of the visualization obj file
+
+    // There are no collision geometries - Therefore we ignore that step
+
+    // Call all the configuration helper functions
+    
+    // ------------------------------------------------ 2 ------------------------------------------------ //
+    // Configure the intial position of the propeller
+    prop_properties.init_pos = chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.154498963796845);
+
+    // Configure the initial rotation of the propeller
+    prop_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
+
+    // Configure the mass of the propeller
+    prop_properties.mass = 0.00395402309271749;
+
+    // Configure the propeller Interia vectors
+    prop_properties.InertiaXX = chrono::ChVector3d(2.83955219476957e-06,2.84026926028763e-06,5.66580058802151e-06);
+    prop_properties.InertiaXY = chrono::ChVector3d(7.53921615234973e-10,-1.55407912210431e-11,-5.50513541652702e-11);
+
+    // Configure the propeller COM along with it's auxilliary frame at the COM
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-5.52286503295572e-10,3.32677464985852e-06,-0.000645546072066471),
+                                           chrono::ChQuaternion<>(1,0,0,0));
+    
+    // Configure the name of the visualization obj file
+    prop_properties.vis_obj_name = "body_2_1.obj";
+
+    // There are no collision geometries - Therefore we ignore that step
+
+    // Call all the configuration helper functions
+    ConfigureUAVPropInitPos(2, prop_properties.init_pos);
+    ConfigureUAVPropInitRot(2, prop_properties.init_rot);
+    ConfigureUAVPropMass(2, prop_properties.mass);
+    ConfigureUAVPropInertiaXX(2, prop_properties.InertiaXX);
+    ConfigureUAVPropInertiaXY(2, prop_properties.InertiaXY);
+    ConfigureUAVPropCOM(2, prop_properties.COM);
+    ConfigureUAVPropOBJName(2, prop_properties.vis_obj_name);
+
+    // ------------------------------------------------ 3 ------------------------------------------------ //
+    // Configure the intial position of the propeller
+    
+    // Configure the initial rotation of the propeller
+
+    // Configure the mass of the propeller
+
+    // Configure the propeller Interia vectors
+
+    // Configure the propeller COM along with it's auxilliary frame at the COM
+    
+    // Configure the name of the visualization obj file
+
+    // There are no collision geometries - Therefore we ignore that step
+
+    // Call all the configuration helper functions
+
+    // ------------------------------------------------ 4 ------------------------------------------------ //
+    // Configure the intial position of the propeller
+    prop_properties.init_pos = chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.154498963796847);
+
+    // Configure the initial rotation of the propeller
+    prop_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
+
+    // Configure the mass of the propeller
+    prop_properties.mass = 0.00395402309271749;
+
+    // Configure the propeller Interia vectors
+    prop_properties.InertiaXX = chrono::ChVector3d(2.83955219476957e-06,2.84026926028763e-06,5.66580058802151e-06);
+    prop_properties.InertiaXY = chrono::ChVector3d(7.53921615234973e-10,-1.55407912210431e-11,-5.50513541652702e-11);
+
+    // Configure the propeller COM along with it's auxilliary frame at the COM
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-5.52286503295572e-10,3.32677464985852e-06,-0.000645546072066471),
+                                           chrono::ChQuaternion<>(1,0,0,0));
+    
+    // Configure the name of the visualization obj file
+    prop_properties.vis_obj_name = "body_1_1.obj";
+
+    // There are no collision geometries - Therefore we ignore that step
+
+    // Call all the configuration helper functions
+    ConfigureUAVPropInitPos(4, prop_properties.init_pos);
+    ConfigureUAVPropInitRot(4, prop_properties.init_rot);
+    ConfigureUAVPropMass(4, prop_properties.mass);
+    ConfigureUAVPropInertiaXX(4, prop_properties.InertiaXX);
+    ConfigureUAVPropInertiaXY(4, prop_properties.InertiaXY);
+    ConfigureUAVPropCOM(4, prop_properties.COM);
+    ConfigureUAVPropOBJName(4, prop_properties.vis_obj_name);
+
+    // ------------------------------------------------------------------------------ INITIATE THE PROPELLERS
+    InitiateUAVProp();
+}
 
 }   // namespace _qrbp_
 

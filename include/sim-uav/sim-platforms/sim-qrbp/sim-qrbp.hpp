@@ -46,12 +46,15 @@ namespace _acsl_
 namespace _qrbp_
 {
 
+// Define the number of propellers for this class of UAV
+#define NOP 4
+
 // ============================================================================
 // simqrbp class
 // Inherits from the templated base UAV simulator class, specifying nop = 4,
 // meaning this is a fixed 4‑propeller variant of the UAV.
 // ============================================================================
-class simqrbp : public _acsl_::_uav_::simuav<4> 
+class simqrbp : public _acsl_::_uav_::simuav<NOP> 
 {
 public:
     // ------------------------------------------------------------------------
@@ -65,7 +68,7 @@ public:
     // for simuav<4>, because that class stores a reference to ChSystemNSC.
     // ------------------------------------------------------------------------
     simqrbp(chrono::ChSystemNSC& sys)
-        : _acsl_::_uav_::simuav<4>(sys)  // <-- Call the base class constructor
+        : _acsl_::_uav_::simuav<NOP>(sys)  // <-- Call the base class constructor
     {
         // All initialization specific to 'simqrbp' goes here.
         // NOTE: THE ORDER OF THESE FUNCTIONS MATTER. YOU CAN IGNORE THE UNIQUE FNS
@@ -83,8 +86,9 @@ public:
         SetUAVShapesDir("../chrono-assets/qrbp/qrbp_shapes/");  // <- Baseclass function
         
         ConfigureQRBPChassis();                                 // <- Compulsary derived class function
+        ConfigureQRBPProps();                                   // <- Compulsary derived class function
         
-        InitiateUAV();                                          // <- Baseclass function
+        AddUAVToSystem();                                       // <- Baseclass function
 
     }
 
@@ -98,11 +102,13 @@ public:
     // 
     // The comulsary functions are:
     //   - Function to setup the chassis
+    //   - Function to setup the propellers
     //
     // The unique functions are:
     //   -
     // ------------------------------------------------------------------------
     void ConfigureQRBPChassis();
+    void ConfigureQRBPProps();
 };
 
 
