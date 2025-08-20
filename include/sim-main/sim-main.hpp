@@ -40,4 +40,21 @@
 #include "sim-qrbp.hpp"
 #include "sim-bridge.hpp"
 
+// ------------------------------------------------------------------------------------------------
+// CHRONO_DATA_DIR Macro Fallback
+// ------------------------------------------------------------------------------------------------
+// CHRONO_DATA_DIR is normally defined by the CMake build system via:
+//   target_compile_definitions(acsl_sim PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"")
+// If this macro is missing (for example, while using code editors or IntelliSense
+// outside a CMake-configured build), fall back to a dummy path to prevent
+// "undefined identifier" errors during development.
+// 
+// NOTE: This fallback only affects direct compilation in IDEs or for code-completion tools.
+// The actual built application will always use the correct value set by CMake.
+// ------------------------------------------------------------------------------------------------
+#ifndef CHRONO_DATA_DIR
+#define CHRONO_DATA_DIR "/undefined/"
+#endif
+
+
 #endif // SIM_MAIN_HPP_

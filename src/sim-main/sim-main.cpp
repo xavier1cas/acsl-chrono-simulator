@@ -42,18 +42,6 @@ double pretty(double x, double tol = 1e-10) {
     return (std::abs(x) < tol) ? 0.0 : x;
 }
 
-#define FLOOR_LENGTH 5
-#define FLOOR_WIDTH 5
-#define FLOOR_HEIGHT 0.1
-#define FLOOR_DENSITY 1000
-#define FLOOR_VISIBILITY true
-#define FLOOR_COLLIDABLE true
-#define FLOOR_PLACEMENT_X 0.0
-#define FLOOR_PLACEMENT_Y 0.0
-#define FLOOR_PLACEMENT_Z -0.5
-#define FLOOR_FRICTION_COEFF 1.0
-#define FLOOR_DAMPING_FACTOR 0.5
-
 int main(int argc, char* argv[]) {
 
     // Set path to Chrono data directory

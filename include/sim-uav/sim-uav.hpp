@@ -61,6 +61,10 @@ namespace _acsl_
 namespace _uav_
 {
 
+// =====================================================================================================================
+// Special type definitions
+// =====================================================================================================================
+using CollisionShapeFrame = std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>;
 
 // =====================================================================================================================
 // Shared data structures
@@ -93,7 +97,7 @@ struct chassisstruct {
     chrono::ChVector3d InertiaXY;
     chrono::ChFramed COM;
     std::string vis_obj_name;
-    std::vector<std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>> collision;
+    std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
 };
 
 
@@ -101,17 +105,34 @@ struct chassisstruct {
 // Structure: propstruct
 //
 // Purpose:
-//   Template container for storing a fixed-size array of Chrono body pointers
-//   that represent the UAV's propeller hubs/assemblies.
+//   Stores the physical and visualization properties for a single propeller hub
+//   of the UAV. The struct includes Chrono body (AuxRef), position, orientation,
+//   mass, inertia, center of mass frame, visualization mesh filename, and a
+//   list of collision shapes with corresponding frames.
 //
-// Template Parameters:
-//   num - Number of propellers for this UAV type
+// Members:
+//   body          - Shared pointer to Chrono body (AuxRef) for the propeller.
+//   init_pos      - Initial position (Chrono coordinates) of the propeller.
+//   init_rot      - Initial orientation (quaternion) of the propeller.
+//   mass          - Mass of the propeller body.
+//   InertiaXX     - Principal moments of inertia about axes.
+//   InertiaXY     - Products of inertia.
+//   COM           - Center of mass reference frame.
+//   vis_obj_name  - Filename for the visualization mesh (.obj).
+//   collision     - List of tuples of collision shapes and associated frames.
 // ----------------------------------------------------------------------------
-template <int num>
 struct propstruct {
-    // Fixed-size array of propeller body pointers
-    std::array<std::shared_ptr<chrono::ChBodyAuxRef>, num> body;
+    std::shared_ptr<chrono::ChBodyAuxRef> body;
+    chrono::ChVector3d init_pos;
+    chrono::ChQuaternion<> init_rot;
+    double mass;
+    chrono::ChVector3d InertiaXX;
+    chrono::ChVector3d InertiaXY;
+    chrono::ChFramed COM;
+    std::string vis_obj_name;
+    std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
 };
+
 
 // ----------------------------------------------------------------------------
 // Structure: m_states
@@ -179,6 +200,9 @@ public:
     // Access the chassisstruct for modifying chassis parameters directly.
     virtual chassisstruct& GetUAVChassis() = 0;
 
+    // Access the propstruct for modifying prop parameters directly.
+    virtual propstruct& GetUAVProp(size_t idx) = 0;
+
     // Return all Chrono body pointers belonging to the UAV.
     virtual std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() = 0;
 
@@ -226,13 +250,46 @@ protected:
 
     // Set chassis collision shapes
     virtual void ConfigureUAVChassisCollisionShapes(
-    const std::vector<std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>>& list) = 0;
+    const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list) = 0;
 
     // Create, initialize, and register chassis body in internal body list.
     virtual void InitiateUAVChassis() = 0;
 
     // Get number of UAV propellers.
     virtual int GetPropCount() = 0;
+
+    // Check the propeller request (starts at 1 and not 0)
+    virtual void CheckUAVPropRequest(size_t idx) = 0;
+
+    // Configure the propeller initial position (converted from NED to Chrono Coordinates).
+    virtual void ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos) = 0;
+
+    // Configure the prop initial orientation quaternion (from NED to Chrono coords).
+    virtual void ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot) = 0;
+
+    // Set the propeller mass (kg).
+    virtual void ConfigureUAVPropMass(size_t idx, double mass) = 0;
+
+    // Set principal moments of inertia (Ixx, Iyy, Izz).
+    virtual void ConfigureUAVPropInertiaXX(size_t idx, chrono::ChVector3d IXX) = 0;
+
+    // Set products of inertia (Ixy, Ixz, Iyz).
+    virtual void ConfigureUAVPropInertiaXY(size_t idx, chrono::ChVector3d IXY) = 0;
+
+    // Set center-of-mass frame relative to prop reference.
+    virtual void ConfigureUAVPropCOM(size_t idx, chrono::ChFrame<> COM) = 0;
+
+    // Set prop visualization mesh filename.
+    virtual void ConfigureUAVPropOBJName(size_t idx, std::string name) = 0;
+
+    // Set prop collision shapes
+    virtual void ConfigureUAVPropCollisionShapes(
+    size_t idx, const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list) = 0;
+
+    // Create, intialize, and register prop body in interal body list.
+    virtual void InitiateUAVProp() = 0;
+    
+
 };
 
 
@@ -263,6 +320,7 @@ public:
 
     chrono::ChFrame<> GetInertialNEDFrame() override;
     chassisstruct& GetUAVChassis() override { return chassis; }
+    propstruct& GetUAVProp(size_t idx) override;
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
     void InitiateUAV() override;
@@ -287,12 +345,27 @@ protected:
     void ConfigureUAVChassisOBJName(std::string name) override { chassis.vis_obj_name = name; }
     
     void ConfigureUAVChassisCollisionShapes
-    (const std::vector<std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>>& list) override
+    (const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list) override
     {   chassis.collision = list;   }
 
     void InitiateUAVChassis() override;
 
     int GetPropCount() override { return nop; }
+    void CheckUAVPropRequest(size_t idx) override;
+    
+	void ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos) override;
+    void ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot) override;
+	
+    void ConfigureUAVPropMass(size_t idx, double mass) override;
+    void ConfigureUAVPropInertiaXX(size_t idx, chrono::ChVector3d IXX) override;
+    void ConfigureUAVPropInertiaXY(size_t idx, chrono::ChVector3d IXY) override;
+    void ConfigureUAVPropCOM(size_t idx, chrono::ChFrame<> COM) override;
+    void ConfigureUAVPropOBJName(size_t idx, std::string name) override;
+	
+	void ConfigureUAVPropCollisionShapes
+	(size_t idx, const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list) override;
+
+    void InitiateUAVProp() override;
 
 private:
     // ---------------- Internal state ----------------
@@ -302,7 +375,7 @@ private:
     std::string shapes_dir;                                      // Path to visual shape files (.obj)
     std::shared_ptr<chrono::ChBodyAuxRef> InertialFrameNED;      // Inertial NED frame body
     chassisstruct chassis;                                       // Chassis data
-    propstruct<nop> props;                                       // Propeller data
+    std::array<propstruct, nop> props;                           // Propeller data
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> bodylist; // All body pointers for registration
     std::vector<std::shared_ptr<chrono::ChLinkBase>> linklist;   // All link pointers for registration
 };

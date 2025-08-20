@@ -211,7 +211,7 @@ void simuav<nop>::InitiateUAVChassis()
             chassis.body->GetCollisionModel()->AddShape(shape, frame);
         }
 
-        // Set chassis body as colliable
+        // Set chassis body as collidable
         chassis.body->EnableCollision(true);
     }
 
@@ -221,6 +221,296 @@ void simuav<nop>::InitiateUAVChassis()
     //   This list will later be added to the physics system in InitiateUAV()
     // ------------------------------------------------------------------------
     bodylist.push_back(chassis.body);
+}
+
+// =========================================================================================================
+// CheckUAVPropRequest(idx)
+//
+// Purpose: 
+//   Checks if the requested propeller is within range of the total number of propellers.
+//   Total number of propellers = 1 - NOP
+// Parameters:
+//   idx - 1-based index of the propeller hub to access (first propeller is idx=1).
+//         Must satisfy 1 <= idx <= nop.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::CheckUAVPropRequest(size_t idx)
+{
+    // 1-based -> 0-based adjustment and bounds check
+    if (idx == 0 || idx > nop) {
+        std::ostringstream oss;
+        oss << "[SIMUAV]: PROPELLER INDEX OUT OF RANGE. VALID RANGE: 1 TO " << nop << ", REQUESTED: " << idx;
+        _message_::SIMULATOR_ERROR(oss.str());
+    }
+}
+
+// =========================================================================================================
+// GetUAVProp(idx)
+// 
+// Purpose:
+//   Provides direct access to the physical and visualization properties of an individual
+//   propeller hub of the UAV by returning a reference to its propstruct.
+//   This enables external code to read or modify any propeller's data, supporting flexible
+//   setup and configuration of UAV components.
+//
+// Parameters:
+//   idx - 1-based index of the propeller hub to access (first propeller is idx=1).
+//         Must satisfy 1 <= idx <= nop.
+//
+// Returns:
+//   Reference to the propstruct instance corresponding to the requested propeller hub.
+//
+// Notes:
+//   - The underlying std::array still uses zero-based indexing; input idx is decremented internally.
+//   - Throws std::out_of_range if idx is not a valid 1-based propeller index.
+//   - Enables modular, type-safe manipulation of individual UAV propellers for advanced
+//     configuration, tuning, or real-time updates.
+// =========================================================================================================
+template <int nop>
+propstruct& simuav<nop>::GetUAVProp(size_t idx)
+{
+    this->CheckUAVPropRequest(idx);         // Check the request
+    return props[idx - 1];                  // Grant if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropInitPos(idx, pos)
+//
+// Purpose:
+//   Set the initial position of the specified propeller for simulation.
+// 
+// Parameters:
+//   idx - 1-based index of the propeller hub (1 <= idx <= nop).
+//   pos - Initial position of the propeller (Chrono world coordinates).
+// 
+// Notes:
+//   - This must be called before InitiateUAVProp().
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos)
+{
+    this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
+    props[idx - 1].init_pos = _transformations_::GetChronoPosFromNED(pos);         // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropInitRot(idx, rot)
+//
+// Purpose:
+//   Set the initial orientation (quaternion) of the specified propeller.
+// 
+// Parameters:
+//   idx - 1-based index of the propeller hub (1 <= idx <= nop).
+//   rot - Initial orientation as Chrono quaternion.
+// 
+// Notes:
+//   - This must be called before InitiateUAVProp().
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot)
+{
+    this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
+    props[idx - 1].init_rot = _transformations_::GetChronoOrientaitonFromNED(rot); // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropMass(mass)
+//
+// Purpose:
+//   Set the mass for all propellers in the UAV.
+// 
+// Parameters:
+//   mass - Mass value to assign to each propeller (kg).
+// 
+// Notes:
+//   - Sets mass uniformly for all propellers prior to simulation.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropMass(size_t idx, double mass)
+{
+    this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
+    props[idx - 1].mass = mass;             // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropInertiaXX(idx, IXX)
+//
+// Purpose:
+//   Set the principal moments of inertia (diagonal) for a specified propeller.
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   IXX - ChVector3d of inertia values.
+// 
+// Notes:
+//   - Must be set before propeller is registered for simulation.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropInertiaXX(size_t idx, chrono::ChVector3d IXX)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx -1].InertiaXX = IXX;          // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropInertiaXY(idx, IXY)
+//
+// Purpose:
+//   Set the products of inertia (off-diagonal) for a specified propeller.
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   IXY - ChVector3d of off-diagonal inertia values.
+// 
+// Notes:
+//   - Must be set before physics registration.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropInertiaXY(size_t idx, chrono::ChVector3d IXY)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx -1].InertiaXY = IXY;          // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropCOM(idx, COM)
+//
+// Purpose:
+//   Set the center of mass (frame) for a specified propeller.
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   COM - Chrono frame representing center of mass orientation and position.
+// 
+// Notes:
+//   - Required before physics object creation.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropCOM(size_t idx, chrono::ChFrame<> COM)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx -1].COM = COM;                // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropOBJName(idx, name)
+//
+// Purpose:
+//   Set the visual mesh filename for a specified propeller.
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   name - Wavefront .obj filename for propeller model.
+// 
+// Notes:
+//   - Needed for visual mesh assignment during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropOBJName(size_t idx, std::string name)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx -1].vis_obj_name = name;      // Assign if within range
+}
+
+// =========================================================================================================
+// ConfigureUAVPropCollisionShapes(idx, list)
+//
+// Purpose:
+//   Assign one or more collision shapes to a specified propeller body.
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   list - Vector of CollisionShapeFrame objects describing the shapes.
+// 
+// Notes:
+//   - Shapes should be set prior to physics engine registration.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropCollisionShapes(size_t idx, const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx - 1].collision = list;
+}
+
+// =========================================================================================================
+// InitiateUAVProp()
+//
+// Purpose:
+//   Create and configure all UAV propeller bodies, preparing them for simulation.
+// 
+// Notes:
+//   - This function registers all propellers in memory and stores them internally.
+//   - Physical properties, geometry, and COM must be set before calling.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::InitiateUAVProp()
+{
+    // Iterate through the total number of propellers
+    for (int idx =0; idx < nop; ++idx)
+    {
+        // ------------------------------------------------------------------------
+        // STEP 1 – Create the Chrono body for the propeller
+        // ------------------------------------------------------------------------
+        props[idx].body = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+
+        // ------------------------------------------------------------------------
+        // STEP 2 – Apply identifying and initial state properties
+        // ------------------------------------------------------------------------
+        props[idx].body->SetName("propeller_" + std::to_string(idx +1));  // 1-based name
+        props[idx].body->SetPos(props[idx].init_pos);
+        props[idx].body->SetRot(props[idx].init_rot);
+        props[idx].body->SetMass(props[idx].mass);
+        props[idx].body->SetInertiaXX(props[idx].InertiaXX);
+        props[idx].body->SetInertiaXY(props[idx].InertiaXY);
+        props[idx].body->SetFrameCOMToRef(props[idx].COM);
+
+        // ------------------------------------------------------------------------
+        // STEP 3 – Load and attach a visual mesh for the propeller
+        // ------------------------------------------------------------------------
+        // Load mesh geometry from Wavefront (.obj) file
+        //   - First param: filepath = shapes_dir + prop[idx] visual object file name
+        //   - Second param: load normals
+        //   - Third param: load UV texture coords
+        auto trimesh = chrono::ChTriangleMeshConnected::CreateFromWavefrontFile(
+            shapes_dir + props[idx].vis_obj_name, true, true
+        );
+
+        // Create a Chrono visual shape from the mesh
+        auto trimesh_shape = chrono_types::make_shared<chrono::ChVisualShapeTriangleMesh>();
+        trimesh_shape->SetMesh(trimesh);
+        trimesh_shape->SetMutable(false); // Make it immutable for performance
+
+        // Add shape to body at zero offset with identity rotation
+        props[idx].body->AddVisualShape(
+            trimesh_shape,
+            chrono::ChFramed(
+                chrono::ChVector3d(0, 0, 0),
+                chrono::ChQuaternion<>(1, 0, 0, 0)  // identity quaternion
+            )
+        );
+
+        // ------------------------------------------------------------------------
+        // STEP 4 - Add all the collision shapes to the propeller (IF present)
+        // ------------------------------------------------------------------------
+        if (!this->props[idx].collision.empty()) {
+            // Create the collision model
+            props[idx].body->AddCollisionModel(chrono_types::make_shared<chrono::ChCollisionModel>());
+
+            // Iterate through the shapes and frames in the collision tuple and add it to the model
+            for (const auto& [shape, frame] : this->props[idx].collision) {
+                props[idx].body->GetCollisionModel()->AddShape(shape, frame);
+            }
+
+            // Set propeller body as collidable
+            props[idx].body->EnableCollision(true);
+        }
+
+        // ------------------------------------------------------------------------
+        // STEP 5 – Register propeller body into the UAV's internal body list
+        //   This list will later be added to the physics system in InitiateUAV()
+        // ------------------------------------------------------------------------
+        bodylist.push_back(props[idx].body);
+    }
 }
 
 
