@@ -346,6 +346,13 @@ void simsystem::SetupVisualizationSystem()
         _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM INACTIVE");
         return;
     }
+    
+    // ------------------------------------------------------------------------
+    // STEP 1.5 – Force the driver type to use OpenGL.
+    //   If not, we receive a benign error at runtime before it defaults to 
+    //   OpenGL anyway.
+    // ------------------------------------------------------------------------
+    m_irrlicht.SetDriverType(irr::video::E_DRIVER_TYPE::EDT_OPENGL);
 
     // ------------------------------------------------------------------------
     // STEP 2 – Main window setup: size, title, and initialization

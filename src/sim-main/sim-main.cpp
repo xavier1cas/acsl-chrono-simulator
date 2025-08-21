@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
 
     // Set the floor's frame to match the NED frame
 	floorBody->SetName("spinny");
-    floorBody->SetPos(_acsl_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0,0,-1))); // Place at NED origin, or set as needed
+    floorBody->SetPos(_acsl_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-2,-2,-1))); // Place at NED origin, or set as needed
     floorBody->SetRot(_acsl_::_transformations_::GetChronoOrientaitonFromNED()); // Align with NED axes
     floorBody->SetFixed(false); // Not fixed; will be fixed by constraint
     floorBody->GetVisualShape(0)->SetColor(chrono::ChColor(1.0f, 0.0f, 0.0f));
@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
 	ballBody->SetPos(_acsl_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0,0,-0.7)));
 	ballBody->SetFixed(false);
 	ballBody->GetVisualShape(0)->SetTexture(chrono::GetChronoDataFile("textures/redwhite.png"));
-	m_bridge.GetSimSystem().GetPhysicsSystem().Add(ballBody);
+	// m_bridge.GetSimSystem().GetPhysicsSystem().Add(ballBody);
 
     // Setup the visualization system
     m_bridge.GetSimSystem().SetupVisualizationSystem();

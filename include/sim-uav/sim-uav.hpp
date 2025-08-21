@@ -43,6 +43,7 @@
 #include <iostream>
 #include <string>
 #include <array>
+#include <variant>
 
 // ACSL physics sim includes
 #include "sim-helpers.hpp"
@@ -54,6 +55,17 @@
 #include "chrono/geometry/ChTriangleMesh.h"
 #include "chrono/geometry/ChTriangleMeshConnected.h"
 #include "chrono/assets/ChVisualShapeTriangleMesh.h"
+#include "chrono/physics/ChLinkMotorRotationAngle.h"
+#include "chrono/physics/ChLinkMotorRotationSpeed.h"
+#include "chrono/physics/ChLinkMotorRotationTorque.h"
+#include "chrono/physics/ChLinkMotorLinearPosition.h"
+#include "chrono/physics/ChLinkMotorLinearSpeed.h"
+#include "chrono/physics/ChLinkMotorLinearForce.h"
+#include "chrono/physics/ChLinkTSDA.h"
+#include "chrono/physics/ChLinkRSDA.h"
+#include "chrono/physics/ChLinkMate.h"
+#include "chrono/functions/ChFunction.h"
+
 
 namespace _acsl_
 {
@@ -65,6 +77,7 @@ namespace _uav_
 // Special type definitions
 // =====================================================================================================================
 using CollisionShapeFrame = std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>;
+
 
 // =====================================================================================================================
 // Shared data structures
@@ -161,6 +174,138 @@ struct m_states {
     chrono::ChVector3d ovel;
     chrono::ChVector3d oacc;
 };
+
+// ----------------------------------------------------------------------------
+// Enum: LinkType
+//
+// Purpose:
+//   Enumerates the supported types of mate constraints (Chrono links) between
+//   UAV bodies for modular link property specification and initialization.
+//
+// Values:
+//   Parallel   - Represents a ChLinkMateParallel constraint (parallel axis).
+//   Generic    - Represents a ChLinkMateGeneric constraint (custom DOF lock).
+//   DistanceZ  - Represents a ChLinkMateDistanceZ constraint (Z-axis distance).
+// ----------------------------------------------------------------------------
+enum class LinkType { Parallel, Generic, DistanceZ };
+
+
+// ----------------------------------------------------------------------------
+// Template: LinkProperty<LT>
+//
+// Purpose:
+//   Primary template declaration for link property storage structs, specialized
+//   for each supported LinkType. This is a forward declaration; use the
+//   specializations below for valid property types.
+//
+// Notes:
+//   Each specialization holds only the properties required to fully
+//   specify and later create a link of that type.
+// ----------------------------------------------------------------------------
+template<LinkType LT>
+struct LinkProperty;
+
+
+// ----------------------------------------------------------------------------
+// Structure: LinkProperty<LinkType::Parallel>
+//
+// Purpose:
+//   Stores all properties required for a ChLinkMateParallel constraint between
+//   two Chrono bodies (enforcing parallel axes, with optional flipping).
+//
+// Members:
+//   flipped - Whether to flip the direction vector for the parallel constraint.
+//   name    - Unique or descriptive link name for identification/debugging.
+//   bodyA   - Shared pointer to the first Chrono body (e.g., chassis).
+//   bodyB   - Shared pointer to the second Chrono body (e.g., propeller).
+//   cA      - Constraint position on bodyA (local frame).
+//   cB      - Constraint position on bodyB (local frame).
+//   dA      - Direction vector on bodyA for axis alignment.
+//   dB      - Direction vector on bodyB for axis alignment.
+// ----------------------------------------------------------------------------
+template<>
+struct LinkProperty<LinkType::Parallel> {
+    bool flipped;
+    std::string name;
+    std::shared_ptr<chrono::ChBodyAuxRef> bodyA, bodyB;
+    chrono::ChVector3d cA, cB, dA, dB;
+};
+
+
+// ----------------------------------------------------------------------------
+// Structure: LinkProperty<LinkType::Generic>
+//
+// Purpose:
+//   Stores all properties required for a ChLinkMateGeneric constraint, allowing
+//   selective locking of translational and rotational degrees of freedom (DOF).
+//
+// Members:
+//   name    - Unique or descriptive name for the link.
+//   bodyA   - Shared pointer to Chrono body A.
+//   bodyB   - Shared pointer to Chrono body B.
+//   cA      - Constraint point on bodyA (local frame).
+//   cB      - Constraint point on bodyB (local frame).
+//   dA      - Direction vector on bodyA for orientation.
+//   dB      - Direction vector on bodyB for orientation.
+//   cx,cy,cz - If true, locks translation along X, Y, and Z, respectively.
+//   rx,ry,rz - If true, locks rotation about X, Y, and Z axes, respectively.
+// ----------------------------------------------------------------------------
+template<>
+struct LinkProperty<LinkType::Generic> {
+    std::string name;
+    std::shared_ptr<chrono::ChBodyAuxRef> bodyA, bodyB;
+    chrono::ChVector3d cA, cB, dA, dB;
+    bool cx, cy, cz, rx, ry, rz;
+};
+
+
+// ----------------------------------------------------------------------------
+// Structure: LinkProperty<LinkType::DistanceZ>
+//
+// Purpose:
+//   Stores all properties required for a ChLinkMateDistanceZ constraint,
+//   which constrains the Z-axis distance between two points on two bodies.
+//
+// Members:
+//   name     - Descriptive or unique name for the link.
+//   bodyA    - Shared pointer to body A.
+//   bodyB    - Shared pointer to body B.
+//   cA       - Constraint point on bodyA (local frame).
+//   cB       - Constraint point on bodyB (local frame).
+//   dB       - Direction vector on bodyB (should point along constrained axis).
+//   distance - The signed Z distance value; 0 for coincident constraints.
+// ----------------------------------------------------------------------------
+template<>
+struct LinkProperty<LinkType::DistanceZ> {
+    std::string name;
+    std::shared_ptr<chrono::ChBodyAuxRef> bodyA, bodyB;
+    chrono::ChVector3d cA, cB, dB;
+    double distance;
+};
+
+
+// ----------------------------------------------------------------------------
+// Type Alias: LinkData
+//
+// Purpose:
+//   Variadic property type that can hold any specialization of LinkProperty,
+//   letting you store properties for any supported type of UAV link constraint
+//   in a single container (such as std::vector<LinkData>).
+//
+// Usage:
+//   - Use LinkData as the type for vectors or lists to store mixed link types.
+//   - Retrieve and process the specific type using std::visit, std::get, or std::holds_alternative.
+//
+// Contains:
+//   LinkProperty<LinkType::Parallel>   — Properties for parallel constraints.
+//   LinkProperty<LinkType::Generic>    — Properties for generic constraints.
+//   LinkProperty<LinkType::DistanceZ>  — Properties for Z distance constraints.
+// ----------------------------------------------------------------------------
+using LinkData = std::variant<
+    LinkProperty<LinkType::Parallel>,
+    LinkProperty<LinkType::Generic>,
+    LinkProperty<LinkType::DistanceZ>
+>;
 
 
 // =====================================================================================================================
@@ -288,8 +433,10 @@ protected:
 
     // Create, intialize, and register prop body in interal body list.
     virtual void InitiateUAVProp() = 0;
-    
 
+    // Create, inialize, and register all the links present in the drone.
+    virtual void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) = 0;
+    
 };
 
 
@@ -367,6 +514,8 @@ protected:
 
     void InitiateUAVProp() override;
 
+    void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) override;
+
 private:
     // ---------------- Internal state ----------------
 
@@ -376,6 +525,7 @@ private:
     std::shared_ptr<chrono::ChBodyAuxRef> InertialFrameNED;      // Inertial NED frame chrono-body
     chassisstruct chassis;                                       // Chassis data
     std::array<propstruct, nop> props;                           // Propeller data
+    std::vector<LinkData> links;                                 // All the link data for the UAV
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> bodylist; // All body pointers for registration
     std::vector<std::shared_ptr<chrono::ChLinkBase>> linklist;   // All link pointers for registration
 };

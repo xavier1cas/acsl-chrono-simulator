@@ -134,20 +134,35 @@ void simqrbp::ConfigureQRBPProps()
 
     // ------------------------------------------------ 1 ------------------------------------------------ //
     // Configure the intial position of the propeller
+    prop_properties.init_pos = chrono::ChVector3d(0.184376362665965,0.308068237403556,0.154498963796847);
 
     // Configure the initial rotation of the propeller
+    prop_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
 
     // Configure the mass of the propeller
+    prop_properties.mass = 0.00395402309271749;
 
     // Configure the propeller Interia vectors
+    prop_properties.InertiaXX = chrono::ChVector3d(2.83955219476957e-06,2.84026926028763e-06,5.66580058802151e-06);
+    prop_properties.InertiaXY = chrono::ChVector3d(7.53921615234973e-10,-1.55407912210431e-11,-5.50513541652702e-11);
 
     // Configure the propeller COM along with it's auxilliary frame at the COM
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-5.52286503295572e-10,3.32677464985852e-06,-0.000645546072066471),
+                                           chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
+    prop_properties.vis_obj_name = "body_4_1.obj";
 
     // There are no collision geometries - Therefore we ignore that step
 
     // Call all the configuration helper functions
+    ConfigureUAVPropInitPos(1, prop_properties.init_pos);
+    ConfigureUAVPropInitRot(1, prop_properties.init_rot);
+    ConfigureUAVPropMass(1, prop_properties.mass);
+    ConfigureUAVPropInertiaXX(1, prop_properties.InertiaXX);
+    ConfigureUAVPropInertiaXY(1, prop_properties.InertiaXY);
+    ConfigureUAVPropCOM(1, prop_properties.COM);
+    ConfigureUAVPropOBJName(1, prop_properties.vis_obj_name);
     
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the intial position of the propeller
@@ -183,20 +198,35 @@ void simqrbp::ConfigureQRBPProps()
 
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the intial position of the propeller
-    
+    prop_properties.init_pos = chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.154498963796845);
+
     // Configure the initial rotation of the propeller
+    prop_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
 
     // Configure the mass of the propeller
+    prop_properties.mass = 0.00395402309271749;
 
     // Configure the propeller Interia vectors
+    prop_properties.InertiaXX = chrono::ChVector3d(2.83955219476957e-06,2.84026926028763e-06,5.66580058802151e-06);
+    prop_properties.InertiaXY = chrono::ChVector3d(7.53921615234973e-10,-1.55407912210431e-11,-5.50513541652702e-11);
 
     // Configure the propeller COM along with it's auxilliary frame at the COM
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-5.52286503295572e-10,3.32677464985852e-06,-0.000645546072066471),
+                                           chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
+    prop_properties.vis_obj_name = "body_5_1.obj";
 
     // There are no collision geometries - Therefore we ignore that step
 
     // Call all the configuration helper functions
+    ConfigureUAVPropInitPos(3, prop_properties.init_pos);
+    ConfigureUAVPropInitRot(3, prop_properties.init_rot);
+    ConfigureUAVPropMass(3, prop_properties.mass);
+    ConfigureUAVPropInertiaXX(3, prop_properties.InertiaXX);
+    ConfigureUAVPropInertiaXY(3, prop_properties.InertiaXY);
+    ConfigureUAVPropCOM(3, prop_properties.COM);
+    ConfigureUAVPropOBJName(3, prop_properties.vis_obj_name);
 
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the intial position of the propeller
@@ -233,6 +263,151 @@ void simqrbp::ConfigureQRBPProps()
     // ------------------------------------------------------------------------------ INITIATE THE PROPELLERS
     InitiateUAVProp();
 }
+
+// Compulsary derived class function that initiates all the links for the UAV and passes
+//  that data to the UAV for initialization.
+void simqrbp::ConfigureQRBPLinks()
+{
+    // Create the link data vector based on the structure that was defined in the sim-uav.hpp
+    std::vector<_uav_::LinkData> link_data_vec;
+    
+    // ---- Concentric2 (chassis to propeller_1) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Concentric2", GetUAVChassis().body, GetUAVProp(1).body,
+        chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844),
+        chrono::ChVector3d(0.184376362665965,0.308068237403556,0.150873963796847),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(0,0,-1)
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+        "Concentric2", GetUAVChassis().body, GetUAVProp(1).body,
+        chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844),
+        chrono::ChVector3d(0.184376362665965,0.308068237403556,0.150873963796847),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(0,0,-1),
+        true, true, true, false, false, false
+    });
+
+    // ---- Coincident3 (chassis to propeller_1) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+        "Coincident3", GetUAVChassis().body, GetUAVProp(1).body,
+        chrono::ChVector3d(0.184871898993746,0.309085313481266,0.158123963796845),
+        chrono::ChVector3d(0.184376362665965,0.308068237403556,0.158123963796847),
+        chrono::ChVector3d(0,0,1),
+        0.0
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Coincident3", GetUAVChassis().body, GetUAVProp(1).body,
+        chrono::ChVector3d(0.184871898993746,0.309085313481266,0.158123963796845),
+        chrono::ChVector3d(0.184376362665965,0.308068237403556,0.158123963796847),
+        chrono::ChVector3d(1.20533813419051e-17,1.72292970257481e-17,-1),
+        chrono::ChVector3d(0,0,1)
+    });
+
+    // ---- Concentric3 (chassis to propeller_2) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
+        chrono::ChVector3d(-0.00942816685338319,0.086637844787446,0.152623963796845),
+        chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.150873963796845),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(0,0,-1)
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+        "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
+        chrono::ChVector3d(-0.00942816685338319,0.086637844787446,0.152623963796845),
+        chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.150873963796845),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(0,0,-1),
+        true, true, true, false, false, false
+    });
+
+    // ---- Coincident4 (chassis to propeller_2) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+        "Coincident4", GetUAVChassis().body, GetUAVProp(2).body,
+        chrono::ChVector3d(-0.00851099108493078,0.0879488705727621,0.158123963796845),
+        chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.158123963796845),
+        chrono::ChVector3d(0,0,1),
+        0.0
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Coincident4", GetUAVChassis().body, GetUAVProp(2).body,
+        chrono::ChVector3d(-0.00851099108493078,0.0879488705727621,0.158123963796845),
+        chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.158123963796845),
+        chrono::ChVector3d(-1.72292970257482e-17,1.20533813419047e-17,-1),
+        chrono::ChVector3d(0,0,1)
+    });
+
+    // ---- Concentric4 (chassis to propeller_3) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
+        chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846),
+        chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.150873963796845),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(3.46756589967432e-15,-6.8628558519186e-15,-1)
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+        "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
+        chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846),
+        chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.150873963796845),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(3.46756589967432e-15,-6.8628558519186e-15,-1),
+        true, true, true, false, false, false
+    });
+
+    // ---- Coincident5 (chassis to propeller_3) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+        "Coincident5", GetUAVChassis().body, GetUAVProp(3).body,
+        chrono::ChVector3d(0.186801489228191,0.0873580955475104,0.158123963796845),
+        chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.158123963796845),
+        chrono::ChVector3d(-3.46756589967432e-15,6.8628558519186e-15,1),
+        0.0
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Coincident5", GetUAVChassis().body, GetUAVProp(3).body,
+        chrono::ChVector3d(0.186801489228191,0.0873580955475104,0.158123963796845),
+        chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.158123963796845),
+        chrono::ChVector3d(-1.20533813418501e-17,1.72292970257864e-17,-1),
+        chrono::ChVector3d(-3.46756589967432e-15,6.8628558519186e-15,1)
+    });
+
+    // ---- Concentric5 (chassis to propeller_4) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
+        chrono::ChVector3d(-0.00942816685338441,0.308068237403485,0.152623963796843),
+        chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.150873963796847),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(0,0,-1)
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+        "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
+        chrono::ChVector3d(-0.00942816685338441,0.308068237403485,0.152623963796843),
+        chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.150873963796847),
+        chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
+        chrono::ChVector3d(0,0,-1),
+        true, true, false, false, false, false
+    });
+
+    // ---- Coincident6 (chassis to propeller_4) ----
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+        "Coincident6", GetUAVChassis().body, GetUAVProp(4).body,
+        chrono::ChVector3d(-0.00968893672835089,0.30731193120074,0.158123963796845),
+        chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.158123963796847),
+        chrono::ChVector3d(0,0,1),
+        0.0
+    });
+    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+        true, "Coincident6", GetUAVChassis().body, GetUAVProp(4).body,
+        chrono::ChVector3d(-0.00968893672835089,0.30731193120074,0.158123963796845),
+        chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.158123963796847),
+        chrono::ChVector3d(-1.20533813418502e-17,1.72292970257864e-17,-1),
+        chrono::ChVector3d(0,0,1)
+    });
+
+    // Finally link all the bodies together
+    LinkUAVBodies(link_data_vec);
+}
+
+
 
 }   // namespace _qrbp_
 

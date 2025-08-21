@@ -223,6 +223,7 @@ void simuav<nop>::InitiateUAVChassis()
     bodylist.push_back(chassis.body);
 }
 
+
 // =========================================================================================================
 // CheckUAVPropRequest(idx)
 //
@@ -243,6 +244,7 @@ void simuav<nop>::CheckUAVPropRequest(size_t idx)
         _message_::SIMULATOR_ERROR(oss.str());
     }
 }
+
 
 // =========================================================================================================
 // GetUAVProp(idx)
@@ -273,6 +275,7 @@ propstruct& simuav<nop>::GetUAVProp(size_t idx)
     return props[idx - 1];                  // Grant if within range
 }
 
+
 // =========================================================================================================
 // ConfigureUAVPropInitPos(idx, pos)
 //
@@ -292,6 +295,7 @@ void simuav<nop>::ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos)
     this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
     props[idx - 1].init_pos = _transformations_::GetChronoPosFromNED(pos);         // Assign if within range
 }
+
 
 // =========================================================================================================
 // ConfigureUAVPropInitRot(idx, rot)
@@ -313,6 +317,7 @@ void simuav<nop>::ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot
     props[idx - 1].init_rot = _transformations_::GetChronoOrientaitonFromNED(rot); // Assign if within range
 }
 
+
 // =========================================================================================================
 // ConfigureUAVPropMass(mass)
 //
@@ -331,6 +336,7 @@ void simuav<nop>::ConfigureUAVPropMass(size_t idx, double mass)
     this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
     props[idx - 1].mass = mass;             // Assign if within range
 }
+
 
 // =========================================================================================================
 // ConfigureUAVPropInertiaXX(idx, IXX)
@@ -352,6 +358,7 @@ void simuav<nop>::ConfigureUAVPropInertiaXX(size_t idx, chrono::ChVector3d IXX)
     props[idx -1].InertiaXX = IXX;          // Assign if within range
 }
 
+
 // =========================================================================================================
 // ConfigureUAVPropInertiaXY(idx, IXY)
 //
@@ -371,6 +378,7 @@ void simuav<nop>::ConfigureUAVPropInertiaXY(size_t idx, chrono::ChVector3d IXY)
     this->CheckUAVPropRequest(idx);         // Check the id of the propeller
     props[idx -1].InertiaXY = IXY;          // Assign if within range
 }
+
 
 // =========================================================================================================
 // ConfigureUAVPropCOM(idx, COM)
@@ -392,6 +400,7 @@ void simuav<nop>::ConfigureUAVPropCOM(size_t idx, chrono::ChFrame<> COM)
     props[idx -1].COM = COM;                // Assign if within range
 }
 
+
 // =========================================================================================================
 // ConfigureUAVPropOBJName(idx, name)
 //
@@ -412,6 +421,7 @@ void simuav<nop>::ConfigureUAVPropOBJName(size_t idx, std::string name)
     props[idx -1].vis_obj_name = name;      // Assign if within range
 }
 
+
 // =========================================================================================================
 // ConfigureUAVPropCollisionShapes(idx, list)
 //
@@ -431,6 +441,7 @@ void simuav<nop>::ConfigureUAVPropCollisionShapes(size_t idx, const std::vector<
     this->CheckUAVPropRequest(idx);         // Check the id of the propeller
     props[idx - 1].collision = list;
 }
+
 
 // =========================================================================================================
 // InitiateUAVProp()
@@ -512,6 +523,65 @@ void simuav<nop>::InitiateUAVProp()
         bodylist.push_back(props[idx].body);
     }
 }
+
+
+// =========================================================================================================
+// LinkUAVBodies(link_data_vec)
+//
+// Purpose:
+//   Constructs all Chrono link constraints between UAV bodies (e.g., chassis, propellers),
+//   using the input vector of link property variants. Each link is created and stored
+//   in the class's internal `linklist` for registration with the Chrono system later.
+//
+// Parameters:
+//   link_data_vec - Vector of LinkData (variant property structs) specifying all
+//                   constraint types and parameters between UAV bodies.
+//
+// Notes:
+//   - Should be called after all bodies are constructed and stored in bodylist, 
+//     but before AddUAVToSystem().
+//   - The function does NOT add links to the Chrono system yet; it only prepares them.
+//   - The input data is stored in the class member `links` for persistent access and future use.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::LinkUAVBodies(const std::vector<LinkData>& link_data_vec)
+{
+    // Store a copy of the input link data in the class member for future/reference operations
+    links = link_data_vec;
+
+    // Iterate over all stored link property variants in the member vector
+    for (const auto& link_data : links) {
+        std::visit([&](const auto& prop) {
+            std::shared_ptr<chrono::ChLinkBase> link;
+            // Parallel
+            if constexpr (std::is_same_v<std::decay_t<decltype(prop)>, LinkProperty<LinkType::Parallel>>) {
+                link = chrono_types::make_shared<chrono::ChLinkMateParallel>();
+                std::dynamic_pointer_cast<chrono::ChLinkMateParallel>(link)->SetFlipped(prop.flipped);
+                std::dynamic_pointer_cast<chrono::ChLinkMateParallel>(link)->Initialize(prop.bodyA, prop.bodyB, false, prop.cA, prop.cB, prop.dA, prop.dB);
+                std::dynamic_pointer_cast<chrono::ChLinkMateParallel>(link)->SetName(prop.name);
+            }
+            // Generic
+            else if constexpr (std::is_same_v<std::decay_t<decltype(prop)>, LinkProperty<LinkType::Generic>>) {
+                link = chrono_types::make_shared<chrono::ChLinkMateGeneric>();
+                std::dynamic_pointer_cast<chrono::ChLinkMateGeneric>(link)->SetConstrainedCoords(
+                    prop.cx, prop.cy, prop.cz, prop.rx, prop.ry, prop.rz);
+                std::dynamic_pointer_cast<chrono::ChLinkMateGeneric>(link)->Initialize(
+                    prop.bodyA, prop.bodyB, false, prop.cA, prop.cB, prop.dA, prop.dB);
+                std::dynamic_pointer_cast<chrono::ChLinkMateGeneric>(link)->SetName(prop.name);
+            }
+            // DistanceZ
+            else if constexpr (std::is_same_v<std::decay_t<decltype(prop)>, LinkProperty<LinkType::DistanceZ>>) {
+                link = chrono_types::make_shared<chrono::ChLinkMateDistanceZ>();
+                std::dynamic_pointer_cast<chrono::ChLinkMateDistanceZ>(link)->Initialize(
+                    prop.bodyA, prop.bodyB, false, prop.cA, prop.cB, prop.dB);
+                std::dynamic_pointer_cast<chrono::ChLinkMateDistanceZ>(link)->SetDistance(prop.distance);
+                std::dynamic_pointer_cast<chrono::ChLinkMateDistanceZ>(link)->SetName(prop.name);
+            }
+            linklist.push_back(link);
+        }, link_data);
+    }
+}
+
 
 
 // =========================================================================================================

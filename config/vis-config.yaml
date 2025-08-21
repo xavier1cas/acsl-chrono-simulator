@@ -41,11 +41,11 @@ main:
 
   # Camera options -------------------------------------------------
   # true: fixed viewpoint; false: dynamic/follow
-  enable_static_cam: true
+  enable_static_cam: false
   # (m) Distance the camera is placed in z (NED)
-  mv_cam_chase_ht: 0.75
+  mv_cam_chase_ht: 2.0
   # (m) Distance the camera is placed in x (NED) 
-  mv_cam_chase_dt: 3.0
+  mv_cam_chase_dt: 2.5
   
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene
