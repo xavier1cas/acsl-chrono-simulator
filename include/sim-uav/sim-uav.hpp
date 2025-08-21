@@ -78,6 +78,41 @@ namespace _uav_
 // =====================================================================================================================
 using CollisionShapeFrame = std::tuple<std::shared_ptr<chrono::ChCollisionShape>, chrono::ChFrame<>>;
 
+// ----------------------------------------------------------------------------
+// Namespace: _acsl_::_uav_::_prop_color_
+//
+// Purpose:
+//   Defines a collection of compile-time UAV color constants for use in
+//   visualization and simulation. Each color is stored as a chrono::ChColor
+//   instance with specified RGB values, making assignment readable and robust.
+//
+// Usage:
+//   - Access colors directly (e.g. _acsl_::_uav_::_prop_color_::RED)
+//   - Assign to visualization or property structs.
+//   - Includes a NULLCOLOR for "unset" or transparent/default cases.
+//
+// Members:
+//   NULLCOLOR - Special "null" color to represent an unset or default state (white RGB).
+//   RED       - Red    (RGB: 1.0, 0.0, 0.0)
+//   GREEN     - Green  (RGB: 0.0, 1.0, 0.0)
+//   BLUE      - Blue   (RGB: 0.0, 0.0, 1.0)
+//   YELLOW    - Yellow (RGB: 1.0, 1.0, 0.0)
+//   BLACK     - Black  (RGB: 0.0, 0.0, 0.0)
+//   ORANGE    - Orange (RGB: 1.0, 0.5, 0.0)
+//   PURPLE    - Purple (RGB: 1.0, 0.0, 1.0)
+//   GREY      - Grey   (RGB: 0.5, 0.5, 0.5)
+// ----------------------------------------------------------------------------
+namespace _prop_color_ {
+    inline const chrono::ChColor NULLCOLOR {1.0f, 1.0f, 1.0f}; // Unset/null color
+    inline const chrono::ChColor RED       {1.0f, 0.0f, 0.0f};
+    inline const chrono::ChColor GREEN     {0.0f, 1.0f, 0.0f};
+    inline const chrono::ChColor BLUE      {0.0f, 0.0f, 1.0f};
+    inline const chrono::ChColor YELLOW    {1.0f, 1.0f, 0.0f};
+    inline const chrono::ChColor BLACK     {0.0f, 0.0f, 0.0f};
+    inline const chrono::ChColor ORANGE    {1.0f, 0.5f, 0.0f};
+    inline const chrono::ChColor PURPLE    {1.0f, 0.0f, 1.0f};
+    inline const chrono::ChColor GREY      {0.1f, 0.1f, 0.1f};
+} // namespace _prop_color_
 
 // =====================================================================================================================
 // Shared data structures
@@ -118,21 +153,24 @@ struct chassisstruct {
 // Structure: propstruct
 //
 // Purpose:
-//   Stores the physical and visualization properties for a single propeller hub
-//   of the UAV. The struct includes Chrono body (AuxRef), position, orientation,
-//   mass, inertia, center of mass frame, visualization mesh filename, and a
-//   list of collision shapes with corresponding frames.
+//   Stores the physical, visualization, and collision properties for a single
+//   propeller hub of the UAV. Includes a Chrono body (AuxRef), initial pose,
+//   mass and inertia properties, reference frame, visualization filename, 
+//   collision shapes, and rendering color and opacity.
 //
 // Members:
 //   body          - Shared pointer to Chrono body (AuxRef) for the propeller.
-//   init_pos      - Initial position (Chrono coordinates) of the propeller.
-//   init_rot      - Initial orientation (quaternion) of the propeller.
-//   mass          - Mass of the propeller body.
+//   init_pos      - Initial position of the propeller (Chrono coordinates).
+//   init_rot      - Initial orientation of the propeller (quaternion).
+//   mass          - Mass of the propeller body (kg).
 //   InertiaXX     - Principal moments of inertia about axes.
-//   InertiaXY     - Products of inertia.
+//   InertiaXY     - Products of inertia (off-diagonal).
 //   COM           - Center of mass reference frame.
-//   vis_obj_name  - Filename for the visualization mesh (.obj).
-//   collision     - List of tuples of collision shapes and associated frames.
+//   vis_obj_name  - Filename for visualization mesh (.obj).
+//   collision     - List of collision shapes and associated frames.
+//   color         - Chrono RGB color value (default: NULLCOLOR for unset).
+//   opacity       - Opacity value (default: 1.0 for fully opaque; 
+//                                           0.0 is transparent/null).
 // ----------------------------------------------------------------------------
 struct propstruct {
     std::shared_ptr<chrono::ChBodyAuxRef> body;
@@ -144,6 +182,8 @@ struct propstruct {
     chrono::ChFramed COM;
     std::string vis_obj_name;
     std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
+    chrono::ChColor color = _prop_color_::NULLCOLOR;      // Default: unset/null
+    float opacity = 1.0f;                                 // Default: opaque
 };
 
 
@@ -174,6 +214,7 @@ struct m_states {
     chrono::ChVector3d ovel;
     chrono::ChVector3d oacc;
 };
+
 
 // ----------------------------------------------------------------------------
 // Enum: LinkType
@@ -431,6 +472,12 @@ protected:
     virtual void ConfigureUAVPropCollisionShapes(
     size_t idx, const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list) = 0;
 
+    // Set prop color based on the predefined enum values
+    virtual void ConfigureUAVPropColor(size_t idx, chrono::ChColor color) = 0;
+
+    // Set prop opacity based on the value passed in
+    virtual void ConfigureUAVPropOpacity(size_t idx, float val) = 0;
+
     // Create, intialize, and register prop body in interal body list.
     virtual void InitiateUAVProp() = 0;
 
@@ -511,6 +558,9 @@ protected:
 	
 	void ConfigureUAVPropCollisionShapes
 	(size_t idx, const std::vector<_acsl_::_uav_::CollisionShapeFrame>& list) override;
+
+    void ConfigureUAVPropColor(size_t idx, chrono::ChColor color) override;
+    void ConfigureUAVPropOpacity(size_t idx, float val) override;
 
     void InitiateUAVProp() override;
 

@@ -444,6 +444,48 @@ void simuav<nop>::ConfigureUAVPropCollisionShapes(size_t idx, const std::vector<
 
 
 // =========================================================================================================
+// ConfigureUAVPropColor(idx, color)
+//
+// Purpose:
+//   Set the prop color based on the predefined values in _acsl_::_uav_::_prop_color_
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   color - Color value for the prop
+// 
+// Notes:
+//   - Needed for visual mesh assignment during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropColor(size_t idx, chrono::ChColor color)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx -1].color = color;            // Assign if within range
+}
+
+
+// =========================================================================================================
+// ConfigureUAVPropOpacity(idx, val)
+//
+// Purpose:
+//   Set the prop opacity based on the float value input.
+// 
+// Parameters:
+//   idx - 1-based index (1 <= idx <= nop).
+//   val - Opacity value from 0 - 1. [ 0 - fully transparent | 1 - fully opaque ]
+// 
+// Notes:
+//   - Needed for visual mesh assignment during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVPropOpacity(size_t idx, float val)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    props[idx -1].opacity = val;            // Assign if within range
+}
+
+
+// =========================================================================================================
 // InitiateUAVProp()
 //
 // Purpose:
@@ -490,6 +532,8 @@ void simuav<nop>::InitiateUAVProp()
         auto trimesh_shape = chrono_types::make_shared<chrono::ChVisualShapeTriangleMesh>();
         trimesh_shape->SetMesh(trimesh);
         trimesh_shape->SetMutable(false); // Make it immutable for performance
+        trimesh_shape->SetColor(props[idx].color);
+        trimesh_shape->SetOpacity(props[idx].opacity);
 
         // Add shape to body at zero offset with identity rotation
         props[idx].body->AddVisualShape(

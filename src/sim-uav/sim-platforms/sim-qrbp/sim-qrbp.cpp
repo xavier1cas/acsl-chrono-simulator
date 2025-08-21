@@ -155,6 +155,10 @@ void simqrbp::ConfigureQRBPProps()
 
     // There are no collision geometries - Therefore we ignore that step
 
+    // Set the color and opacity values
+    prop_properties.color = _uav_::_prop_color_::BLACK;
+    prop_properties.opacity = 0.5;
+
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(1, prop_properties.init_pos);
     ConfigureUAVPropInitRot(1, prop_properties.init_rot);
@@ -163,6 +167,8 @@ void simqrbp::ConfigureQRBPProps()
     ConfigureUAVPropInertiaXY(1, prop_properties.InertiaXY);
     ConfigureUAVPropCOM(1, prop_properties.COM);
     ConfigureUAVPropOBJName(1, prop_properties.vis_obj_name);
+    ConfigureUAVPropColor(1, prop_properties.color);
+    ConfigureUAVPropOpacity(1, prop_properties.opacity);
     
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the intial position of the propeller
@@ -187,6 +193,10 @@ void simqrbp::ConfigureQRBPProps()
 
     // There are no collision geometries - Therefore we ignore that step
 
+    // Set the color and opacity values
+    prop_properties.color = _uav_::_prop_color_::BLACK;
+    prop_properties.opacity = 0.5;
+
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(2, prop_properties.init_pos);
     ConfigureUAVPropInitRot(2, prop_properties.init_rot);
@@ -195,6 +205,8 @@ void simqrbp::ConfigureQRBPProps()
     ConfigureUAVPropInertiaXY(2, prop_properties.InertiaXY);
     ConfigureUAVPropCOM(2, prop_properties.COM);
     ConfigureUAVPropOBJName(2, prop_properties.vis_obj_name);
+    ConfigureUAVPropColor(2, prop_properties.color);
+    ConfigureUAVPropOpacity(2, prop_properties.opacity);
 
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the intial position of the propeller
@@ -219,6 +231,10 @@ void simqrbp::ConfigureQRBPProps()
 
     // There are no collision geometries - Therefore we ignore that step
 
+    // Set the color and opacity values
+    prop_properties.color = _uav_::_prop_color_::BLACK;
+    prop_properties.opacity = 0.5;
+
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(3, prop_properties.init_pos);
     ConfigureUAVPropInitRot(3, prop_properties.init_rot);
@@ -227,6 +243,8 @@ void simqrbp::ConfigureQRBPProps()
     ConfigureUAVPropInertiaXY(3, prop_properties.InertiaXY);
     ConfigureUAVPropCOM(3, prop_properties.COM);
     ConfigureUAVPropOBJName(3, prop_properties.vis_obj_name);
+    ConfigureUAVPropColor(3, prop_properties.color);
+    ConfigureUAVPropOpacity(3, prop_properties.opacity);
 
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the intial position of the propeller
@@ -251,6 +269,10 @@ void simqrbp::ConfigureQRBPProps()
 
     // There are no collision geometries - Therefore we ignore that step
 
+    // Set the color and opacity values
+    prop_properties.color = _uav_::_prop_color_::BLACK;
+    prop_properties.opacity = 0.5;
+
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(4, prop_properties.init_pos);
     ConfigureUAVPropInitRot(4, prop_properties.init_rot);
@@ -259,6 +281,8 @@ void simqrbp::ConfigureQRBPProps()
     ConfigureUAVPropInertiaXY(4, prop_properties.InertiaXY);
     ConfigureUAVPropCOM(4, prop_properties.COM);
     ConfigureUAVPropOBJName(4, prop_properties.vis_obj_name);
+    ConfigureUAVPropColor(4, prop_properties.color);
+    ConfigureUAVPropOpacity(4, prop_properties.opacity);
 
     // ------------------------------------------------------------------------------ INITIATE THE PROPELLERS
     InitiateUAVProp();
