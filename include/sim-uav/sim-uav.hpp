@@ -114,6 +114,24 @@ namespace _prop_color_ {
     inline const chrono::ChColor GREY      {0.1f, 0.1f, 0.1f};
 } // namespace _prop_color_
 
+// ----------------------------------------------------------------------------
+// Namespace: _acsl_::_uav_::_motor_dir_
+//
+// Purpose:
+//   Defines integer constants for motor rotation direction, for use in
+//   UAV modeling and simulation. Positive (+1) indicates counterclockwise (CCW),
+//   negative (-1) indicates clockwise (CW).
+//
+// Members:
+//   CCW - Counterclockwise rotation (value: +1)
+//   CW  - Clockwise rotation (value: -1)
+// ----------------------------------------------------------------------------
+namespace _motor_dir_ {
+    inline const int CCW = +1; // Counterclockwise
+    inline const int CW  = -1; // Clockwise
+} // namespace _motor_dir_
+
+
 // =====================================================================================================================
 // Shared data structures
 // =====================================================================================================================
@@ -156,7 +174,7 @@ struct chassisstruct {
 //   Stores the physical, visualization, and collision properties for a single
 //   propeller hub of the UAV. Includes a Chrono body (AuxRef), initial pose,
 //   mass and inertia properties, reference frame, visualization filename, 
-//   collision shapes, and rendering color and opacity.
+//   collision shapes, rendering color, opacity, and rotation direction.
 //
 // Members:
 //   body          - Shared pointer to Chrono body (AuxRef) for the propeller.
@@ -181,9 +199,24 @@ struct propstruct {
     chrono::ChVector3d InertiaXY;
     chrono::ChFramed COM;
     std::string vis_obj_name;
-    std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
+    std::vector<CollisionShapeFrame> collision;
     chrono::ChColor color = _prop_color_::NULLCOLOR;      // Default: unset/null
     float opacity = 1.0f;                                 // Default: opaque
+};
+
+
+// ----------------------------------------------------------------------------
+// Structure: motorstruct
+//
+// Purpose:
+//   Stores all the data associated with the actuators for the UAV.
+//
+// Members:
+//   rotation_dir  - Propeller rotation direction integer (+1 = CCW, -1 = CW;
+//                   use values from _acsl_::_uav_::_rotation_dir_).
+// ----------------------------------------------------------------------------
+struct motorstruct {
+    int spin_dir = _motor_dir_::CW;                      // Default: clockwise
 };
 
 
@@ -389,6 +422,9 @@ public:
     // Access the propstruct for modifying prop parameters directly.
     virtual propstruct& GetUAVProp(size_t idx) = 0;
 
+    // Acess the motorstruct for modifying motor parameters directly.
+    virtual motorstruct& GetUAVMotor(size_t idx) = 0;
+
     // Return all Chrono body pointers belonging to the UAV.
     virtual std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() = 0;
 
@@ -481,6 +517,9 @@ protected:
     // Create, intialize, and register prop body in interal body list.
     virtual void InitiateUAVProp() = 0;
 
+    // Set motor spin direction based on the value passed in 
+    virtual void ConfigureUAVMotorSpinDir(size_t idx, float spin) = 0;
+
     // Create, inialize, and register all the links present in the drone.
     virtual void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) = 0;
     
@@ -515,6 +554,7 @@ public:
     chrono::ChFrame<> GetInertialNEDFrame() override;
     chassisstruct& GetUAVChassis() override { return chassis; }
     propstruct& GetUAVProp(size_t idx) override;
+    motorstruct& GetUAVMotor(size_t idx) override;
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
     void AddUAVToSystem() override;
@@ -564,6 +604,8 @@ protected:
 
     void InitiateUAVProp() override;
 
+    void ConfigureUAVMotorSpinDir(size_t idx, float spin) override;
+
     void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) override;
 
 private:
@@ -575,6 +617,7 @@ private:
     std::shared_ptr<chrono::ChBodyAuxRef> InertialFrameNED;      // Inertial NED frame chrono-body
     chassisstruct chassis;                                       // Chassis data
     std::array<propstruct, nop> props;                           // Propeller data
+    std::array<motorstruct, nop> motors;                         // Actuator data
     std::vector<LinkData> links;                                 // All the link data for the UAV
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> bodylist; // All body pointers for registration
     std::vector<std::shared_ptr<chrono::ChLinkBase>> linklist;   // All link pointers for registration

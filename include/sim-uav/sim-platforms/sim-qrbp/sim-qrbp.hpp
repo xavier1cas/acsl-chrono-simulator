@@ -88,6 +88,7 @@ public:
         ConfigureQRBPChassis();                                 // <- Compulsary derived class function
         ConfigureQRBPProps();                                   // <- Compulsary derived class function
         ConfigureQRBPLinks();                                   // <- Compulsary derived class function
+        ConfigureQRBPMotors();                                  // <- Compulsary derived class function
         
         AddUAVToSystem();                                       // <- Baseclass function
 
@@ -105,6 +106,7 @@ public:
     //   - Function to setup the chassis
     //   - Function to setup the propellers
     //   - Function to setup all the links for the platform
+    //   - Function to setup all the motors for the platform
     //
     // The unique functions are:
     //   -
@@ -112,6 +114,7 @@ public:
     void ConfigureQRBPChassis();
     void ConfigureQRBPProps();
     void ConfigureQRBPLinks();
+    void ConfigureQRBPMotors();
 };
 
 

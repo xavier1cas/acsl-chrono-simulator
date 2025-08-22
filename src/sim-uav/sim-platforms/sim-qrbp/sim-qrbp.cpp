@@ -47,7 +47,7 @@ namespace _qrbp_
 void simqrbp::ConfigureQRBPChassis()
 {
     // Create the struct for processing the uav chassis properties
-    ::_acsl_::_uav_::chassisstruct chassis_properties;
+    _uav_::chassisstruct chassis_properties;
 
     // Configure the initial position of the chassis ------------ -----------------------------------------------------
     chassis_properties.init_pos = chrono::ChVector3d(0.0984471609373536,0.187071795527612,0.17256855449029);
@@ -130,7 +130,7 @@ void simqrbp::ConfigureQRBPChassis()
 void simqrbp::ConfigureQRBPProps()
 {
     // Create the struct for processing the uav propeller properties
-    ::_acsl_::_uav_::propstruct prop_properties;
+    _uav_::propstruct prop_properties;
 
     // ------------------------------------------------ 1 ------------------------------------------------ //
     // Configure the intial position of the propeller
@@ -296,14 +296,14 @@ void simqrbp::ConfigureQRBPLinks()
     std::vector<_uav_::LinkData> link_data_vec;
     
     // ---- Concentric2 (chassis to propeller_1) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Concentric2", GetUAVChassis().body, GetUAVProp(1).body,
         chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844),
         chrono::ChVector3d(0.184376362665965,0.308068237403556,0.150873963796847),
         chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
         chrono::ChVector3d(0,0,-1)
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
         "Concentric2", GetUAVChassis().body, GetUAVProp(1).body,
         chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844),
         chrono::ChVector3d(0.184376362665965,0.308068237403556,0.150873963796847),
@@ -313,14 +313,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Coincident3 (chassis to propeller_1) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident3", GetUAVChassis().body, GetUAVProp(1).body,
         chrono::ChVector3d(0.184871898993746,0.309085313481266,0.158123963796845),
         chrono::ChVector3d(0.184376362665965,0.308068237403556,0.158123963796847),
         chrono::ChVector3d(0,0,1),
         0.0
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident3", GetUAVChassis().body, GetUAVProp(1).body,
         chrono::ChVector3d(0.184871898993746,0.309085313481266,0.158123963796845),
         chrono::ChVector3d(0.184376362665965,0.308068237403556,0.158123963796847),
@@ -329,14 +329,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Concentric3 (chassis to propeller_2) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
         chrono::ChVector3d(-0.00942816685338319,0.086637844787446,0.152623963796845),
         chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.150873963796845),
         chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
         chrono::ChVector3d(0,0,-1)
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
         "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
         chrono::ChVector3d(-0.00942816685338319,0.086637844787446,0.152623963796845),
         chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.150873963796845),
@@ -346,14 +346,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Coincident4 (chassis to propeller_2) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident4", GetUAVChassis().body, GetUAVProp(2).body,
         chrono::ChVector3d(-0.00851099108493078,0.0879488705727621,0.158123963796845),
         chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.158123963796845),
         chrono::ChVector3d(0,0,1),
         0.0
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident4", GetUAVChassis().body, GetUAVProp(2).body,
         chrono::ChVector3d(-0.00851099108493078,0.0879488705727621,0.158123963796845),
         chrono::ChVector3d(-0.00942816685338318,0.086637844787446,0.158123963796845),
@@ -362,14 +362,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Concentric4 (chassis to propeller_3) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
         chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846),
         chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.150873963796845),
         chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
         chrono::ChVector3d(3.46756589967432e-15,-6.8628558519186e-15,-1)
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
         "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
         chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846),
         chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.150873963796845),
@@ -379,14 +379,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Coincident5 (chassis to propeller_3) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident5", GetUAVChassis().body, GetUAVProp(3).body,
         chrono::ChVector3d(0.186801489228191,0.0873580955475104,0.158123963796845),
         chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.158123963796845),
         chrono::ChVector3d(-3.46756589967432e-15,6.8628558519186e-15,1),
         0.0
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident5", GetUAVChassis().body, GetUAVProp(3).body,
         chrono::ChVector3d(0.186801489228191,0.0873580955475104,0.158123963796845),
         chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.158123963796845),
@@ -395,14 +395,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Concentric5 (chassis to propeller_4) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
         chrono::ChVector3d(-0.00942816685338441,0.308068237403485,0.152623963796843),
         chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.150873963796847),
         chrono::ChVector3d(-3.49148133884316e-15,6.98296267768625e-15,1),
         chrono::ChVector3d(0,0,-1)
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Generic>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
         "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
         chrono::ChVector3d(-0.00942816685338441,0.308068237403485,0.152623963796843),
         chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.150873963796847),
@@ -412,14 +412,14 @@ void simqrbp::ConfigureQRBPLinks()
     });
 
     // ---- Coincident6 (chassis to propeller_4) ----
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::DistanceZ>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident6", GetUAVChassis().body, GetUAVProp(4).body,
         chrono::ChVector3d(-0.00968893672835089,0.30731193120074,0.158123963796845),
         chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.158123963796847),
         chrono::ChVector3d(0,0,1),
         0.0
     });
-    link_data_vec.push_back(::_acsl_::_uav_::LinkProperty<::_acsl_::_uav_::LinkType::Parallel>{
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident6", GetUAVChassis().body, GetUAVProp(4).body,
         chrono::ChVector3d(-0.00968893672835089,0.30731193120074,0.158123963796845),
         chrono::ChVector3d(-0.00942816685338454,0.308068237403483,0.158123963796847),
@@ -431,7 +431,43 @@ void simqrbp::ConfigureQRBPLinks()
     LinkUAVBodies(link_data_vec);
 }
 
+// Compulsary derived class function that initiates the motors with all the necessary parameters
+void simqrbp::ConfigureQRBPMotors()
+{
+    // Create the struct for processing the uav motor properties
+    _uav_::motorstruct motor_properties;
 
+    // ------------------------------------------------ 1 ------------------------------------------------ //
+    // Configure the spin direction of the motor
+    motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
+
+    // Call all the configuration helper functions
+    ConfigureUAVMotorSpinDir(1, motor_properties.spin_dir);
+    
+    // ------------------------------------------------ 2 ------------------------------------------------ //
+    // Configure the spin direction of the motor
+    motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
+
+    // Call all the configuration helper functions
+    ConfigureUAVMotorSpinDir(2, motor_properties.spin_dir);
+    
+    // ------------------------------------------------ 3 ------------------------------------------------ //
+    // Configure the spin direction of the motor
+    motor_properties.spin_dir = _uav_::_motor_dir_::CW;
+
+    // Call all the configuration helper functions
+    ConfigureUAVMotorSpinDir(3, motor_properties.spin_dir);
+    
+    // ------------------------------------------------ 4 ------------------------------------------------ //
+    // Configure the spin direction of the motor
+    motor_properties.spin_dir = _uav_::_motor_dir_::CW;
+
+    // Call all the configuration helper functions
+    ConfigureUAVMotorSpinDir(4, motor_properties.spin_dir);
+    
+    // ---------------------------------------------------------------------------------- INITIATE THE MOTORS
+    
+}
 
 }   // namespace _qrbp_
 

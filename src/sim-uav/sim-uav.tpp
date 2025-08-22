@@ -626,6 +626,55 @@ void simuav<nop>::LinkUAVBodies(const std::vector<LinkData>& link_data_vec)
     }
 }
 
+// =========================================================================================================
+// GetUAVMotor(idx)
+// 
+// Purpose:
+//   Provides direct access to the of an individual motor associated with it's respective
+//   propeller hub of the UAV by returning a reference to its motorstruct.
+//   This enables external code to read or modify any motors's data, supporting flexible
+//   setup and configuration of UAV components.
+//
+// Parameters:
+//   idx - 1-based index of the propeller hub to access (first motor is idx=1).
+//         Must satisfy 1 <= idx <= nop.
+//
+// Returns:
+//   Reference to the motorstruct instance corresponding to the requested propeller hub.
+//
+// Notes:
+//   - The underlying std::array still uses zero-based indexing; input idx is decremented internally.
+//   - Throws std::out_of_range if idx is not a valid 1-based propeller index.
+//   - Enables modular, type-safe manipulation of individual UAV propellers for advanced
+//     configuration, tuning, or real-time updates.
+// =========================================================================================================
+template <int nop>
+motorstruct& simuav<nop>::GetUAVMotor(size_t idx)
+{
+    this->CheckUAVPropRequest(idx);         // Check the request
+    return motors[idx - 1];                 // Grant if within range
+}
+
+
+// =========================================================================================================
+// ConfigureUAVMotorSpinDir(idx, spin)
+//
+// Purpose:
+//   Set the motor spin based on the int value input.
+// 
+// Parameters:
+//   idx  - 1-based index (1 <= idx <= nop).
+//   spin - Spin direction value -1 or 1. [ -1 - CW | 1 - CCW ]
+// 
+// Notes:
+//   - Needed motor creation during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorSpinDir(size_t idx, float spin)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    motors[idx -1].spin_dir = spin;         // Assign if within range
+}
 
 
 // =========================================================================================================
