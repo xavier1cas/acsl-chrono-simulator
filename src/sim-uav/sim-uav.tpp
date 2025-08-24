@@ -670,10 +670,31 @@ motorstruct& simuav<nop>::GetUAVMotor(size_t idx)
 //   - Needed motor creation during simulation setup.
 // =========================================================================================================
 template <int nop>
-void simuav<nop>::ConfigureUAVMotorSpinDir(size_t idx, float spin)
+void simuav<nop>::ConfigureUAVMotorSpinDir(size_t idx, int spin)
 {
     this->CheckUAVPropRequest(idx);         // Check the id of the propeller
     motors[idx -1].spin_dir = spin;         // Assign if within range
+}
+
+
+// =========================================================================================================
+// ConfigureUAVMotorFrame(idx, frame)
+//
+// Purpose:
+//   Set the motor frame based on the frame value input.
+// 
+// Parameters:
+//   idx  - 1-based index (1 <= idx <= nop).
+//   frame - Frame where the motor is located.
+// 
+// Notes:
+//   - Needed motor creation during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame)
+{
+    this->CheckUAVPropRequest(idx);         // Check the id of the propeller
+    motors[idx -1].frame = frame;           // Assign if within range
 }
 
 

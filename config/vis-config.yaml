@@ -52,6 +52,8 @@ main:
   render_ned_frame: true
   # Show body-fixed UAV frame axes
   render_body_frame: true
+  # Show propeller frame axes
+  render_prop_frames: true
   # Show all COG frames in the scene
   render_all_COG_frames: false
 

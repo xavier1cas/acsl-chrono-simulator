@@ -214,9 +214,13 @@ struct propstruct {
 // Members:
 //   rotation_dir  - Propeller rotation direction integer (+1 = CCW, -1 = CW;
 //                   use values from _acsl_::_uav_::_rotation_dir_).
+//   frame - Frame / location of the motor. Needs the marker location from the
+//           CAD model export. 
 // ----------------------------------------------------------------------------
 struct motorstruct {
     int spin_dir = _motor_dir_::CW;                      // Default: clockwise
+    chrono::ChFramed frame;                              
+
 };
 
 
@@ -413,6 +417,9 @@ public:
     // Get the file system path string for the UAV's shapes directory.
     virtual std::string GetUAVShapesDir() const = 0;
 
+    // Get number of UAV propellers.
+    virtual int GetPropCount() = 0;
+
     // Return the inertial NED frame as a Chrono ChFrame object.
     virtual chrono::ChFrame<> GetInertialNEDFrame() = 0;
 
@@ -477,9 +484,6 @@ protected:
     // Create, initialize, and register chassis body in internal body list.
     virtual void InitiateUAVChassis() = 0;
 
-    // Get number of UAV propellers.
-    virtual int GetPropCount() = 0;
-
     // Check the propeller request (starts at 1 and not 0)
     virtual void CheckUAVPropRequest(size_t idx) = 0;
 
@@ -518,7 +522,10 @@ protected:
     virtual void InitiateUAVProp() = 0;
 
     // Set motor spin direction based on the value passed in 
-    virtual void ConfigureUAVMotorSpinDir(size_t idx, float spin) = 0;
+    virtual void ConfigureUAVMotorSpinDir(size_t idx, int spin) = 0;
+
+    // Set motor frame based on the value passed in
+    virtual void ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame) = 0;
 
     // Create, inialize, and register all the links present in the drone.
     virtual void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) = 0;
@@ -550,6 +557,7 @@ public:
     void SetUAVPlatformName(std::string name) override { this->name_ = name; }
     std::string GetUAVPlatformName() const override { return name_; }
     std::string GetUAVShapesDir() const override { return shapes_dir; }
+    int GetPropCount() override { return nop; }
 
     chrono::ChFrame<> GetInertialNEDFrame() override;
     chassisstruct& GetUAVChassis() override { return chassis; }
@@ -584,7 +592,6 @@ protected:
 
     void InitiateUAVChassis() override;
 
-    int GetPropCount() override { return nop; }
     void CheckUAVPropRequest(size_t idx) override;
     
 	void ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos) override;
@@ -604,7 +611,8 @@ protected:
 
     void InitiateUAVProp() override;
 
-    void ConfigureUAVMotorSpinDir(size_t idx, float spin) override;
+    void ConfigureUAVMotorSpinDir(size_t idx, int spin) override;
+    void ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame) override;
 
     void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) override;
 

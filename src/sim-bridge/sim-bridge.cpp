@@ -169,7 +169,14 @@ void simbridge::UpdateVisualizationSystem()
 
         // Render the NED body frame of reference if requested
         if (this->m_sys.GetVisConfig().render_body_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(uav->GetUAVChassis().body->GetFrameRefToAbs(), 1);
+            this->m_sys.GetVisionSystem().RenderFrame(uav->GetUAVChassis().body->GetFrameRefToAbs(), 0.6);
+        }
+
+        // Render all the propeller frame of reference if requested
+        if (this->m_sys.GetVisConfig().render_prop_frames) {
+            for (int idx = 1; idx <= this->uav->GetPropCount(); ++idx) {
+                this->m_sys.GetVisionSystem().RenderFrame(uav->GetUAVProp(idx).body->GetFrameRefToAbs(), 0.3);
+            }
         }
 
         // Render all the COG frames of reference if requested

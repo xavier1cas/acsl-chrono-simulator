@@ -90,6 +90,7 @@ struct visionconfig {
     double mv_cam_chase_ht;
     double mv_cam_chase_dt;
     bool render_all_COG_frames;
+    bool render_prop_frames;
 };
 
 // =====================================================================================================================

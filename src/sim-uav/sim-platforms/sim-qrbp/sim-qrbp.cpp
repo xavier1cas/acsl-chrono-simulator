@@ -440,30 +440,42 @@ void simqrbp::ConfigureQRBPMotors()
     // ------------------------------------------------ 1 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844),
+                                              chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(1, motor_properties.spin_dir);
+    ConfigureUAVMotorFrame(1, motor_properties.frame);
     
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-0.00942816685338317,0.086637844787446,0.152623963796845),
+                                              chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(2, motor_properties.spin_dir);
+    ConfigureUAVMotorFrame(2, motor_properties.frame);
     
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CW;
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846),
+                                              chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(3, motor_properties.spin_dir);
+    ConfigureUAVMotorFrame(3, motor_properties.frame);
     
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CW;
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-0.00942816685338455,0.308068237403483,0.152623963796843),
+                                              chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(4, motor_properties.spin_dir);
+    ConfigureUAVMotorFrame(4, motor_properties.frame);
     
     // ---------------------------------------------------------------------------------- INITIATE THE MOTORS
     
