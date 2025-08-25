@@ -49,6 +49,7 @@
 #include "sim-helpers.hpp"
 #include "sim-messages.hpp"
 #include "fkYAML/node.hpp"
+#include "Eigen/Dense"
 
 // Chrono includes
 #include "chrono/physics/ChSystemNSC.h"
@@ -216,16 +217,29 @@ struct propstruct {
 //                   for the motor.
 //   speed         - Shared pointer to Chrono function (ChFunctionConst) 
 //                   for the motor.
+//   thrust        - Shared pointer to Chrono Thrust (ChForce) for the motor.
+//   torque        - Shared pointer to Chrono Torque (ChForce) for the motor.
 //   frame         - Frame / location of the motor. Needs the marker location
 //                   from the CAD model export.
 //   rotation_dir  - Propeller rotation direction integer (+1 = CCW, -1 = CW;
 //                   use values from _acsl_::_uav_::_rotation_dir_).
+//   norm2newt     - Polynomial vector to compute the thrust in N from a
+//                   normalized thrust [0-1] value.
+//   newt2norm     - Polynomial vector to compute the normalized thrust [0-1]
+//                   from a thrust in N value.
+//   norm2rps      - Polynomial vector to compute the rad/s speed of the rotor
+//                   from a normalized thrust [0-1] value.
 // ----------------------------------------------------------------------------
 struct motorstruct {
     std::shared_ptr<chrono::ChLinkMotorRotationSpeed> motor;
     std::shared_ptr<chrono::ChFunctionConst> speed;
+    std::shared_ptr<chrono::ChForce> thrust;
+    std::shared_ptr<chrono::ChForce> torque;
     chrono::ChFramed frame;                              
     int spin_dir = _motor_dir_::CW;                      // Default: clockwise
+    Eigen::VectorXd norm2newt;
+    Eigen::VectorXd newt2norm;
+    Eigen::VectorXd norm2rps;
 };
 
 
@@ -452,6 +466,9 @@ public:
     // Retrieve the Propeller's full state data in the NED frame.
     virtual m_states GetUAVPropStateData(size_t idx) = 0;
 
+    // Function to set the thrust setpoints of the UAV
+    virtual void SetActuator(size_t idx, double thrust, double torque, double rpm) = 0;
+
 protected:
     // ---------------- Protected API ----------------
 
@@ -535,6 +552,15 @@ protected:
     // Set motor frame based on the value passed in
     virtual void ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame) = 0;
 
+    // Set the motor polynomial for converting from Normalized thrust value to Newtons
+    virtual void ConfigureUAVMotorNorm2Newt(size_t idx, Eigen::VectorXd& poly) = 0;
+
+    // Set the motor polynomial for converting from Newtons to Normalized thrust value
+    virtual void ConfigureUAVMotorNewt2Norm(size_t idx, Eigen::VectorXd& poly) = 0;
+
+    // Set the motor polynomial for converting from Normalized thrust value to RPS
+    virtual void ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly) = 0;
+
     // Create, initialize, and register motor in the internal list
     virtual void InitiateUAVMotors() = 0;
 
@@ -571,14 +597,20 @@ public:
     int GetPropCount() override { return nop; }
 
     chrono::ChFrame<> GetInertialNEDFrame() override;
+    
     chassisstruct& GetUAVChassis() override { return chassis; }
     propstruct& GetUAVProp(size_t idx) override;
     motorstruct& GetUAVMotor(size_t idx) override;
+
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
+    
     void AddUAVToSystem() override;
+
     m_states GetUAVStateData() override;
     m_states GetUAVPropStateData(size_t idx) override;
+
+    void SetActuator(size_t idx, double thrust, double torque, double rpm) override;
 
 protected:
     // ---------------- Protected API overrides ----------------
@@ -625,6 +657,11 @@ protected:
 
     void ConfigureUAVMotorSpinDir(size_t idx, int spin) override;
     void ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame) override;
+
+    
+    void ConfigureUAVMotorNorm2Newt(size_t idx, Eigen::VectorXd& poly) override;
+    void ConfigureUAVMotorNewt2Norm(size_t idx, Eigen::VectorXd& poly) override;
+    void ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly) override;
 
     void InitiateUAVMotors() override;
 

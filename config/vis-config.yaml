@@ -49,13 +49,13 @@ main:
   
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene
-  render_ned_frame: false
+  render_ned_frame: true
   # Show body-fixed UAV frame axes
-  render_body_frame: false
+  render_body_frame: true
   # Show propeller frame axes
   render_prop_frames: false
   # Show all COG frames in the scene
-  render_all_COG_frames: true
+  render_all_COG_frames: false
 
   # Rendering effects ----------------------------------------------
   # Toggle shadow rendering (GPU-intensive)

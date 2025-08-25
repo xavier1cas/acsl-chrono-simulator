@@ -697,6 +697,61 @@ void simuav<nop>::ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame)
     motors[idx -1].frame = frame;           // Assign if within range
 }
 
+
+// =========================================================================================================
+// ConfigureUAVMotorNorm2Newt(idx, vec)
+//
+// Purpose:
+//   Set the motor polynomial vector for converting normalized thrust values [0-1] to Newtons.
+//
+// Parameters:
+//   idx  - 1-based index (1 <= idx <= nop).
+//   poly - Eigen::VectorXd containing polynomial coefficients.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorNorm2Newt(size_t idx, Eigen::VectorXd& poly)
+{
+    this->CheckUAVPropRequest(idx);
+    motors[idx - 1].norm2newt = poly;
+}
+
+
+// =========================================================================================================
+// ConfigureUAVMotorNewt2Norm(idx, vec)
+//
+// Purpose:
+//   Set the motor polynomial vector for converting Newtons to normalized thrust values [0-1].
+//
+// Parameters:
+//   idx  - 1-based index (1 <= idx <= nop).
+//   poly - Eigen::VectorXd containing polynomial coefficients.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorNewt2Norm(size_t idx, Eigen::VectorXd& poly)
+{
+    this->CheckUAVPropRequest(idx);
+    motors[idx - 1].newt2norm = poly;
+}
+
+
+// =========================================================================================================
+// ConfigureUAVMotorNorm2RPS(idx, vec)
+//
+// Purpose:
+//   Set the motor polynomial vector for converting normalized thrust values [0-1] to rotor speed in rad/s.
+//
+// Parameters:
+//   idx  - 1-based index (1 <= idx <= nop).
+//   poly - Eigen::VectorXd containing polynomial coefficients.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly)
+{
+    this->CheckUAVPropRequest(idx);
+    motors[idx - 1].norm2rps = poly;
+}
+
+
 // =========================================================================================================
 // InitiateUAVMotors()
 //
@@ -761,31 +816,51 @@ void simuav<nop>::InitiateUAVMotors()
         motors[idx].speed->SetConstant(0.0);   // Set the initial speed to 0 rpm
         motors[idx].motor->SetSpeedFunction(motors[idx].speed);
 
-        // auto thrust = chrono_types::make_shared<chrono::ChForce>();
-        // thrust->SetName("thrust_" + std::to_string(idx + 1));   // 1-based name
-        // thrust->SetBody(this->GetUAVChassis().body.get());
-        // thrust->SetMode(chrono::ChForce::ForceType::FORCE);
-        // thrust->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
-        // thrust->SetRelDir(chrono::ChVector3d(0,0,-1));
-        // auto rel_coord = _transformations_::GetNEDPosFromChrono( this->GetUAVProp(idx + 1).body->GetPos() - this->GetUAVChassis().body->GetPos() );
-        // std::cout << "Thrust position [" << (idx + 1) << "]: " 
-        //           << rel_coord.x() << ", "
-        //           << rel_coord.y() << ", "
-        //           << rel_coord.z() << std::endl;
-        // std::cout << "Prop position [" << (idx + 1) << "]: " 
-        //           << this->GetUAVProp(idx + 1).body->GetPos().x() << ", "
-        //           << this->GetUAVProp(idx + 1).body->GetPos().y() << ", "
-        //           << this->GetUAVProp(idx + 1).body->GetPos().z() << std::endl;
-        // std::cout << "Chassis position [" << (idx + 1) << "]: " 
-        //           << this->GetUAVChassis().body->GetPos().x() << ", "
-        //           << this->GetUAVChassis().body->GetPos().y() << ", "
-        //           << this->GetUAVChassis().body->GetPos().z() << std::endl;
-        // thrust->SetVrelpoint(rel_coord);
-        // thrust->SetMforce(4.25);
-        // GetUAVChassis().body->AddForce(thrust);        
+        // ------------------------------------------------------------------------
+        // STEP 5 – Set up the thrust function and the initial thrust
+        // ------------------------------------------------------------------------
+        motors[idx].thrust = chrono_types::make_shared<chrono::ChForce>();      // Initiate the thrust force
+        motors[idx].thrust->SetName("thrust_" + std::to_string(idx + 1));       // 1-based name
+        motors[idx].thrust->SetBody(this->GetUAVChassis().body.get());          // Thrust is applied to the chassis
+        motors[idx].thrust->SetMode(chrono::ChForce::ForceType::FORCE);         // It is of the type force
+        motors[idx].thrust->SetFrame(chrono::ChForce::ReferenceFrame::BODY);    // It is applied in the body frame
+        motors[idx].thrust->SetRelDir(chrono::ChVector3d(0,0,-1));              // It is applied in the -ve z (NED)
+        
+        // Iteratively compute where this thrust is applied wrt to the chassis and rotor hub.
+        auto rel_coord = _transformations_::GetNEDPosFromChrono( this->GetUAVProp(idx + 1).body->GetPos() 
+                                                                 - this->GetUAVChassis().body->GetPos() );
+        // Point out the location in the chassis body frame (NED)
+        motors[idx].thrust->SetVrelpoint(rel_coord);
+        motors[idx].thrust->SetMforce(0);                                       // Apply an initial thrust
+        GetUAVChassis().body->AddForce(motors[idx].thrust);                     // Add this thrust force to the body
 
         // ------------------------------------------------------------------------
-        // STEP 5 – Register the motor link in the UAV's internal link list
+        // STEP 5 – Set up the torque function and the initial thrust
+        // ------------------------------------------------------------------------
+        motors[idx].torque = chrono_types::make_shared<chrono::ChForce>();      // Initiate the torque force
+        motors[idx].torque->SetName("torque_" + std::to_string(idx + 1));       // 1-basead name
+        motors[idx].torque->SetBody(this->GetUAVChassis().body.get());          // Thrust is applied to the chassis
+        motors[idx].torque->SetMode(chrono::ChForce::ForceType::TORQUE);        // It is of the type torque
+        motors[idx].torque->SetFrame(chrono::ChForce::ReferenceFrame::BODY);    // It is applied in the body frame
+        // Compute the axis around which the backtorque is applied.
+        // CCW : -Z NED | CW : Z NED
+        if (motors[idx].spin_dir == _motor_dir_::CW)
+        {
+            motors[idx].torque->SetRelDir(chrono::ChVector3d(0,0,-1));
+        }    
+        else
+        {
+            motors[idx].torque->SetRelDir(chrono::ChVector3d(0,0,1));
+        }
+
+        // Point out the location in the chassis body frame (NED)
+        motors[idx].torque->SetVrelpoint(rel_coord);
+        motors[idx].torque->SetMforce(0);                                       // Apply an initial thrust
+        GetUAVChassis().body->AddForce(motors[idx].torque);                     // Add this torque force to the body
+
+        _message_::SIMULATOR_INFO("[SIMUAV]: ADDING MOTOR AT: ", rel_coord );
+        // ------------------------------------------------------------------------
+        // STEP 7 – Register the motor link in the UAV's internal link list
         //   This list will later be added to the physics system in AddUAVToSystem()
         // ------------------------------------------------------------------------
         linklist.push_back(motors[idx].motor);
@@ -937,11 +1012,6 @@ m_states simuav<nop>::GetUAVStateData()
 template <int nop>
 m_states simuav<nop>::GetUAVPropStateData(size_t idx)
 {
-    // ------------------------------------------------------------------------
-    // STEP 1 - Check if the given index is valid
-    // ------------------------------------------------------------------------
-    this->CheckUAVPropRequest(idx);
-
     // Object to store and return the state data
     m_states m_state;
 
@@ -1010,6 +1080,35 @@ m_states simuav<nop>::GetUAVPropStateData(size_t idx)
 
     // Return the filled state struct
     return m_state;
+}
+
+// =========================================================================================================
+// SetActuator(idx, thrust, torque, rpm)
+// 
+// Purpose:
+//   Sets the motor thrust, backtorque and the rpm setpoints.
+//
+// Parameters:
+//   idx    - 1-based index (1 <= idx <= nop).
+//   thrust - thrust value in (N)
+//   torque - troque value in (Nm)
+//   rpm    - angular velocity setpoint of the rotors in (rad/s)
+//   
+// 
+// Notes:
+//   - Needed motor creation during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::SetActuator(size_t idx, double thrust, double torque, double rpm)
+{
+    // Set the thrust setpoint
+    this->GetUAVMotor(idx).thrust->SetMforce(thrust);
+
+    // Set the torque setpoint
+    this->GetUAVMotor(idx).torque->SetMforce(torque);
+
+    // Set the motor rpm
+    this->GetUAVMotor(idx).speed->SetConstant(rpm);
 }
 
 }   // namespace _uav_

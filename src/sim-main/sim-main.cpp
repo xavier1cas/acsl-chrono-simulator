@@ -165,7 +165,7 @@ int main(int argc, char* argv[]) {
     chrono::ChRealtimeStepTimer realtime_timer;
     double step_size = m_bridge.GetSimSystem().GetPhyConfig().StepSize;
     bool display{false};
-    bool display_drone{false};
+    bool display_drone{true};
 
     realtime_timer.start();
     
@@ -221,6 +221,11 @@ int main(int argc, char* argv[]) {
         // Get the UAV's states
         auto states = m_bridge.GetUAV()->GetUAVStateData();
 
+        auto forces = _acsl_::_transformations_::GetNEDPosFromChrono( m_bridge.GetUAV()->GetUAVChassis().body->GetAppliedForce() );
+        auto torques = m_bridge.GetUAV()->GetUAVChassis().body->GetAppliedTorque() ;
+        
+        
+
         if (display)
         {
             std::cout << "Simulation time: " << sim_time << " s, "  << std::endl;
@@ -273,6 +278,16 @@ int main(int argc, char* argv[]) {
                     << pretty(states.ovel.x(), 1e-10) << ", "
                     << pretty(states.ovel.y(), 1e-10) << ", "
                     << pretty(states.ovel.z(), 1e-10) << std::endl;
+
+            std::cout << "UAV FORCES IN NED FRAME: "
+                      << pretty(forces.x(), 1e-10) << ", "
+                      << pretty(forces.y(), 1e-10) << ", "
+                      << pretty(forces.z(), 1e-10) << std::endl;
+
+            std::cout << "UAV TORQUES IN NED FRAME: "
+                      << pretty(torques.x(), 1e-10) << ", "
+                      << pretty(torques.y(), 1e-10) << ", "
+                      << pretty(torques.z(), 1e-10) << std::endl;
         }
 
     }

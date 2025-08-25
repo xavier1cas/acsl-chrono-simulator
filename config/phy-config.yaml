@@ -39,7 +39,7 @@ physics:
   # Enable gravity in NED frame [0, 0, 9.81]
   # true  → Apply Earth gravity
   # false → Zero-gravity simulation
-  gravity: true
+  gravity: false
 
 
 # ============================================================================
