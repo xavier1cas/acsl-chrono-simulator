@@ -58,6 +58,23 @@ chrono::ChQuaternion<> GetChronoOrientaitonFromNED(const chrono::ChQuaternion<>&
     return q_result;
 }
 
+// Converts from Chrono's global/world frame to NED position
+chrono::ChVector3d GetNEDPosFromChrono(const chrono::ChVector3d& pos_chrono)
+{
+    chrono::ChQuaternion<> RotChABSFrametoNEDFrame = chrono::QuatFromAngleX(-chrono::CH_PI_2); // inverse rotation
+    return RotChABSFrametoNEDFrame.Rotate(pos_chrono);
+}
+
+// Converts from Chrono's global frame to NED quaternion
+chrono::ChQuaternion<> GetNEDOrientationFromChrono(const chrono::ChQuaternion<>& q_chrono)
+{
+    chrono::ChQuaternion<> q_rot = chrono::QuatFromAngleX(-chrono::CH_PI_2);
+    chrono::ChQuaternion<> q_result;
+    q_result.Cross(q_chrono, q_rot);
+    return q_result;
+}
+
+
 
 }   // namespace _transformations_
 

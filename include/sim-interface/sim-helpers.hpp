@@ -55,6 +55,13 @@ chrono::ChVector3d GetChronoPosFromNED(const chrono::ChVector3d& nedpos);
 // If no input is given it gives the rotation to go from Chrono Frame to NED frame
 chrono::ChQuaternion<> GetChronoOrientaitonFromNED(const chrono::ChQuaternion<>& q_ned = chrono::ChQuaternion<>(1, 0, 0, 0));
 
+// Converts from Chrono's global/world frame to NED position
+chrono::ChVector3d GetNEDPosFromChrono(const chrono::ChVector3d& pos_chrono);
+
+// Converts from Chrono's global frame to NED quaternion
+// If no input is given it gives the rotation to go from NED frame to Chrono Frame
+chrono::ChQuaternion<> GetNEDOrientationFromChrono(const chrono::ChQuaternion<>& q_chrono = chrono::ChQuaternion<>(1, 0, 0, 0));
+
 
 }   // namespace _transformations_
 

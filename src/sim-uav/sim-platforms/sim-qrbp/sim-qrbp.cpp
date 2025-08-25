@@ -285,7 +285,7 @@ void simqrbp::ConfigureQRBPProps()
     ConfigureUAVPropOpacity(4, prop_properties.opacity);
 
     // ------------------------------------------------------------------------------ INITIATE THE PROPELLERS
-    InitiateUAVProp();
+    InitiateUAVProps();
 }
 
 // Compulsary derived class function that initiates all the links for the UAV and passes
@@ -478,6 +478,7 @@ void simqrbp::ConfigureQRBPMotors()
     ConfigureUAVMotorFrame(4, motor_properties.frame);
     
     // ---------------------------------------------------------------------------------- INITIATE THE MOTORS
+    InitiateUAVMotors();
     
 }
 

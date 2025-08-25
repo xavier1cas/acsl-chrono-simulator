@@ -287,7 +287,7 @@ propstruct& simuav<nop>::GetUAVProp(size_t idx)
 //   pos - Initial position of the propeller (Chrono world coordinates).
 // 
 // Notes:
-//   - This must be called before InitiateUAVProp().
+//   - This must be called before InitiateUAVProps().
 // =========================================================================================================
 template <int nop>
 void simuav<nop>::ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos)
@@ -308,7 +308,7 @@ void simuav<nop>::ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos)
 //   rot - Initial orientation as Chrono quaternion.
 // 
 // Notes:
-//   - This must be called before InitiateUAVProp().
+//   - This must be called before InitiateUAVProps().
 // =========================================================================================================
 template <int nop>
 void simuav<nop>::ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot)
@@ -486,7 +486,7 @@ void simuav<nop>::ConfigureUAVPropOpacity(size_t idx, float val)
 
 
 // =========================================================================================================
-// InitiateUAVProp()
+// InitiateUAVProps()
 //
 // Purpose:
 //   Create and configure all UAV propeller bodies, preparing them for simulation.
@@ -496,7 +496,7 @@ void simuav<nop>::ConfigureUAVPropOpacity(size_t idx, float val)
 //   - Physical properties, geometry, and COM must be set before calling.
 // =========================================================================================================
 template <int nop>
-void simuav<nop>::InitiateUAVProp()
+void simuav<nop>::InitiateUAVProps()
 {
     // Iterate through the total number of propellers
     for (int idx =0; idx < nop; ++idx)
@@ -697,6 +697,101 @@ void simuav<nop>::ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame)
     motors[idx -1].frame = frame;           // Assign if within range
 }
 
+// =========================================================================================================
+// InitiateUAVMotors()
+//
+// Purpose:
+//   Create and configure all UAV motor bodies, preparing them for simulation.
+// 
+// Notes:
+//   - This function registers all motors in memory and stores them internally.
+//   - Spin direction and frame must be configured before the initiation
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::InitiateUAVMotors()
+{
+    // Iterate through the total number of propellers
+    for (int idx = 0; idx < nop; ++idx)
+    {
+        // ------------------------------------------------------------------------
+        // STEP 1 – Create the Chrono body for the motor
+        // ------------------------------------------------------------------------
+        motors[idx].motor = chrono_types::make_shared<chrono::ChLinkMotorRotationSpeed>();
+        motors[idx].motor->SetName("motor_" + std::to_string(idx + 1));  // 1-based name
+
+        // ------------------------------------------------------------------------
+        // STEP 2 – Prepare transformed position and orientation for the motor frame
+        // ------------------------------------------------------------------------
+        // Convert NED frame to Chrono frame for both position and orientation
+        chrono::ChVector3<> motor_pos = _transformations_::GetChronoPosFromNED(motors[idx].frame.GetPos());
+        chrono::ChQuaternion<> base_rot = _transformations_::GetChronoOrientaitonFromNED(motors[idx].frame.GetRot());
+
+        // 180-degree rotation about the X axis for CCW case
+        chrono::ChQuaternion<> rot_180_x;
+        rot_180_x = chrono::QuatFromAngleX(chrono::CH_PI);
+
+        chrono::ChQuaternion<> motor_rot;
+        if (motors[idx].spin_dir == _motor_dir_::CCW)
+        {
+            motor_rot = rot_180_x * base_rot;   // Flip for CCW
+        }    
+        else
+        {
+            motor_rot = base_rot;               // Use the base orientation for CW
+        }
+
+        motors[idx].frame.SetPos(motor_pos);
+        motors[idx].frame.SetRot(motor_rot);
+
+        // ------------------------------------------------------------------------
+        // STEP 3 – Initialize the Chrono motor link
+        // ------------------------------------------------------------------------
+        motors[idx].motor->Initialize(
+            this->GetUAVProp(idx + 1).body,    // 1-based indexing for the motors 
+            this->GetUAVChassis().body,
+            motors[idx].frame);
+        
+        // Set the spindle constraint to revolute
+        motors[idx].motor->SetSpindleConstraint(chrono::ChLinkMotorRotation::SpindleConstraint::REVOLUTE);
+
+        // ------------------------------------------------------------------------
+        // STEP 4 – Set up the speed function and initial speed
+        // ------------------------------------------------------------------------
+        motors[idx].speed = chrono_types::make_shared<chrono::ChFunctionConst>();
+        motors[idx].speed->SetConstant(0.0);   // Set the initial speed to 0 rpm
+        motors[idx].motor->SetSpeedFunction(motors[idx].speed);
+
+        // auto thrust = chrono_types::make_shared<chrono::ChForce>();
+        // thrust->SetName("thrust_" + std::to_string(idx + 1));   // 1-based name
+        // thrust->SetBody(this->GetUAVChassis().body.get());
+        // thrust->SetMode(chrono::ChForce::ForceType::FORCE);
+        // thrust->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
+        // thrust->SetRelDir(chrono::ChVector3d(0,0,-1));
+        // auto rel_coord = _transformations_::GetNEDPosFromChrono( this->GetUAVProp(idx + 1).body->GetPos() - this->GetUAVChassis().body->GetPos() );
+        // std::cout << "Thrust position [" << (idx + 1) << "]: " 
+        //           << rel_coord.x() << ", "
+        //           << rel_coord.y() << ", "
+        //           << rel_coord.z() << std::endl;
+        // std::cout << "Prop position [" << (idx + 1) << "]: " 
+        //           << this->GetUAVProp(idx + 1).body->GetPos().x() << ", "
+        //           << this->GetUAVProp(idx + 1).body->GetPos().y() << ", "
+        //           << this->GetUAVProp(idx + 1).body->GetPos().z() << std::endl;
+        // std::cout << "Chassis position [" << (idx + 1) << "]: " 
+        //           << this->GetUAVChassis().body->GetPos().x() << ", "
+        //           << this->GetUAVChassis().body->GetPos().y() << ", "
+        //           << this->GetUAVChassis().body->GetPos().z() << std::endl;
+        // thrust->SetVrelpoint(rel_coord);
+        // thrust->SetMforce(4.25);
+        // GetUAVChassis().body->AddForce(thrust);        
+
+        // ------------------------------------------------------------------------
+        // STEP 5 – Register the motor link in the UAV's internal link list
+        //   This list will later be added to the physics system in AddUAVToSystem()
+        // ------------------------------------------------------------------------
+        linklist.push_back(motors[idx].motor);
+    }
+}
+
 
 // =========================================================================================================
 // AddUAVToSystem()
@@ -724,7 +819,7 @@ void simuav<nop>::AddUAVToSystem()
     // ------------------------------------------------------------------------
     for (auto& body : bodylist) {
         if (body) {
-            _message_::SIMULATOR_INFO("[SIMUAV]: ADDING " + body->GetName() + " TO SYSTEM"); 
+            _message_::SIMULATOR_INFO("[SIMUAV]: ADDING " + body->GetName() + " BODY TO SYSTEM"); 
             m_physics_.Add(body);
         }
     }
@@ -737,6 +832,7 @@ void simuav<nop>::AddUAVToSystem()
     // ------------------------------------------------------------------------
     for (auto& link : linklist) {
         if (link) {
+            _message_::SIMULATOR_INFO("[SIMUAV]: ADDING " + link->GetName() + " LINK TO SYSTEM"); 
             m_physics_.Add(link);
         }
     }
@@ -823,6 +919,94 @@ m_states simuav<nop>::GetUAVStateData()
 
     // --- Angular acceleration (in UAV local frame) ---
     m_state.oacc = GetUAVChassis().body->GetAngAccLocal();
+
+    // Return the filled state struct
+    return m_state;
+}
+
+// =========================================================================================================
+// GetUAVPropStateData()
+// 
+// Purpose:
+//   Collect and return the UAV propeller's state (position, velocity, acceleration,
+//   orientation, angular velocity/acceleration) in the NED frame.
+//
+// Returns:
+//   m_states struct containing the UAV propeller's full state in NED coordinates.
+// =========================================================================================================
+template <int nop>
+m_states simuav<nop>::GetUAVPropStateData(size_t idx)
+{
+    // ------------------------------------------------------------------------
+    // STEP 1 - Check if the given index is valid
+    // ------------------------------------------------------------------------
+    this->CheckUAVPropRequest(idx);
+
+    // Object to store and return the state data
+    m_states m_state;
+
+    // ------------------------------------------------------------------------
+    // STEP 1 - Get frame transformations
+    // ------------------------------------------------------------------------
+
+    // NED frame relative to Chrono's absolute world frame
+    chrono::ChFrame<> ned_abs = GetInertialNEDFrameAuxBody()->GetFrameRefToAbs();
+
+    // UAV chassis frame relative to Chrono's absolute world frame
+    chrono::ChFrame<> prop_abs = GetUAVProp(idx).body->GetFrameRefToAbs();
+
+    // UAV chassis frame relative to the NED frame
+    //   - Inverse transform of NED_abs gives Abs->NED conversion
+    //   - Multiply by uav_abs to express UAV pose w.r.t NED origin
+    chrono::ChFrame<> prop_ned = ned_abs.GetInverse() * prop_abs;
+
+    // ------------------------------------------------------------------------
+    // STEP 2 - Get linear kinematics in absolute frame
+    // ------------------------------------------------------------------------
+
+    // Linear velocity (absolute frame)
+    chrono::ChVector3d prop_vel_abs = GetUAVProp(idx).body->GetPosDt();
+
+    // Linear acceleration (absolute frame)
+    chrono::ChVector3d prop_acc_abs = GetUAVProp(idx).body->GetPosDt2();
+
+    // ------------------------------------------------------------------------
+    // STEP 3 - Prepare NED rotation transformation
+    // ------------------------------------------------------------------------
+
+    // Rotation matrix of the NED frame relative to absolute frame
+    //   - Used to convert vectors from Abs -> NED coordinates
+    chrono::ChMatrix33d R_ned = ned_abs.GetRotMat();
+
+    // ------------------------------------------------------------------------
+    // STEP 4 - Fill state structure
+    // ------------------------------------------------------------------------
+
+    // --- Time Of the Simulation ---
+    m_state.time = this->m_physics_.GetChTime();
+
+    // --- Position in NED frame ---
+    m_state.pos = prop_ned.GetPos();
+
+    // --- Linear velocity in NED frame ---
+    // Apply rotation transpose (i.e., inverse) to convert from Abs to NED
+    m_state.vel = R_ned.transpose() * prop_vel_abs;
+
+    // --- Linear acceleration in NED frame ---
+    m_state.acc = R_ned.transpose() * prop_acc_abs;
+
+    // --- Orientation in NED frame ---
+    // Quaternion (scalar-last in Chrono convention)
+    m_state.quat = prop_ned.GetRot();
+
+    // Euler angles from quaternion (XYZ Cardan convention)
+    m_state.eul = m_state.quat.GetCardanAnglesXYZ();
+
+    // --- Angular velocity (in UAV local frame) ---
+    m_state.ovel = GetUAVProp(idx).body->GetAngVelLocal();
+
+    // --- Angular acceleration (in UAV local frame) ---
+    m_state.oacc = GetUAVProp(idx).body->GetAngAccLocal();
 
     // Return the filled state struct
     return m_state;

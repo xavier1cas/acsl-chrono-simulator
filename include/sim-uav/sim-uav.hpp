@@ -212,15 +212,20 @@ struct propstruct {
 //   Stores all the data associated with the actuators for the UAV.
 //
 // Members:
+//   motor         - Shared pointer to Chrono body (ChLinMotorRotationSppeed) 
+//                   for the motor.
+//   speed         - Shared pointer to Chrono function (ChFunctionConst) 
+//                   for the motor.
+//   frame         - Frame / location of the motor. Needs the marker location
+//                   from the CAD model export.
 //   rotation_dir  - Propeller rotation direction integer (+1 = CCW, -1 = CW;
 //                   use values from _acsl_::_uav_::_rotation_dir_).
-//   frame - Frame / location of the motor. Needs the marker location from the
-//           CAD model export. 
 // ----------------------------------------------------------------------------
 struct motorstruct {
-    int spin_dir = _motor_dir_::CW;                      // Default: clockwise
+    std::shared_ptr<chrono::ChLinkMotorRotationSpeed> motor;
+    std::shared_ptr<chrono::ChFunctionConst> speed;
     chrono::ChFramed frame;                              
-
+    int spin_dir = _motor_dir_::CW;                      // Default: clockwise
 };
 
 
@@ -444,6 +449,9 @@ public:
     // Retrieve the UAV's full state data in the NED frame.
     virtual m_states GetUAVStateData() = 0;
 
+    // Retrieve the Propeller's full state data in the NED frame.
+    virtual m_states GetUAVPropStateData(size_t idx) = 0;
+
 protected:
     // ---------------- Protected API ----------------
 
@@ -519,13 +527,16 @@ protected:
     virtual void ConfigureUAVPropOpacity(size_t idx, float val) = 0;
 
     // Create, intialize, and register prop body in interal body list.
-    virtual void InitiateUAVProp() = 0;
+    virtual void InitiateUAVProps() = 0;
 
     // Set motor spin direction based on the value passed in 
     virtual void ConfigureUAVMotorSpinDir(size_t idx, int spin) = 0;
 
     // Set motor frame based on the value passed in
     virtual void ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame) = 0;
+
+    // Create, initialize, and register motor in the internal list
+    virtual void InitiateUAVMotors() = 0;
 
     // Create, inialize, and register all the links present in the drone.
     virtual void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) = 0;
@@ -567,6 +578,7 @@ public:
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
     void AddUAVToSystem() override;
     m_states GetUAVStateData() override;
+    m_states GetUAVPropStateData(size_t idx) override;
 
 protected:
     // ---------------- Protected API overrides ----------------
@@ -609,10 +621,12 @@ protected:
     void ConfigureUAVPropColor(size_t idx, chrono::ChColor color) override;
     void ConfigureUAVPropOpacity(size_t idx, float val) override;
 
-    void InitiateUAVProp() override;
+    void InitiateUAVProps() override;
 
     void ConfigureUAVMotorSpinDir(size_t idx, int spin) override;
     void ConfigureUAVMotorFrame(size_t idx, chrono::ChFrame<> frame) override;
+
+    void InitiateUAVMotors() override;
 
     void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) override;
 

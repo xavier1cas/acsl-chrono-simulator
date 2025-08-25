@@ -113,6 +113,51 @@ int main(int argc, char* argv[]) {
 	ballBody->GetVisualShape(0)->SetTexture(chrono::GetChronoDataFile("textures/redwhite.png"));
 	// m_bridge.GetSimSystem().GetPhysicsSystem().Add(ballBody);
 
+    // Auxiliary marker (coordinate system feature)
+    // Actuator 1 reference body
+    auto aux_body_1 = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+    aux_body_1->SetName("actuator_1_auxref");
+    aux_body_1->SetFrameRefToAbs(chrono::ChFrame<>(
+                                 _acsl_::_transformations_::GetChronoPosFromNED(
+                                  chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844)), 
+                                  _acsl_::_transformations_::GetChronoOrientaitonFromNED(
+                                  chrono::ChQuaternion<>(1,0,0,0))));
+    aux_body_1->SetFixed(false);
+    // m_bridge.GetSimSystem().GetPhysicsSystem().Add(aux_body_1);
+
+    // Actuator 2 reference body
+    auto aux_body_2 = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+    aux_body_2->SetName("actuator_2_auxref");
+    aux_body_2->SetFrameRefToAbs(chrono::ChFrame<>(
+                                 _acsl_::_transformations_::GetChronoPosFromNED(
+                                 chrono::ChVector3d(-0.00942816685338317,0.086637844787446,0.152623963796845)),
+                                 _acsl_::_transformations_::GetChronoOrientaitonFromNED(
+                                 chrono::ChQuaternion<>(1,0,0,0))));
+    aux_body_2->SetFixed(false);
+    // m_bridge.GetSimSystem().GetPhysicsSystem().Add(aux_body_2);
+
+    // Actuator 3 reference body
+    auto aux_body_3 = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+    aux_body_3->SetName("actuator_3_auxref");
+    aux_body_3->SetFrameRefToAbs(chrono::ChFrame<>(
+                                 _acsl_::_transformations_::GetChronoPosFromNED(
+                                 chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846)), 
+                                 _acsl_::_transformations_::GetChronoOrientaitonFromNED(
+                                 chrono::ChQuaternion<>(1,0,0,0))));
+    aux_body_3->SetFixed(false);
+    // m_bridge.GetSimSystem().GetPhysicsSystem().Add(aux_body_3);
+
+    // Actuator 4 reference body
+    auto aux_body_4 = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+    aux_body_4->SetName("actuator_4_auxref");
+    aux_body_4->SetFrameRefToAbs(chrono::ChFrame<>(
+                                 _acsl_::_transformations_::GetChronoPosFromNED(
+                                 chrono::ChVector3d(-0.00942816685338455,0.308068237403483,0.152623963796843)), 
+                                 _acsl_::_transformations_::GetChronoOrientaitonFromNED(
+                                 chrono::ChQuaternion<>(1,0,0,0))));
+    aux_body_4->SetFixed(false);
+    // m_bridge.GetSimSystem().GetPhysicsSystem().Add(aux_body_4);
+
     // Setup the visualization system
     m_bridge.GetSimSystem().SetupVisualizationSystem();
 
@@ -150,6 +195,7 @@ int main(int argc, char* argv[]) {
         // Do the physics
 		floorBody->EmptyAccumulators();
         floorBody->AccumulateForce(force_local, chrono::ChVector3d(0,0,0), true);
+        // m_bridge.GetUAV()->GetUAVChassis().body->AccumulateForce(chrono::ChVector3d(0,0,-0.05), chrono::ChVector3d(0,0,0), true);
         floorBody->AccumulateTorque(torque_local, true);
 
 		m_bridge.GetSimSystem().GetPhysicsSystem().DoStepDynamics(step_size);
