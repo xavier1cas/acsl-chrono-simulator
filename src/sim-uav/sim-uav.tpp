@@ -753,6 +753,24 @@ void simuav<nop>::ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly)
 
 
 // =========================================================================================================
+// ConfigureUAVMotorCt(idx, ct)
+//
+// Purpose:
+//   Set the motor torque constant that defines a linear realtionship between thrust and backtorque.
+//
+// Parameters:
+//   idx  - 1-based index (1 <= idx <= nop).
+//   ct - double value for the ct
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorCt(size_t idx, double ct)
+{
+    this->CheckUAVPropRequest(idx);
+    motors[idx - 1].ct = ct;
+}
+
+
+// =========================================================================================================
 // InitiateUAVMotors()
 //
 // Purpose:
@@ -1110,6 +1128,41 @@ void simuav<nop>::SetActuator(size_t idx, double thrust, double torque, double r
     // Set the motor rpm
     this->GetUAVMotor(idx).speed->SetConstant(rpm);
 }
+
+
+// =========================================================================================================
+// SetThrustSetPoint(idx, thrustSP)
+// 
+// Purpose:
+//   Sets the motor thrust, backtorque and the rpm setpoints based on the normalized thrust setpoint input
+//
+// Parameters:
+//   idx      - 1-based index (1 <= idx <= nop).
+//   thrustSP - thrust value in normalized terms [0-1] (-)
+// 
+// Notes:
+//   - Needed motor creation during simulation setup.
+//   - Needed motor polynomial coefficient vectors to be configured during simulation setup.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
+{
+    // Check if the vectors are not empty
+    if (motors[idx - 1].norm2newt.size() == 0) 
+    { _message_::SIMULATOR_ERROR("[SIMUAV]: THRUST NORMAL VALUE TO NEWTON POLYNOMIAL NOT CONFIGURED"); }
+    if (motors[idx - 1].norm2rps.size() == 0)
+    { _message_::SIMULATOR_ERROR("[SIMUAV]: THRUST NORMAL VALUE TO RPS FOR PROP SPEED NOT CONFIGURED"); }
+
+    // If it passes the checks then >>
+    // Cache the values
+    auto thrust = _compute_::evaluatePolynomial(motors[idx - 1].norm2newt, thrustSP);
+    auto torque = 0.15 * motors[idx - 1].ct * thrust;       // Cq = 0.15 * ct -> Cq is the backtorque constant
+    auto rps = _compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP);
+
+    // Set the values
+    this->SetActuator(idx, thrust, torque, rps);
+}
+
 
 }   // namespace _uav_
 

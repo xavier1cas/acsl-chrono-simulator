@@ -229,6 +229,7 @@ struct propstruct {
 //                   from a thrust in N value.
 //   norm2rps      - Polynomial vector to compute the rad/s speed of the rotor
 //                   from a normalized thrust [0-1] value.
+//   ct            - Motor torque coefficient for computing the backtorque.
 // ----------------------------------------------------------------------------
 struct motorstruct {
     std::shared_ptr<chrono::ChLinkMotorRotationSpeed> motor;
@@ -240,6 +241,7 @@ struct motorstruct {
     Eigen::VectorXd norm2newt;
     Eigen::VectorXd newt2norm;
     Eigen::VectorXd norm2rps;
+    double ct;
 };
 
 
@@ -469,6 +471,9 @@ public:
     // Function to set the thrust setpoints of the UAV
     virtual void SetActuator(size_t idx, double thrust, double torque, double rpm) = 0;
 
+    // Function to set the normalized thrust setpoint for the UAV
+    virtual void SetThrustSetPoint(size_t idx, double thrustSP) = 0;
+
 protected:
     // ---------------- Protected API ----------------
 
@@ -561,6 +566,9 @@ protected:
     // Set the motor polynomial for converting from Normalized thrust value to RPS
     virtual void ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly) = 0;
 
+    // Set the motor torque constant 
+    virtual void ConfigureUAVMotorCt(size_t idx, double ct) = 0;
+
     // Create, initialize, and register motor in the internal list
     virtual void InitiateUAVMotors() = 0;
 
@@ -612,6 +620,8 @@ public:
 
     void SetActuator(size_t idx, double thrust, double torque, double rpm) override;
 
+    void SetThrustSetPoint(size_t idx, double thrustSP) override;
+
 protected:
     // ---------------- Protected API overrides ----------------
 
@@ -662,6 +672,7 @@ protected:
     void ConfigureUAVMotorNorm2Newt(size_t idx, Eigen::VectorXd& poly) override;
     void ConfigureUAVMotorNewt2Norm(size_t idx, Eigen::VectorXd& poly) override;
     void ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly) override;
+    void ConfigureUAVMotorCt(size_t idx, double ct) override;
 
     void InitiateUAVMotors() override;
 

@@ -88,5 +88,19 @@ double rad2deg(double rad) { return rad * 180.0 / chrono::CH_PI; }
 }
 
 
+namespace _compute_
+{
+
+double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value)
+{
+    double result = 0.0;
+    for (int i = 0, deg = coefficients.size() - 1; deg >= 0; deg--, i++) {
+        result += coefficients[i] * std::pow(value, deg);
+    }
+    return result;
+}
+
+}
+
 
 }   // namespace _acsl_

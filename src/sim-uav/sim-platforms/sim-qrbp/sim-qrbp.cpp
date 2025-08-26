@@ -437,6 +437,49 @@ void simqrbp::ConfigureQRBPMotors()
     // Create the struct for processing the uav motor properties
     _uav_::motorstruct motor_properties;
 
+    // Cache the motor torque constant
+    motor_properties.ct = 0.1017;
+
+    // Cache the motor polynomial coefficients
+    // Polynomial coefficients vector to evaluate the Commanded Thrust [-] based on the Thrust in Newton
+    // TMotor F35A - Velox V2808 Kv1300
+    motor_properties.newt2norm = (Eigen::VectorXd(8) << 
+                                    0.000000030316084940690649384320061064321,
+                                    -0.000001814468657920738862350290739045,
+                                    0.000042434512948142268497307011410058,
+                                    -0.00050487431926448940282259325584846,
+                                    0.0035249290604740459061094970394379,
+                                    -0.017552333963129614080589391278409,
+                                    0.1149654034760465154407782506496,
+                                    0.011001286689392602777259888569006
+                                 ).finished();
+
+    // Polynomial coefficients vector to evaluate the thrust in [N] based on the Commanded Thrust [-]
+    // based on the TMotor F35A - Velox V2808 Kv1300
+    motor_properties.norm2newt = (Eigen::VectorXd(8) <<
+                                    -964.190794120222,
+                                    3455.38315633097,
+                                    -4891.19717148758,
+                                    3484.3076361483,
+                                    -1331.28079719591,
+                                    282.155686512384,
+                                    -17.5839370140511,
+                                    0.794846844681469
+                                 ).finished();
+
+    // Polynomial coefficients vector to evaluate the rad/s of motor based on the Commanded Thrust [-]
+    // based on the TMotor F35A - Velox V2808 Kv1300                                 
+    motor_properties.norm2rps = (Eigen::VectorXd(8) <<
+                                    -1468.55474852634,
+                                    0.0,
+                                    3053.57261239948,
+                                    0.0,
+                                    -2172.4846210066,
+                                    0.0,
+                                    2722.55798254531,
+                                    307.177316040655
+                                ).finished();
+
     // ------------------------------------------------ 1 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
@@ -446,6 +489,10 @@ void simqrbp::ConfigureQRBPMotors()
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(1, motor_properties.spin_dir);
     ConfigureUAVMotorFrame(1, motor_properties.frame);
+    ConfigureUAVMotorNewt2Norm(1, motor_properties.newt2norm);
+    ConfigureUAVMotorNorm2Newt(1, motor_properties.norm2newt);
+    ConfigureUAVMotorNorm2RPS(1, motor_properties.norm2rps);
+    ConfigureUAVMotorCt(1, motor_properties.ct);
     
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the spin direction of the motor
@@ -456,6 +503,10 @@ void simqrbp::ConfigureQRBPMotors()
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(2, motor_properties.spin_dir);
     ConfigureUAVMotorFrame(2, motor_properties.frame);
+    ConfigureUAVMotorNewt2Norm(2, motor_properties.newt2norm);
+    ConfigureUAVMotorNorm2Newt(2, motor_properties.norm2newt);
+    ConfigureUAVMotorNorm2RPS(2, motor_properties.norm2rps);
+    ConfigureUAVMotorCt(2, motor_properties.ct);
     
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the spin direction of the motor
@@ -466,6 +517,10 @@ void simqrbp::ConfigureQRBPMotors()
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(3, motor_properties.spin_dir);
     ConfigureUAVMotorFrame(3, motor_properties.frame);
+    ConfigureUAVMotorNewt2Norm(3, motor_properties.newt2norm);
+    ConfigureUAVMotorNorm2Newt(3, motor_properties.norm2newt);
+    ConfigureUAVMotorNorm2RPS(3, motor_properties.norm2rps);
+    ConfigureUAVMotorCt(3, motor_properties.ct);
     
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the spin direction of the motor
@@ -476,6 +531,10 @@ void simqrbp::ConfigureQRBPMotors()
     // Call all the configuration helper functions
     ConfigureUAVMotorSpinDir(4, motor_properties.spin_dir);
     ConfigureUAVMotorFrame(4, motor_properties.frame);
+    ConfigureUAVMotorNewt2Norm(4, motor_properties.newt2norm);
+    ConfigureUAVMotorNorm2Newt(4, motor_properties.norm2newt);
+    ConfigureUAVMotorNorm2RPS(4, motor_properties.norm2rps);
+    ConfigureUAVMotorCt(4, motor_properties.ct);
     
     // ---------------------------------------------------------------------------------- INITIATE THE MOTORS
     InitiateUAVMotors();

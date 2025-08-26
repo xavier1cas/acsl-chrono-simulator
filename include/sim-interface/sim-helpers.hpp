@@ -37,6 +37,10 @@
 #ifndef SIM_HELPERS_HPP_
 #define SIM_HELPERS_HPP_
 
+// System includes
+#include <cmath>
+
+// Chrono includes
 #include "chrono/core/ChQuaternion.h"
 #include "chrono/core/ChVector3.h"
 #include "chrono/core/ChRotation.h"
@@ -73,6 +77,19 @@ namespace _conversions_
 double rad2deg(double rad);
 
 }   // namespace _conversions_
+
+// All the computation function
+namespace _compute_
+{
+
+// Function to evaluate a polynomial given its coefficients and a value at which to evaluate the polynomial
+// Example usage: double value = 3.0;
+//                Eigen::VectorXd coeffs(3);
+//                coeffs << 1, -2, 1; // Represents the polynomial x^2 - 2x + 1
+//                double result = evaluatePolynomial(coeffs, value);
+double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value);
+
+}   // namespace _compute_
 
 }   // namespace _acsl_
 

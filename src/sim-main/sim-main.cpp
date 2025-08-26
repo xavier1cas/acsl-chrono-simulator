@@ -215,6 +215,12 @@ int main(int argc, char* argv[]) {
         chrono::ChMatrix33d R_ned = ned_abs.GetRotMat();
         chrono::ChVector3d v_in_ned =  R_ned.transpose() * v_abs;
 
+        // TEMP - Apply a thrust setpoint - for checking
+        m_bridge.GetUAV()->SetThrustSetPoint(1, 0.1);
+        m_bridge.GetUAV()->SetThrustSetPoint(2, 0.1);
+        m_bridge.GetUAV()->SetThrustSetPoint(3, 0.1);
+        m_bridge.GetUAV()->SetThrustSetPoint(4, 0.1);
+
         // After the loop, get the overall elapsed time (in seconds)
         double sim_time = m_bridge.GetSimSystem().GetPhysicsSystem().GetChTime();
         
