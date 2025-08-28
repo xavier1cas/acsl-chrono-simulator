@@ -33,11 +33,10 @@
 #   3. Make sure the platform exists in the ACSL Physics Sim database with clear .hpp and .cpp files for 
 #      the derived class.
 #
-# This file also configures the simulator to start in the SIL/HIL modes or to run in MIL mode.
-#
-#
-# NOTE:
+# NOTES:
 # - Only one UAV platform should be enabled at a time for simulation.
+# - This file also configures the simulator to start in the SIL/HIL modes or to run in MIL mode.
+# - This file also configures the level of debugging you want from the simulator (Does not include the controller logs).
 ########################################################################################################################
 
 # ============================================================================
@@ -47,6 +46,15 @@
 # Set to false to run in MODEL-IN-THE-LOOP mode
 mode:
   enable_flightstack_loop: false
+
+# ============================================================================
+# DEBUGGING toggles
+# ============================================================================
+debug:
+  # Set to true if you want to print the chassis state data to the screen
+  terminal: true
+  # Set to true if you want to log the uav chassis and prop state data to file
+  log_physics: true
 
 # ============================================================================
 # UAV Platform Selection

@@ -37,10 +37,10 @@
 #include "sim-main.hpp"
 
 
-// Helper to pretty-print small values as zero
-double pretty(double x, double tol = 1e-10) {
-    return (std::abs(x) < tol) ? 0.0 : x;
-}
+// // Helper to pretty-print small values as zero
+// double pretty(double x, double tol = 1e-10) {
+//     return (std::abs(x) < tol) ? 0.0 : x;
+// }
 
 int main(int argc, char* argv[]) {
 
@@ -63,53 +63,53 @@ int main(int argc, char* argv[]) {
 
         // Spin in place to maintain soft real-time
         realtime_timer.Spin(step_size);
-       
-        // After the loop, get the overall elapsed time (in seconds)
-        double sim_time = m_bridge.GetSimSystem().GetPhysicsSystem().GetChTime();
         
         // Get the UAV's states
         auto states = m_bridge.GetUAV()->GetUAVStateData();
-
-        auto forces = _acsl_::_transformations_::GetNEDPosFromChrono( m_bridge.GetUAV()->GetUAVChassis().body->GetAppliedForce() );
-        auto torques = m_bridge.GetUAV()->GetUAVChassis().body->GetAppliedTorque() ;
         
-        bool display_drone_data{false};
+        bool display_drone_data{true};
 
         if (display_drone_data)
         {
-            std::cout << "Simulation time: " << states.time << " s, "  << std::endl;
+            std::string color_label = "\033[38;5;214m";  // Bright Orange
+            std::string color_value = "\033[1;36m";      // Bright/Bold Cyan
+            std::string color_reset = "\033[0m";         // Reset
 
-            
-            std::cout << "UAV position in NED frame: "
-                    << pretty(states.pos.x(), 1e-10) << ", "
-                    << pretty(states.pos.y(), 1e-10) << ", "
-                    << pretty(states.pos.z(), 1e-10) << std::endl;
-            
-            std::cout << "UAV velocity in NED frame: "
-                    << pretty(states.vel.x(), 1e-10) << ", "
-                    << pretty(states.vel.y(), 1e-10) << ", "
-                    << pretty(states.vel.z(), 1e-10) << std::endl;
+            std::ostringstream msg;
 
-            std::cout << "UAV rotation in NED frame (CHRONO): " 
-                    << pretty(_acsl_::_conversions_::rad2deg(states.eul.x()), 1e-10) << ", "
-                    << pretty(_acsl_::_conversions_::rad2deg(states.eul.y()), 1e-10) << ", "
-                    << pretty(_acsl_::_conversions_::rad2deg(states.eul.z()), 1e-10) << std::endl;
+            msg << "\n"
+                << color_label << "SIMULATION TIME: " << color_value << states.time << " s\n" << color_reset
+                << color_label << "UAV POSITION IN NED FRAME: " << color_value
+                << states.pos.x() << ", "
+                << states.pos.y() << ", "
+                << states.pos.z() << "\n" << color_reset
+                << color_label << "UAV VELOCITY IN NED FRAME: " << color_value
+                << states.vel.x() << ", "
+                << states.vel.y() << ", "
+                << states.vel.z() << "\n" << color_reset
+                << color_label << "UAV rotation in NED frame: " << color_value
+                << _acsl_::_conversions_::rad2deg(states.eul.x()) << ", "
+                << _acsl_::_conversions_::rad2deg(states.eul.y()) << ", "
+                << _acsl_::_conversions_::rad2deg(states.eul.z()) << "\n" << color_reset
+                << color_label << "UAV ANGULAR VELOCITY IN NED FRAME: " << color_value
+                << states.ovel.x() << ", "
+                << states.ovel.y() << ", "
+                << states.ovel.z() << "\n" << color_reset
+                << color_label << "UAV FORCES IN NED FRAME [I]: " << color_value
+                << states.muI.x() << ", "
+                << states.muI.y() << ", "
+                << states.muI.z() << "\n" << color_reset
+                << color_label << "UAV FORCES IN NED FRAME [J]: " << color_value
+                << states.muJ.x() << ", "
+                << states.muJ.y() << ", "
+                << states.muJ.z() << "\n" << color_reset
+                << color_label << "UAV TORQUES IN NED FRAME: " << color_value
+                << states.tauJ.x() << ", "
+                << states.tauJ.y() << ", "
+                << states.tauJ.z() << color_reset;
 
-
-            std::cout << "UAV angular velocity in NED frame: "
-                    << pretty(states.ovel.x(), 1e-10) << ", "
-                    << pretty(states.ovel.y(), 1e-10) << ", "
-                    << pretty(states.ovel.z(), 1e-10) << std::endl;
-
-            std::cout << "UAV FORCES IN NED FRAME: "
-                      << pretty(forces.x(), 1e-10) << ", "
-                      << pretty(forces.y(), 1e-10) << ", "
-                      << pretty(forces.z(), 1e-10) << std::endl;
-
-            std::cout << "UAV TORQUES IN NED FRAME: "
-                      << pretty(torques.x(), 1e-10) << ", "
-                      << pretty(torques.y(), 1e-10) << ", "
-                      << pretty(torques.z(), 1e-10) << std::endl;
+            // Print the colorized output
+            std::cout << msg.str() << std::endl;
         }
 
     }

@@ -980,8 +980,12 @@ m_states simuav<nop>::GetUAVStateData()
     // ------------------------------------------------------------------------
 
     // Rotation matrix of the NED frame relative to absolute frame
-    //   - Used to convert vectors from Abs -> NED coordinates
+    //   - Used to convert vectors from Abs -> NED coordinates and vice-versa.
     chrono::ChMatrix33d R_ned = ned_abs.GetRotMat();
+
+    // Rotation matrix of the drone relative to the NED frame
+    //   - Used to convert vectors from I -> J coordinates and vice-versa.
+    chrono::ChMatrix33d R_uav = uav_ned.GetRotMat();
 
     // ------------------------------------------------------------------------
     // STEP 4 - Fill state structure
@@ -1012,6 +1016,15 @@ m_states simuav<nop>::GetUAVStateData()
 
     // --- Angular acceleration (in UAV local frame) ---
     m_state.oacc = GetUAVChassis().body->GetAngAccLocal();
+
+    // --- Forces acting on the body in the Inertial frame (NED) ---
+    m_state.muI = _transformations_::GetNEDPosFromChrono(GetUAVChassis().body->GetAppliedForce());
+
+    // --- Forces acting on the body in the Body frame (NED) ---
+    m_state.muJ =  R_uav.transpose() * m_state.muI;
+
+    // --- Torque acting on the body in the Body frame (NED) ---
+    m_state.tauJ = GetUAVChassis().body->GetAppliedTorque();
 
     // Return the filled state struct
     return m_state;
@@ -1066,6 +1079,10 @@ m_states simuav<nop>::GetUAVPropStateData(size_t idx)
     //   - Used to convert vectors from Abs -> NED coordinates
     chrono::ChMatrix33d R_ned = ned_abs.GetRotMat();
 
+    // Rotation matrix of the prop relative to the NED frame
+    //   - Used to convert vectors from I -> J coordinates and vice-versa.
+    chrono::ChMatrix33d R_prop = prop_ned.GetRotMat();
+
     // ------------------------------------------------------------------------
     // STEP 4 - Fill state structure
     // ------------------------------------------------------------------------
@@ -1095,6 +1112,15 @@ m_states simuav<nop>::GetUAVPropStateData(size_t idx)
 
     // --- Angular acceleration (in UAV local frame) ---
     m_state.oacc = GetUAVProp(idx).body->GetAngAccLocal();
+
+    // --- Forces acting on the body in the Inertial frame (NED) ---
+    m_state.muI = _transformations_::GetNEDPosFromChrono(GetUAVProp(idx).body->GetAppliedForce());
+
+    // --- Forces acting on the body in the Body frame (NED) ---
+    m_state.muJ =  R_prop.transpose() * m_state.muI;
+
+    // --- Torque acting on the body in the Body frame (NED) ---
+    m_state.tauJ = GetUAVProp(idx).body->GetAppliedTorque();
 
     // Return the filled state struct
     return m_state;

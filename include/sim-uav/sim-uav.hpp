@@ -261,6 +261,9 @@ struct motorstruct {
 //   quat  - Orientation quaternion in NED coordinates.
 //   ovel  - Angular velocity in body frame (relative to NED).
 //   oacc  - Angular acceleration in body frame (relative to NED).
+//   muI   - Forces acting on the body in the inertial frame (NED).
+//   muJ   - Forces acting on the body in the body frame (NED).
+//   tauJ  - Torque acting on the body in the body frame (NED).
 // ----------------------------------------------------------------------------
 struct m_states {
     double time;
@@ -271,6 +274,9 @@ struct m_states {
     chrono::ChQuaterniond quat;
     chrono::ChVector3d ovel;
     chrono::ChVector3d oacc;
+    chrono::ChVector3d muI;
+    chrono::ChVector3d muJ;
+    chrono::ChVector3d tauJ;
 };
 
 
