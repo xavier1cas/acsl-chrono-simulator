@@ -85,11 +85,14 @@ public:
     // ------------------------------------------------------------------------
     simbridge()
     {
-        // Initialize the Chrono physics/visual environment
+        // Initialize the Chrono physics environment
         m_sys.SetupPhysicsSystem();
         
         // Load config, select platform, and attach it to the physics system
         ConfigureSimulatorFromConfig();
+
+        // Initialize the Chrono visualization environment
+        m_sys.SetupVisualizationSystem();
     }
     
     // ------------------------------------------------------------------------

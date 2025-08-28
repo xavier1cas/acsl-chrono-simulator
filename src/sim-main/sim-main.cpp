@@ -50,9 +50,6 @@ int main(int argc, char* argv[]) {
     // Create an instance of sim-bridge
     _acsl_::_bridge_::simbridge m_bridge;   
 
-    // Setup the visualization module
-    m_bridge.GetSimSystem().SetupVisualizationSystem();
-
     chrono::ChRealtimeStepTimer realtime_timer;
     double step_size = m_bridge.GetSimSystem().GetPhyConfig().StepSize;
     

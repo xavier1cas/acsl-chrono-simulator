@@ -37,7 +37,6 @@
 #ifndef SIM_MAIN_HPP_
 #define SIM_MAIN_HPP_
 
-#include "sim-qrbp.hpp"
 #include "sim-bridge.hpp"
 
 // ------------------------------------------------------------------------------------------------

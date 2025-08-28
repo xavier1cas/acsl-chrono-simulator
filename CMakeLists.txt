@@ -84,6 +84,17 @@ project(acsl_physics_sim)
 #--------------------------------------------------------------
 
 LIST(APPEND CMAKE_PREFIX_PATH "${CMAKE_INSTALL_PREFIX}/../Chrono/lib")
+
+# Set default path for the chrono_dir and cache it for GUI visibility
+if(NOT Chrono_DIR)
+  set(Chrono_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/chrono-build/cmake" CACHE PATH "Chrono config directory")
+endif()
+
+# Set default build type to Release and cache it for GUI visibility
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
+endif()
+
 find_package(Chrono
              COMPONENTS Irrlicht
              OPTIONAL_COMPONENTS PardisoMKL
