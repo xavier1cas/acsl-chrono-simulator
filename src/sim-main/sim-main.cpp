@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         auto forces = _acsl_::_transformations_::GetNEDPosFromChrono( m_bridge.GetUAV()->GetUAVChassis().body->GetAppliedForce() );
         auto torques = m_bridge.GetUAV()->GetUAVChassis().body->GetAppliedTorque() ;
         
-        bool display_drone_data{true};
+        bool display_drone_data{false};
 
         if (display_drone_data)
         {

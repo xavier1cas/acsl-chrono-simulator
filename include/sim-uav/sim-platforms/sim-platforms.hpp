@@ -157,7 +157,7 @@ struct platforms {
         std::string active = validateExclusiveSelection();
 
         if (active == "qrbp") {
-            _message_::SIMULATOR_INFO("ATTACHING QRBP TO THE PHYSICS SYSTEM");
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING QRBP TO THE PHYSICS SYSTEM");
             return std::unique_ptr< ::_acsl_::_uav_::simuavbase >( new ::_acsl_::_qrbp_::simqrbp(sys) );
         }
         // else if (active == "x8copter") {
@@ -173,7 +173,7 @@ struct platforms {
         //     );
         // }
 
-        _message_::SIMULATOR_ERROR("ACTIVE PLATFORM NAME NOT RECOGNIZED: " + active);
+        _message_::SIMULATOR_ERROR("[SIMBRG]: ACTIVE PLATFORM NAME NOT RECOGNIZED: " + active);
         return nullptr;
     }
 
@@ -193,9 +193,9 @@ struct platforms {
             }
         }
         if (count == 0) {
-            _message_::SIMULATOR_ERROR("NO UAV PLATFORM SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
+            _message_::SIMULATOR_ERROR("[SIMBRG]: NO UAV PLATFORM SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
         } else if (count > 1) {
-            _message_::SIMULATOR_ERROR("MULTIPLE UAV PLATFORMS SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
+            _message_::SIMULATOR_ERROR("[SIMBRG]: MULTIPLE UAV PLATFORMS SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
         }
         return active;
     }

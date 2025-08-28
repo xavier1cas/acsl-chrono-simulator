@@ -79,9 +79,12 @@ public:
     //   - Step 1: Call m_sys.SetupPhysicsSystem() to initialize the Chrono 
     //             physics environment.
     //   - Step 2: Read the simulator configuration file and determine which 
-    //             UAV platform should be active.
-    //   - Step 3: Instantiate the selected UAV platform and attach it to the 
+    //             UAV platform and locale should be active - Instantiate the 
+    //             selected UAV platform and locale then attach it to the 
     //             initialized physics system.
+    //   - Step 3: Call m_sys.SetupVisualizationSystem() to initalize the 
+    //             Irrlicht visualization environment.
+    //   - Step 4: Create the logger for the entire simulation instance.
     // ------------------------------------------------------------------------
     simbridge()
     {
@@ -93,6 +96,9 @@ public:
 
         // Initialize the Chrono visualization environment
         m_sys.SetupVisualizationSystem();
+
+        // Initialize the simualtor logger
+        ConfigureSimulatorLog();
     }
     
     // ------------------------------------------------------------------------
@@ -139,6 +145,22 @@ private:
     void ConfigureSimulatorFromConfig();
 
     // ------------------------------------------------------------------------
+    // Creates a directory structure for simulator log files:
+    //   - Base directory is relative: "../sim-log/"
+    //   - Appends platform folder (e.g., UAV type)
+    //   - Adds date in "YYYY_MM_DD" format
+    //   - Adds run folder "flight_run_HH_MM_SS" from current local time
+    //
+    // Implementation: sim-bridge.cpp
+    // ------------------------------------------------------------------------
+    void ConfigureSimulatorLog();
+
+    // ------------------------------------------------------------------------
+    // path variabel for storing the sim-log path for this sim instance
+    // ------------------------------------------------------------------------
+    std::filesystem::path log_dir;
+
+    // ------------------------------------------------------------------------
     // Boolean for telling the system if it's in HIL/SIL mode
     // ------------------------------------------------------------------------
     bool efsl;          // <- Stands for enable flightstack loop.
@@ -153,12 +175,14 @@ private:
     // available.
     // ------------------------------------------------------------------------
     platforms available_uavs;
+    std::string active_platform;
 
     // ------------------------------------------------------------------------
     // Structure from sim-locales that holds all the locales that are 
     // available.
     // ------------------------------------------------------------------------
     locales available_locals;
+    std::string active_locale;
 
     // ------------------------------------------------------------------------
     // Unique pointer to store the UAV object.

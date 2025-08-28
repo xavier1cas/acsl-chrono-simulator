@@ -95,6 +95,10 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
 endif()
 
+# Find pacakges needed for the codebase
+#   - Most systems have 1.71.0. Change it to that if needed.
+find_package(Boost 1.87 REQUIRED COMPONENTS log log_setup system filesystem thread)
+
 find_package(Chrono
              COMPONENTS Irrlicht
              OPTIONAL_COMPONENTS PardisoMKL

@@ -140,7 +140,7 @@ struct locales {
     createSelectedLocale(chrono::ChSystemNSC& sys) const {
         std::string active = validateExclusiveSelection();
         if (active == "flat") {
-            _message_::SIMULATOR_INFO("ATTACHING FLAT SURFACE LOCALE TO THE PHYSICS SYSTEM");
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING FLAT SURFACE LOCALE TO THE PHYSICS SYSTEM");
             return std::unique_ptr< ::_acsl_::_environment_::simenvbase >(new ::_acsl_::_flat_::simflat(sys));
         }
         // else if (active == "mountain") {
@@ -148,7 +148,7 @@ struct locales {
         //     return std::unique_ptr< ::_acsl_::_environment_::simenvbase >(new ::_acsl_::_mountain_::simmountain(sys));
         // }
         // Add more else-if blocks for new scenes/locales here
-        _message_::SIMULATOR_ERROR("ACTIVE LOCALE NAME NOT RECOGNIZED: " + active);
+        _message_::SIMULATOR_ERROR("[SIMBRG]: ACTIVE LOCALE NAME NOT RECOGNIZED: " + active);
         return nullptr;
     }
 
@@ -172,9 +172,9 @@ struct locales {
             }
         }
         if (count == 0) {
-            _message_::SIMULATOR_ERROR("NO ENVIRONMENT SCENE SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
+            _message_::SIMULATOR_ERROR("[SIMBRG]: NO ENVIRONMENT SCENE SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
         } else if (count > 1) {
-            _message_::SIMULATOR_ERROR("MULTIPLE ENVIRONMENT SCENES SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
+            _message_::SIMULATOR_ERROR("[SIMBRG]: MULTIPLE ENVIRONMENT SCENES SELECTED — EXACTLY ONE MUST BE SET TO TRUE.");
         }
         return active;
     }

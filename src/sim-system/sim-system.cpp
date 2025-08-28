@@ -77,7 +77,7 @@ void simsystem::ReadPhysicsConfigFile()
     // ------------------------------------------------------------------------
     if (!ifs) {
         _message_::SIMULATOR_ERROR(
-            "COULD NOT OPEN PHYSICS CONFIG FILE: " + this->phy_config_filename
+            "[SIMSYS]: COULD NOT OPEN PHYSICS CONFIG FILE: " + this->phy_config_filename
         );
     }
 
@@ -151,7 +151,7 @@ void simsystem::ReadVisionConfigFile()
     // ------------------------------------------------------------------------
     if (!ifs) {
         _message_::SIMULATOR_ERROR(
-            "COULD NOT OPEN VISUALIZATION CONFIG FILE: " + this->vis_config_filename
+            "[SIMSYS]: COULD NOT OPEN VISUALIZATION CONFIG FILE: " + this->vis_config_filename
         );
     }
 
@@ -289,24 +289,24 @@ void simsystem::SetupPhysicsSystem()
     // ------------------------------------------------------------------------
     // STEP 7 – Log current configuration to the simulator console/log
     // ------------------------------------------------------------------------
-    _message_::SIMULATOR_INFO("SIMULATOR PHYSICS SYSTEM ACTIVE");
-    _message_::SIMULATOR_INFO(" - STARTING NSC SYSTEM");
+    _message_::SIMULATOR_INFO("[SIMSYS]: SIMULATOR PHYSICS SYSTEM ACTIVE");
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - STARTING NSC SYSTEM");
     
     // Physics core settings
-    _message_::SIMULATOR_INFO(" - SYSTEM [GRAVITY]: ", phyconfig.gravity);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - SYSTEM [GRAVITY]: ", phyconfig.gravity);
     
     // Solver settings
-    _message_::SIMULATOR_INFO(" - SOLVER [PSOR]: ", phyconfig.PSOR);
-    _message_::SIMULATOR_INFO(" - SOLVER [MaxIterations]: ", phyconfig.MaxIterations);
-    _message_::SIMULATOR_INFO(" - SOLVER [EnableWarmStart]: ", phyconfig.EnableWarmStart);
-    _message_::SIMULATOR_INFO(" - SOLVER [StepSize]: ", phyconfig.StepSize); 
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [PSOR]: ", phyconfig.PSOR);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [MaxIterations]: ", phyconfig.MaxIterations);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [EnableWarmStart]: ", phyconfig.EnableWarmStart);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [StepSize]: ", phyconfig.StepSize); 
 
     // Collision settings
-    _message_::SIMULATOR_INFO(" - COLLISION [BULLET]: ", phyconfig.BULLET);
-    _message_::SIMULATOR_INFO(" - COLLISION [MULTICORE]: ", phyconfig.MULTICORE);
-    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedEnvelope]: ", phyconfig.DefaultSuggestedEnvelope);
-    _message_::SIMULATOR_INFO(" - COLLISION [DefaultSuggestedMargin]: ", phyconfig.DefaultSuggestedMargin);
-    _message_::SIMULATOR_INFO(" - COLLISION [ContactBreakingThreshold]: ", phyconfig.ContactBreakingThreshold);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [BULLET]: ", phyconfig.BULLET);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [MULTICORE]: ", phyconfig.MULTICORE);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [DefaultSuggestedEnvelope]: ", phyconfig.DefaultSuggestedEnvelope);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [DefaultSuggestedMargin]: ", phyconfig.DefaultSuggestedMargin);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [ContactBreakingThreshold]: ", phyconfig.ContactBreakingThreshold);
 }
 
 // =====================================================================================================================
@@ -344,7 +344,7 @@ void simsystem::SetupVisualizationSystem()
     //   If not, log status and exit early; simulation will run headless.
     // ------------------------------------------------------------------------
     if (!visconfig.enable_vis) {
-        _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM INACTIVE");
+        _message_::SIMULATOR_INFO("[SIMSYS]: VISUALIZATION SYSTEM INACTIVE");
         return;
     }
     
@@ -379,20 +379,20 @@ void simsystem::SetupVisualizationSystem()
     // ------------------------------------------------------------------------
     // STEP 4 – Log visualization configuration to the simulator output/log
     // ------------------------------------------------------------------------
-    _message_::SIMULATOR_INFO("VISUALIZATION SYSTEM ACTIVE");
-    _message_::SIMULATOR_INFO(" - STARTED WINDOW OF SIZE: " +
+    _message_::SIMULATOR_INFO("[SIMSYS]: VISUALIZATION SYSTEM ACTIVE");
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - STARTED WINDOW OF SIZE: " +
                               std::to_string(visconfig.width) + " x " +
                               std::to_string(visconfig.height));
-    _message_::SIMULATOR_INFO(" - STARTED WINDOW WITH TITLE: " + visconfig.title);
-    _message_::SIMULATOR_INFO(" - RENDER NED FRAME: ", visconfig.render_ned_frame);
-    _message_::SIMULATOR_INFO(" - RENDER BODY FRAME: ", visconfig.render_body_frame);
-    _message_::SIMULATOR_INFO(" - RENDER PROP FRAMES: ", visconfig.render_prop_frames);
-    _message_::SIMULATOR_INFO(" - RENDER ALL COG FRAMES: ", visconfig.render_all_COG_frames);
-    _message_::SIMULATOR_INFO(" - RENDER COLLISION ZONES: ", visconfig.render_collision_zones);
-    _message_::SIMULATOR_INFO(" - RENDER SHADOWS: ", visconfig.render_shadows);
-    _message_::SIMULATOR_INFO(" - ENABLE STATIC CAM: ", visconfig.enable_static_cam);
-    _message_::SIMULATOR_INFO(" - CAMERA CHASE HEIGHT: ", visconfig.mv_cam_chase_ht);
-    _message_::SIMULATOR_INFO(" - CAMERA CHASE DISTANCE: ", visconfig.mv_cam_chase_dt);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - STARTED WINDOW WITH TITLE: " + visconfig.title);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER NED FRAME: ", visconfig.render_ned_frame);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER BODY FRAME: ", visconfig.render_body_frame);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER PROP FRAMES: ", visconfig.render_prop_frames);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER ALL COG FRAMES: ", visconfig.render_all_COG_frames);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER COLLISION ZONES: ", visconfig.render_collision_zones);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER SHADOWS: ", visconfig.render_shadows);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - ENABLE STATIC CAM: ", visconfig.enable_static_cam);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - CAMERA CHASE HEIGHT: ", visconfig.mv_cam_chase_ht);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - CAMERA CHASE DISTANCE: ", visconfig.mv_cam_chase_dt);
 
     // ------------------------------------------------------------------------
     // STEP 5 – Attach the Chrono physics system for real-time rendering

@@ -281,7 +281,7 @@ void simenv<nxb, nxd>::InitiateEnv() {
                 )
             );
         } else {
-            _message_::SIMULATOR_INFO("NO VISUALIZATION MESH PROVIDED FOR ENV_AUX_BODY_" + std::to_string(i)
+            _message_::SIMULATOR_INFO("[SIMENV]: NO VISUALIZATION MESH PROVIDED FOR ENV_AUX_BODY_" + std::to_string(i)
                                       + " | SKIPPING MESH ATTACHMENT.");
         }
 

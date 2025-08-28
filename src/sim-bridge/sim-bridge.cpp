@@ -87,7 +87,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     if (!ifs) {
         _message_::SIMULATOR_ERROR(
-            "COULD NOT OPEN SIMULATOR CONFIG FILE: " + sim_config_filename
+            "[SIMBRG]: COULD NOT OPEN SIMULATOR CONFIG FILE: " + sim_config_filename
         );
     }
 
@@ -99,7 +99,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     // STEP 4 – Extract simulation mode
     // ------------------------------------------------------------------------
-    efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
+    this->efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -112,14 +112,14 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     // STEP 5.1 – Validate and get the active locale name
     // ------------------------------------------------------------------------
-    std::string active_locale = available_locals.validateExclusiveSelection();
+    this->active_locale = available_locals.validateExclusiveSelection();
 
     // ------------------------------------------------------------------------
     // STEP 5.2 – Instantiate the selected locale using the factory in locales
     //   - Pass in the Chrono physics system from m_sys for ENV construction.
     //   - Store the ENV in simbridge::locale (std::unique_ptr<simenvbase>).
     // ------------------------------------------------------------------------
-    env = available_locals.createSelectedLocale(this->m_sys.GetPhysicsSystem());
+    this->env = available_locals.createSelectedLocale(this->m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
     // STEP 6 – Populate available_uavs dynamically from YAML
@@ -132,22 +132,118 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     // STEP 6.1 – Validate and get the active platform name
     // ------------------------------------------------------------------------
-    std::string active_platform = available_uavs.validateExclusiveSelection();
+    this->active_platform = available_uavs.validateExclusiveSelection();
 
     // ------------------------------------------------------------------------
     // STEP 6.2 – Instantiate the selected UAV using the factory in platforms
     //   - Pass in the Chrono physics system from m_sys for UAV construction.
     //   - Store the UAV in simbridge::uav (std::unique_ptr<simuavbase>).
     // ------------------------------------------------------------------------
-    uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
+    this->uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
     // STEP 7 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
-    _message_::SIMULATOR_INFO("SIMULATOR CONFIG LOADED SUCCESSFULLY");
-    _message_::SIMULATOR_INFO(" - HIL / SIL MODE : " + std::to_string(efsl));
-    _message_::SIMULATOR_INFO(" - ACTIVE PLATFORM: " + active_platform);
-    _message_::SIMULATOR_INFO(" - ACTIVE LOCALE: " + active_locale);
+    _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : " + std::to_string(efsl));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: " + active_platform);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: " + active_locale);
+}
+
+// =====================================================================================================================
+// ConfigureSimulatorLog()
+//
+// Purpose:
+//   Creates the directory structure for flight simulation logs, organizing output files by platform and run time.
+//   Copies main config files needed for reproducibility into log directory.
+//
+// Workflow:
+//   1. Format current local time as date ("YYYY_MM_DD") and time ("HH_MM_SS") strings.
+//   2. Assemble the log directory path using the provided platform name.
+//   3. Create the required directory tree recursively using std::filesystem.
+//   4. Report errors to stderr if directory creation fails.
+//   5. Print the created directory path on success.
+//   6. Make a "config" subdirectory under the log directory.
+//   7. Copy specific config files to the log/config subdirectory.
+//
+// Notes:
+//   - Only files "phy-config.yaml", "sim-config.yaml", "vis-config.yaml" are copied.
+//   - If a copy fails, an error message is printed.
+//   - This function is portable and keeps output organized for reproducibility.
+// =====================================================================================================================
+void simbridge::ConfigureSimulatorLog()
+{
+    // ------------------------------------------------------------------------
+    // STEP 1 – Get current local system time
+    // ------------------------------------------------------------------------
+    auto now = std::chrono::system_clock::now();
+    std::time_t t = std::chrono::system_clock::to_time_t(now);
+    struct tm tm_result;
+    localtime_r(&t, &tm_result);
+
+    // ------------------------------------------------------------------------
+    // STEP 2 – Format date as "YYYY_MM_DD" and time as "HH_MM_SS"
+    // ------------------------------------------------------------------------
+    std::ostringstream dateStream, timeStream;
+    dateStream << std::put_time(&tm_result, "%Y_%m_%d");
+    timeStream << std::put_time(&tm_result, "%H_%M_%S");
+    std::string dateStr = dateStream.str();
+    std::string timeStr = timeStream.str();
+
+    // ------------------------------------------------------------------------
+    // STEP 3 – Assemble the relative log directory path
+    // ------------------------------------------------------------------------
+    this->log_dir = "../sim-log";
+    this->log_dir /= this->active_platform;
+    this->log_dir /= dateStr;
+    this->log_dir /= "flight_run_" + timeStr;
+
+    // ------------------------------------------------------------------------
+    // STEP 4 – Create the directory tree recursively
+    // ------------------------------------------------------------------------
+    std::error_code ec;
+    std::filesystem::create_directories(this->log_dir, ec);
+
+    // ------------------------------------------------------------------------
+    // STEP 5 – Report creation outcome to stdout or stderr
+    // ------------------------------------------------------------------------
+    if (ec) {
+        _message_::SIMULATOR_ERROR("[SIMBRG]: Error creating directories: ", ec.message());
+        return;
+    } else {
+        _message_::SIMULATOR_INFO("[SIMBRG]: Created log directory: " + this->log_dir.string());
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 6 – Make sure log/config directory exists
+    // ------------------------------------------------------------------------
+    std::filesystem::path dst_config = this->log_dir / "config";
+    std::error_code ec_config;
+    std::filesystem::create_directories(dst_config, ec_config);
+
+    // ------------------------------------------------------------------------
+    // STEP 7 – Copy specific config files to log/config
+    // ------------------------------------------------------------------------
+    const char* files_to_copy[] = {"phy-config.yaml", "sim-config.yaml", "vis-config.yaml"};
+    std::filesystem::path src_config_dir = "../config";
+    for (const auto& fname : files_to_copy) {
+        std::filesystem::path src = src_config_dir / fname;
+        std::filesystem::path dst = dst_config / fname;
+        std::error_code copy_ec;
+        std::filesystem::copy_file(
+            src, dst,
+            std::filesystem::copy_options::overwrite_existing,
+            copy_ec
+        );
+        if (copy_ec) {
+            _message_::SIMULATOR_ERROR(
+                "[SIMBRG]: Error copying config file: " + src.string() + " -> " + dst.string(),
+                copy_ec.message()
+            );
+        } else {
+            _message_::SIMULATOR_INFO("[SIMBRG]: Copied: " + src.string() + " to " + dst.string());
+        }
+    }
 }
 
 
