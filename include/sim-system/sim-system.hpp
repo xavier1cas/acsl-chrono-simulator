@@ -174,8 +174,8 @@ private:
     // Constants: Hardcoded file paths to the YAML configuration files.
     // These define initial physics and visualization settings.
     // ------------------------------------------------------------------------
-    const std::string& phy_config_filename = "../config/phy-config.yaml";
-    const std::string& vis_config_filename = "../config/vis-config.yaml";
+    const std::string phy_config_filename = "../config/phy-config.yaml";
+    const std::string vis_config_filename = "../config/vis-config.yaml";
 
     // ------------------------------------------------------------------------
     // The main Chrono physics simulation system (non-smooth contact variant).

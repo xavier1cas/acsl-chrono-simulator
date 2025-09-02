@@ -47,13 +47,13 @@ int main(int argc, char* argv[]) {
     // Set path to Chrono data directory
     chrono::SetChronoDataPath(CHRONO_DATA_DIR);
 
+    // Create an instance of the sim-logger
+    _acsl_::_logger_::simlog m_logger;
+
     // Create an instance of sim-bridge
     _acsl_::_bridge_::simbridge m_bridge;   
 
-    chrono::ChRealtimeStepTimer realtime_timer;
     double step_size = m_bridge.GetSimSystem().GetPhyConfig().StepSize;
-    
-    realtime_timer.start();
     
     while (m_bridge.GetSimSystem().GetVisionSystem().Run()) {
 				
@@ -62,12 +62,12 @@ int main(int argc, char* argv[]) {
 		m_bridge.GetSimSystem().GetPhysicsSystem().DoStepDynamics(step_size);
 
         // Spin in place to maintain soft real-time
-        realtime_timer.Spin(step_size);
+        m_bridge.GetRealtimeStepper().Spin(step_size);
         
         // Get the UAV's states
         auto states = m_bridge.GetUAV()->GetUAVStateData();
         
-        bool display_drone_data{true};
+        bool display_drone_data{false};
 
         if (display_drone_data)
         {

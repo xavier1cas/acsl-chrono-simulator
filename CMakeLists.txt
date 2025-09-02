@@ -113,6 +113,12 @@ if (NOT Chrono_FOUND)
   return()
 endif()
 
+if (NOT Boost_FOUND)
+  message("Could not find Boost or one of its required components")
+  return()
+endif()
+
+
 #--------------------------------------------------------------
 # Important! To ensure ABI compatibility, use the same C++ standard
 # as the one used to build the Chrono libraries.
@@ -186,6 +192,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-main/sim-main.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-system/sim-system.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-helpers.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-logger.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/sim-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene/sim-locales/sim-flat/sim-flat.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-bridge/sim-bridge.cpp
@@ -210,7 +217,14 @@ target_link_options(acsl_sim PUBLIC ${CHRONO_LINKER_FLAGS})
 # Link to Chrono libraries and dependency libraries
 #--------------------------------------------------------------
 
-target_link_libraries(acsl_sim ${CHRONO_LIBRARIES})
+target_link_libraries(acsl_sim
+    ${CHRONO_LIBRARIES}
+    ${Boost_LOG_LIBRARY}
+    ${Boost_LOG_SETUP_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
+)
 
 #--------------------------------------------------------------
 # === 4 (OPTIONAL) ===

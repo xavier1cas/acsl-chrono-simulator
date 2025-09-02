@@ -84,7 +84,7 @@ public:
     //             initialized physics system.
     //   - Step 3: Call m_sys.SetupVisualizationSystem() to initalize the 
     //             Irrlicht visualization environment.
-    //   - Step 4: Create the logger for the entire simulation instance.
+    //   - Step 4: Start the realtime stepper
     // ------------------------------------------------------------------------
     simbridge()
     {
@@ -97,8 +97,8 @@ public:
         // Initialize the Chrono visualization environment
         m_sys.SetupVisualizationSystem();
 
-        // Initialize the simualtor logger
-        ConfigureSimulatorLog();
+        // Start tracking the realtime
+        GetRealtimeStepper().start();
     }
     
     // ------------------------------------------------------------------------
@@ -120,6 +120,12 @@ public:
     std::unique_ptr<:: _acsl_:: _environment_::simenvbase>& GetEnv() { return env; }
 
     // ------------------------------------------------------------------------
+    // Accessor: Returns a reference to the real-time stepper object used to
+    // track and synchronize the simulation's real-world duration.
+    // ------------------------------------------------------------------------
+    chrono::ChRealtimeStepTimer& GetRealtimeStepper() { return realtimer; }
+
+    // ------------------------------------------------------------------------
     // Function: Updates the visual system for the acsl physics simulator
     // ------------------------------------------------------------------------
     void UpdateVisualizationSystem();
@@ -132,7 +138,7 @@ private:
     //   - Active simulation mode (model/software/hardware-in-loop)
     //   - Active UAV platform
     // ------------------------------------------------------------------------
-    const std::string& sim_config_filename = "../config/sim-config.yaml";
+    const std::string sim_config_filename = "../config/sim-config.yaml";
 
     // ------------------------------------------------------------------------
     // Reads YAML settings for the simulator:
@@ -143,22 +149,6 @@ private:
     // Implementation: sim-bridge.cpp
     // ------------------------------------------------------------------------
     void ConfigureSimulatorFromConfig();
-
-    // ------------------------------------------------------------------------
-    // Creates a directory structure for simulator log files:
-    //   - Base directory is relative: "../sim-log/"
-    //   - Appends platform folder (e.g., UAV type)
-    //   - Adds date in "YYYY_MM_DD" format
-    //   - Adds run folder "flight_run_HH_MM_SS" from current local time
-    //
-    // Implementation: sim-bridge.cpp
-    // ------------------------------------------------------------------------
-    void ConfigureSimulatorLog();
-
-    // ------------------------------------------------------------------------
-    // path variabel for storing the sim-log path for this sim instance
-    // ------------------------------------------------------------------------
-    std::filesystem::path log_dir;
 
     // ------------------------------------------------------------------------
     // Boolean for telling the system if it's in HIL/SIL mode
@@ -193,6 +183,12 @@ private:
     // Unique pointer to store the ENV object.
     // ------------------------------------------------------------------------
     std::unique_ptr<::_acsl_::_environment_::simenvbase> env;
+
+    // ------------------------------------------------------------------------
+    // Realtime stepper object to track the simulation's real life duration
+    // ------------------------------------------------------------------------
+    chrono::ChRealtimeStepTimer realtimer;
+
 };
 
 

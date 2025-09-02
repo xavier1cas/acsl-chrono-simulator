@@ -38,6 +38,7 @@
 #define SIM_MAIN_HPP_
 
 #include "sim-bridge.hpp"
+#include "sim-logger.hpp"
 
 // ------------------------------------------------------------------------------------------------
 // CHRONO_DATA_DIR Macro Fallback
