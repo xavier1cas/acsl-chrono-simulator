@@ -43,6 +43,7 @@
 #include "sim-uav.hpp"          // Import the header file for the UAV API
 #include "sim-locales.hpp"      // Import the header file with all the environments
 #include "sim-environment.hpp"  // Import the header file for the ENV API
+#include "sim-logger.hpp"       // Import the header file for the Logger API
 
 namespace _acsl_
 {
@@ -61,15 +62,17 @@ namespace _bridge_
 //     simulation system.
 //
 // Usage:
-//   simbridge bridge;
+//   simlog m_logger;
+//   simbridge bridge(m_logger);
 //   // automatically reads sim-config.yaml upon construction
 //   // later methods will handle UAV platform load & simulation start.
 //
 // Notes:
 //   - Configuration file is expected at: ../config/sim-config.yaml
 //   - Actual simulation mode execution logic will be in sim-bridge.cpp.
+//   - Now accepts and stores a reference to a simlog instance for use across simulation.
 // =====================================================================================================================
-class simbridge
+class simbridge : public ::_acsl_::_logger_::blackbox
 {
 public:
 
@@ -85,12 +88,14 @@ public:
     //   - Step 3: Call m_sys.SetupVisualizationSystem() to initalize the 
     //             Irrlicht visualization environment.
     //   - Step 4: Start the realtime stepper
+    //   - Step 5: Start the physics logger if requested.
     // ------------------------------------------------------------------------
-    simbridge()
+    simbridge(_acsl_::_logger_::simlog& logger)
+        : m_logger(logger) // store reference to external logger
     {
         // Initialize the Chrono physics environment
         m_sys.SetupPhysicsSystem();
-        
+
         // Load config, select platform, and attach it to the physics system
         ConfigureSimulatorFromConfig();
 
@@ -99,11 +104,14 @@ public:
 
         // Start tracking the realtime
         GetRealtimeStepper().start();
+
+        // Setup the physics log file if requested
+        if (this->log2file) { InitiateLogging(); ConfigureHeaders(); }
     }
-    
+
     // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the underlying simulator system class
-    // so that external changes can me made
+    // so that external changes can be made.
     // ------------------------------------------------------------------------
     ::_acsl_::_system_::simsystem& GetSimSystem() { return m_sys; }
 
@@ -126,9 +134,20 @@ public:
     chrono::ChRealtimeStepTimer& GetRealtimeStepper() { return realtimer; }
 
     // ------------------------------------------------------------------------
+    // Accessor: Returns a reference to the logger instance used by the simulator.
+    // ------------------------------------------------------------------------
+    _acsl_::_logger_::simlog& GetLogger() { return m_logger; }
+
+    // ------------------------------------------------------------------------
     // Function: Updates the visual system for the acsl physics simulator
     // ------------------------------------------------------------------------
     void UpdateVisualizationSystem();
+
+    // ------------------------------------------------------------------------
+    // Function: Updates the physics system for the acsl physics simulator
+    // ------------------------------------------------------------------------
+    void UpdatePhysicsSystem();
+
 
 private:
 
@@ -154,6 +173,12 @@ private:
     // Boolean for telling the system if it's in HIL/SIL mode
     // ------------------------------------------------------------------------
     bool efsl;          // <- Stands for enable flightstack loop.
+
+    // ------------------------------------------------------------------------
+    // Boolean for telling the system it's debugging configuration
+    // ------------------------------------------------------------------------
+    bool log2file;
+    bool log2terminal;
 
     // ------------------------------------------------------------------------
     // Chrono Physics and Visual system object.
@@ -189,7 +214,20 @@ private:
     // ------------------------------------------------------------------------
     chrono::ChRealtimeStepTimer realtimer;
 
+    // ------------------------------------------------------------------------
+    // Reference to external simlog logger instance for centralized logging.
+    // ------------------------------------------------------------------------
+    _acsl_::_logger_::simlog& m_logger;
+
+    // ------------------------------------------------------------------------
+    // Blackbox functions for the physics logger.
+    // ------------------------------------------------------------------------
+    void ConfigureHeaders() override;
+    bool InitiateLogging() override;
+    void LogData() override;
+
 };
+
 
 
 

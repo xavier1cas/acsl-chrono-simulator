@@ -36,12 +36,6 @@
 
 #include "sim-main.hpp"
 
-
-// // Helper to pretty-print small values as zero
-// double pretty(double x, double tol = 1e-10) {
-//     return (std::abs(x) < tol) ? 0.0 : x;
-// }
-
 int main(int argc, char* argv[]) {
 
     // Set path to Chrono data directory
@@ -51,69 +45,16 @@ int main(int argc, char* argv[]) {
     _acsl_::_logger_::simlog m_logger;
 
     // Create an instance of sim-bridge
-    _acsl_::_bridge_::simbridge m_bridge;   
+    _acsl_::_bridge_::simbridge m_bridge(m_logger);   
 
     double step_size = m_bridge.GetSimSystem().GetPhyConfig().StepSize;
     
     while (m_bridge.GetSimSystem().GetVisionSystem().Run()) {
 				
         m_bridge.UpdateVisualizationSystem();
-
-		m_bridge.GetSimSystem().GetPhysicsSystem().DoStepDynamics(step_size);
-
-        // Spin in place to maintain soft real-time
-        m_bridge.GetRealtimeStepper().Spin(step_size);
-        
-        // Get the UAV's states
-        auto states = m_bridge.GetUAV()->GetUAVStateData();
-        
-        bool display_drone_data{false};
-
-        if (display_drone_data)
-        {
-            std::string color_label = "\033[38;5;214m";  // Bright Orange
-            std::string color_value = "\033[1;36m";      // Bright/Bold Cyan
-            std::string color_reset = "\033[0m";         // Reset
-
-            std::ostringstream msg;
-
-            msg << "\n"
-                << color_label << "SIMULATION TIME: " << color_value << states.time << " s\n" << color_reset
-                << color_label << "UAV POSITION IN NED FRAME: " << color_value
-                << states.pos.x() << ", "
-                << states.pos.y() << ", "
-                << states.pos.z() << "\n" << color_reset
-                << color_label << "UAV VELOCITY IN NED FRAME: " << color_value
-                << states.vel.x() << ", "
-                << states.vel.y() << ", "
-                << states.vel.z() << "\n" << color_reset
-                << color_label << "UAV rotation in NED frame: " << color_value
-                << _acsl_::_conversions_::rad2deg(states.eul.x()) << ", "
-                << _acsl_::_conversions_::rad2deg(states.eul.y()) << ", "
-                << _acsl_::_conversions_::rad2deg(states.eul.z()) << "\n" << color_reset
-                << color_label << "UAV ANGULAR VELOCITY IN NED FRAME: " << color_value
-                << states.ovel.x() << ", "
-                << states.ovel.y() << ", "
-                << states.ovel.z() << "\n" << color_reset
-                << color_label << "UAV FORCES IN NED FRAME [I]: " << color_value
-                << states.muI.x() << ", "
-                << states.muI.y() << ", "
-                << states.muI.z() << "\n" << color_reset
-                << color_label << "UAV FORCES IN NED FRAME [J]: " << color_value
-                << states.muJ.x() << ", "
-                << states.muJ.y() << ", "
-                << states.muJ.z() << "\n" << color_reset
-                << color_label << "UAV TORQUES IN NED FRAME: " << color_value
-                << states.tauJ.x() << ", "
-                << states.tauJ.y() << ", "
-                << states.tauJ.z() << color_reset;
-
-            // Print the colorized output
-            std::cout << msg.str() << std::endl;
-        }
-
+        m_bridge.UpdatePhysicsSystem();
+		
     }
-
     return 0;
 
 }

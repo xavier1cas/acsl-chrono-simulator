@@ -155,8 +155,8 @@ public:
     // ------------------------------------------------------------------------
     // Accessor: Returns references to physics and control loggers.
     // ------------------------------------------------------------------------
-    src::logger GetPhysicsLogger() { return this->loggers.physics; }
-    src::logger GetControlLogger() { return this->loggers.control; }
+    src::logger& GetPhysicsLogger() { return this->loggers.physics; }
+    src::logger& GetControlLogger() { return this->loggers.control; }
 
     // ------------------------------------------------------------------------
     // Setter: Assigns the log directory for this simulation instance.
