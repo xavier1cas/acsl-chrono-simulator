@@ -544,113 +544,78 @@ void simbridge::ConfigureHeaders()
 }
 
 
+// =====================================================================================================================
+// LogData()
+//
+// Purpose:
+//   Collects state data from the UAV chassis and all propellers and writes a formatted line to the physics log.
+//   Ensures each timestep's complete UAV and propeller state is efficiently recorded using Boost.Log.
+//
+// Workflow:
+//   1. Serialize the UAV chassis state variables using the shared serialization helper.
+//   2. Iterate over all UAV propellers, serialize each one's state, and append to the output buffer.
+//   3. Attach the required thread-local logging tag so this record is accepted by the log filter.
+//   4. Write the collected data as a single line to the physics log using Boost.Log.
+//   5. Catch and report any exceptions that may occur during log output.
+//
+// Notes:
+//   - Relies on a common serialization helper to maintain consistent field ordering.
+//   - Appends in the exact order and format expected by the CSV log headers.
+//   - Tag attribute "PhysicsTag" must be present to ensure sink filter matches.
+//   - Any logging failure is cleanly reported to the user via the simulator terminal logger.
+// =====================================================================================================================
 void simbridge::LogData()
 {
+    // ------------------------------------------------------------------------
+    // STEP 1 – Serialize UAV chassis state to buffer
+    // ------------------------------------------------------------------------
     std::ostringstream oss;
+    oss << ", ";        // Add a delimiter before constructing the message.
+    _serialize_::SerializeStateData(oss, this->uav->GetUAVStateData());
 
-    // Grab the states
-    auto uav_states = this->uav->GetUAVStateData();
-
-    // Add the uav states to the buffer
-    oss << ", "
-        << uav_states.time << ", "
-        << uav_states.pos.x() << ", "
-        << uav_states.pos.y() << ", "
-        << uav_states.pos.z() << ", "
-        << uav_states.vel.x() << ", "
-        << uav_states.vel.y() << ", "
-        << uav_states.vel.z() << ", "
-        << uav_states.acc.x() << ", "
-        << uav_states.acc.y() << ", "
-        << uav_states.acc.z() << ", "
-        << uav_states.eul.x() << ", "
-        << uav_states.eul.y() << ", "
-        << uav_states.eul.z() << ", "
-        << uav_states.quat.e0() << ", "
-        << uav_states.quat.e1() << ", "
-        << uav_states.quat.e2() << ", "
-        << uav_states.quat.e3() << ", "
-        << uav_states.ovel.x() << ", "
-        << uav_states.ovel.y() << ", "
-        << uav_states.ovel.z() << ", "
-        << uav_states.oacc.x() << ", "
-        << uav_states.oacc.y() << ", "
-        << uav_states.oacc.z() << ", "
-        << uav_states.muI.x() << ", "
-        << uav_states.muI.z() << ", "
-        << uav_states.muI.y() << ", "
-        << uav_states.muJ.x() << ", "
-        << uav_states.muJ.z() << ", "
-        << uav_states.muJ.y() << ", "
-        << uav_states.tauJ.x() << ", "
-        << uav_states.tauJ.y() << ", "
-        << uav_states.tauJ.z() << ", ";
-
-    // Iteratively grab the states of the propellers
+    // ------------------------------------------------------------------------
+    // STEP 2 – Serialize all propeller states, appending them in order
+    // ------------------------------------------------------------------------
     int nop = this->uav->GetPropCount();
-
     for (int i = 1; i <= nop; ++i)
     {
-        // Get the states
-        auto prop_states = this->uav->GetUAVPropStateData(i);
-        
-        // Add it to the buffer
-        oss << prop_states.time << ", "
-            << prop_states.pos.x() << ", "
-            << prop_states.pos.y() << ", "
-            << prop_states.pos.z() << ", "
-            << prop_states.vel.x() << ", "
-            << prop_states.vel.y() << ", "
-            << prop_states.vel.z() << ", "
-            << prop_states.acc.x() << ", "
-            << prop_states.acc.y() << ", "
-            << prop_states.acc.z() << ", "
-            << prop_states.eul.x() << ", "
-            << prop_states.eul.y() << ", "
-            << prop_states.eul.z() << ", "
-            << prop_states.quat.e0() << ", "
-            << prop_states.quat.e1() << ", "
-            << prop_states.quat.e2() << ", "
-            << prop_states.quat.e3() << ", "
-            << prop_states.ovel.x() << ", "
-            << prop_states.ovel.y() << ", "
-            << prop_states.ovel.z() << ", "
-            << prop_states.oacc.x() << ", "
-            << prop_states.oacc.y() << ", "
-            << prop_states.oacc.z() << ", "
-            << prop_states.muI.x() << ", "
-            << prop_states.muI.z() << ", "
-            << prop_states.muI.y() << ", "
-            << prop_states.muJ.x() << ", "
-            << prop_states.muJ.z() << ", "
-            << prop_states.muJ.y() << ", "
-            << prop_states.tauJ.x() << ", "
-            << prop_states.tauJ.y() << ", "
-            << prop_states.tauJ.z() << ", ";
-
+        _serialize_::SerializeStateData(oss, this->uav->GetUAVPropStateData(i));
     }
 
     try {
         // ------------------------------------------------------------------------
-        // STEP 5 – Attach thread-local "Tag" so the logger filter lets 
-        //          this log record through
+        // STEP 3 – Attach thread-local "Tag" so the logger filter accepts this record
         // ------------------------------------------------------------------------
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "PhysicsTag");
 
         // ------------------------------------------------------------------------
-        // STEP 6 – Write headers to the physics log using Boost.Log macro
+        // STEP 4 – Write the serialized data to the physics log using Boost.Log macro
         // ------------------------------------------------------------------------
         BOOST_LOG(m_logger.GetPhysicsLogger()) << oss.str();
     }
     catch (const std::exception& e) {
         // ------------------------------------------------------------------------
-        // STEP 7 – Report errors to terminal logger if header write fails
+        // STEP 5 – On exception, report log failure via terminal logger
         // ------------------------------------------------------------------------
         _message_::SIMULATOR_ERROR("[SIMBRG] FAILED TO WRITE PHYSICS LOG DATA", e.what());
     }
-
-
 }
+
+// Prototype ever run function - will need traj module integrated and will house the logic for all the modes.
+void simbridge::EverRun()
+{
+    // While the vision system is running
+    while (this->m_sys.GetVisionSystem().Run()) {
+            
+        // Update the visualization
+        this->UpdateVisualizationSystem();
+
+        // Update the physics
+        this->UpdatePhysicsSystem();
+		
+    }
+}
+
 
 
 }   // namespace _bridge_

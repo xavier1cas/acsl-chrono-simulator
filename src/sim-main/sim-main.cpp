@@ -39,22 +39,26 @@
 int main(int argc, char* argv[]) {
 
     // Set path to Chrono data directory
+    // NOTE: A default path is set in the header file but the main path
+    //       will be piped in from the cmake command and will need to be
+    //       set during compilation time.
     chrono::SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create an instance of the sim-logger
+    // NOTE: This step is extremely important. The logger instance is 
+    //       created here due to ownership. The bridge object and the
+    //       logger object MUST be owned by the main class.
     _acsl_::_logger_::simlog m_logger;
 
-    // Create an instance of sim-bridge
+    // Create an instance of sim-bridge and pass the logger to the bridge
+    // NOTE: The logger will then be used by the bridge which will then
+    //       pass the logger instance to the controller class which will
+    //       utilize the logger to log the data from the controller.
     _acsl_::_bridge_::simbridge m_bridge(m_logger);   
-
-    double step_size = m_bridge.GetSimSystem().GetPhyConfig().StepSize;
     
-    while (m_bridge.GetSimSystem().GetVisionSystem().Run()) {
-				
-        m_bridge.UpdateVisualizationSystem();
-        m_bridge.UpdatePhysicsSystem();
-		
-    }
+    // Call the EverRun() main simulation loop coded in the bridge.
+    m_bridge.EverRun();
+    
     return 0;
 
 }

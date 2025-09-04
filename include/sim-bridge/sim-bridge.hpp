@@ -110,6 +110,33 @@ public:
     }
 
     // ------------------------------------------------------------------------
+    // Function: Main while loop for the entire simulation system.
+    // ------------------------------------------------------------------------
+    void EverRun();
+
+private:
+
+    // ------------------------------------------------------------------------
+    // Reads YAML settings for the simulator:
+    //   - Mode selection (HIL, SIL, MIL)
+    //   - UAV platform choice
+    //   - Other runtime parameters as needed.
+    //
+    // Implementation: sim-bridge.cpp
+    // ------------------------------------------------------------------------
+    void ConfigureSimulatorFromConfig();
+
+    // ------------------------------------------------------------------------
+    // Function: Updates the visual system for the acsl physics simulator
+    // ------------------------------------------------------------------------
+    void UpdateVisualizationSystem();
+
+    // ------------------------------------------------------------------------
+    // Function: Updates the physics system for the acsl physics simulator
+    // ------------------------------------------------------------------------
+    void UpdatePhysicsSystem();
+
+    // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the underlying simulator system class
     // so that external changes can be made.
     // ------------------------------------------------------------------------
@@ -139,35 +166,12 @@ public:
     _acsl_::_logger_::simlog& GetLogger() { return m_logger; }
 
     // ------------------------------------------------------------------------
-    // Function: Updates the visual system for the acsl physics simulator
-    // ------------------------------------------------------------------------
-    void UpdateVisualizationSystem();
-
-    // ------------------------------------------------------------------------
-    // Function: Updates the physics system for the acsl physics simulator
-    // ------------------------------------------------------------------------
-    void UpdatePhysicsSystem();
-
-
-private:
-
-    // ------------------------------------------------------------------------
     // Hardcoded path to the simulation configuration YAML.
     // Stores settings for:
     //   - Active simulation mode (model/software/hardware-in-loop)
     //   - Active UAV platform
     // ------------------------------------------------------------------------
     const std::string sim_config_filename = "../config/sim-config.yaml";
-
-    // ------------------------------------------------------------------------
-    // Reads YAML settings for the simulator:
-    //   - Mode selection (HIL, SIL, MIL)
-    //   - UAV platform choice
-    //   - Other runtime parameters as needed.
-    //
-    // Implementation: sim-bridge.cpp
-    // ------------------------------------------------------------------------
-    void ConfigureSimulatorFromConfig();
 
     // ------------------------------------------------------------------------
     // Boolean for telling the system if it's in HIL/SIL mode

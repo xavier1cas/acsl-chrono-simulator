@@ -91,6 +91,29 @@ double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value);
 
 }   // namespace _compute_
 
+// All the serialization functions
+namespace _serialize_
+{
+
+// Helper that serializes *any* UAV state struct to CSV-compatible values
+template<typename State>
+void SerializeStateData(std::ostringstream& oss, const State& s) {
+    oss << s.time << ", "
+        << s.pos.x() << ", " << s.pos.y() << ", " << s.pos.z() << ", "
+        << s.vel.x() << ", " << s.vel.y() << ", " << s.vel.z() << ", "
+        << s.acc.x() << ", " << s.acc.y() << ", " << s.acc.z() << ", "
+        << s.eul.x() << ", " << s.eul.y() << ", " << s.eul.z() << ", "
+        << s.quat.e0() << ", " << s.quat.e1() << ", " << s.quat.e2() << ", " << s.quat.e3() << ", "
+        << s.ovel.x() << ", " << s.ovel.y() << ", " << s.ovel.z() << ", "
+        << s.oacc.x() << ", " << s.oacc.y() << ", " << s.oacc.z() << ", "
+        << s.muI.x() << ", " << s.muI.y() << ", " << s.muI.z() << ", "
+        << s.muJ.x() << ", " << s.muJ.y() << ", " << s.muJ.z() << ", "
+        << s.tauJ.x() << ", " << s.tauJ.y() << ", " << s.tauJ.z() << ", ";
+}
+
+
+}   // namespace _serialize_
+
 }   // namespace _acsl_
 
 #endif // SIM_HELPERS_HPP_
