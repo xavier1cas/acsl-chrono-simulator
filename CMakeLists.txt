@@ -96,8 +96,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Find pacakges needed for the codebase
-#   - Most systems have 1.71.0. Change it to that if needed.
-find_package(Boost 1.87 REQUIRED COMPONENTS log log_setup system filesystem thread)
+#   - Most systems have 1.71.0. Therfore it is set as the minimum required version of Boost
+find_package(Boost 1.71 REQUIRED COMPONENTS log log_setup system filesystem thread)
 
 find_package(Chrono
              COMPONENTS Irrlicht
