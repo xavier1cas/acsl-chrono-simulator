@@ -487,7 +487,7 @@ void simbridge::ConfigureHeaders()
         "_vx", "_vy", "_vz",
         "_ax", "_ay", "_az",
         "_phi", "_theta", "_psi",
-        "_q0", "_q1", "_q2", "_q3", "_q4",
+        "_q0", "_q1", "_q2", "_q3", 
         "_wx", "_wy", "_wz",
         "_alphx", "_alphy", "_alphz",
         "_muIx", "_muIy", "_muIz",
