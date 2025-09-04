@@ -293,7 +293,7 @@ void simbridge::UpdatePhysicsSystem()
     auto states = this->uav->GetUAVStateData();
 
     // ------------------------------------------------------------------------
-    // STEP 4 – If terminal logging is enabled, format and print state block in color.
+    // STEP 4 – If terminal logging is enabled, print state block in color.
     // ------------------------------------------------------------------------
     if (this->log2terminal)
     {
@@ -336,6 +336,11 @@ void simbridge::UpdatePhysicsSystem()
         // Print the colorized output to the terminal.
         std::cout << msg.str() << std::endl;
     }
+
+    // ------------------------------------------------------------------------
+    // STEP 4 – If file logging is enabled, format and write to file.
+    // ------------------------------------------------------------------------
+    if (this->log2file) { this->LogData(); }
 }
 
 
@@ -541,7 +546,110 @@ void simbridge::ConfigureHeaders()
 
 void simbridge::LogData()
 {
-    ;
+    std::ostringstream oss;
+
+    // Grab the states
+    auto uav_states = this->uav->GetUAVStateData();
+
+    // Add the uav states to the buffer
+    oss << ", "
+        << uav_states.time << ", "
+        << uav_states.pos.x() << ", "
+        << uav_states.pos.y() << ", "
+        << uav_states.pos.z() << ", "
+        << uav_states.vel.x() << ", "
+        << uav_states.vel.y() << ", "
+        << uav_states.vel.z() << ", "
+        << uav_states.acc.x() << ", "
+        << uav_states.acc.y() << ", "
+        << uav_states.acc.z() << ", "
+        << uav_states.eul.x() << ", "
+        << uav_states.eul.y() << ", "
+        << uav_states.eul.z() << ", "
+        << uav_states.quat.e0() << ", "
+        << uav_states.quat.e1() << ", "
+        << uav_states.quat.e2() << ", "
+        << uav_states.quat.e3() << ", "
+        << uav_states.ovel.x() << ", "
+        << uav_states.ovel.y() << ", "
+        << uav_states.ovel.z() << ", "
+        << uav_states.oacc.x() << ", "
+        << uav_states.oacc.y() << ", "
+        << uav_states.oacc.z() << ", "
+        << uav_states.muI.x() << ", "
+        << uav_states.muI.z() << ", "
+        << uav_states.muI.y() << ", "
+        << uav_states.muJ.x() << ", "
+        << uav_states.muJ.z() << ", "
+        << uav_states.muJ.y() << ", "
+        << uav_states.tauJ.x() << ", "
+        << uav_states.tauJ.y() << ", "
+        << uav_states.tauJ.z() << ", ";
+
+    // Iteratively grab the states of the propellers
+    int nop = this->uav->GetPropCount();
+
+    for (int i = 1; i <= nop; ++i)
+    {
+        // Get the states
+        auto prop_states = this->uav->GetUAVPropStateData(i);
+        
+        // Add it to the buffer
+        oss << prop_states.time << ", "
+            << prop_states.pos.x() << ", "
+            << prop_states.pos.y() << ", "
+            << prop_states.pos.z() << ", "
+            << prop_states.vel.x() << ", "
+            << prop_states.vel.y() << ", "
+            << prop_states.vel.z() << ", "
+            << prop_states.acc.x() << ", "
+            << prop_states.acc.y() << ", "
+            << prop_states.acc.z() << ", "
+            << prop_states.eul.x() << ", "
+            << prop_states.eul.y() << ", "
+            << prop_states.eul.z() << ", "
+            << prop_states.quat.e0() << ", "
+            << prop_states.quat.e1() << ", "
+            << prop_states.quat.e2() << ", "
+            << prop_states.quat.e3() << ", "
+            << prop_states.ovel.x() << ", "
+            << prop_states.ovel.y() << ", "
+            << prop_states.ovel.z() << ", "
+            << prop_states.oacc.x() << ", "
+            << prop_states.oacc.y() << ", "
+            << prop_states.oacc.z() << ", "
+            << prop_states.muI.x() << ", "
+            << prop_states.muI.z() << ", "
+            << prop_states.muI.y() << ", "
+            << prop_states.muJ.x() << ", "
+            << prop_states.muJ.z() << ", "
+            << prop_states.muJ.y() << ", "
+            << prop_states.tauJ.x() << ", "
+            << prop_states.tauJ.y() << ", "
+            << prop_states.tauJ.z() << ", ";
+
+    }
+
+    try {
+        // ------------------------------------------------------------------------
+        // STEP 5 – Attach thread-local "Tag" so the logger filter lets 
+        //          this log record through
+        // ------------------------------------------------------------------------
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", "PhysicsTag");
+
+        // ------------------------------------------------------------------------
+        // STEP 6 – Write headers to the physics log using Boost.Log macro
+        // ------------------------------------------------------------------------
+        BOOST_LOG(m_logger.GetPhysicsLogger()) << oss.str();
+    }
+    catch (const std::exception& e) {
+        // ------------------------------------------------------------------------
+        // STEP 7 – Report errors to terminal logger if header write fails
+        // ------------------------------------------------------------------------
+        _message_::SIMULATOR_ERROR("[SIMBRG] FAILED TO WRITE PHYSICS LOG DATA", e.what());
+    }
+
+
 }
 
 
