@@ -394,6 +394,11 @@ bool simbridge::InitiateLogging() {
         // --------------------------------------------------------------------
         typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
         boost::shared_ptr<text_sink> physics_sink = boost::make_shared<text_sink>();
+        
+        // Unlike the flightstack, we aren't looking for the highest tier of 
+        // performance, therfore you can set the logger to flush data to file
+        // as soon as it gets it in the cache.
+        physics_sink->locked_backend()->auto_flush(true);   
 
         // --------------------------------------------------------------------
         // STEP 4 – Add file stream to sink backend.
@@ -445,79 +450,94 @@ bool simbridge::InitiateLogging() {
     return false;
 }
 
+// =====================================================================================================================
+// ConfigureHeaders()
+//
+// Purpose:
+//   Build and write a CSV header row for all chassis and propeller states to the physics log.
+//   Ensures that data columns in the log file are clearly labeled and aligned with each timestep's values.
+//
+// Workflow:
+//   1. Define a complete, ordered list of state variable suffixes to describe all measured and derived fields.
+//   2. Determine the current UAV's number of propellers (dynamic platform support).
+//   3. Assemble header names for both the chassis (e.g., "chassis_x") and each propeller (e.g., "propeller_1_vx").
+//   4. Concatenate all headers into a single comma-separated string for log file output.
+//   5. Attach the "Tag" logging attribute as required by the Boost.Log sink filter to ensure this line is logged.
+//   6. Write the header string using Boost.Log. Report to terminal on success.
+//   7. Catch and report any exceptions that occur during log output.
+//
+// Notes:
+//   - Guarantees all physics log columns are properly labeled for later analysis.
+//   - Structure and naming align with simulation state output structures and variable names.
+//   - Ensures compatibility with log sink filters (must have "PhysicsTag" attribute present).
+//   - Fails gracefully, reporting header write errors to the terminal console.
+// =====================================================================================================================
 void simbridge::ConfigureHeaders()
 {
-    // Create Headers for the following states
-    //   time  - Simulation time stamp.
-    //   pos   - Position in NED coordinates.
-    //   vel   - Linear velocity in NED coordinates.
-    //   acc   - Linear acceleration in NED coordinates.
-    //   eul   - Euler angles (rotation) in NED coordinates.
-    //   quat  - Orientation quaternion in NED coordinates.
-    //   ovel  - Angular velocity in body frame (relative to NED).
-    //   oacc  - Angular acceleration in body frame (relative to NED).
-    //   muI   - Forces acting on the body in the inertial frame (NED).
-    //   muJ   - Forces acting on the body in the body frame (NED).
-    //   tauJ  - Torque acting on the body in the body frame (NED).
-    
-    // State groups for body and propeller
+    // ------------------------------------------------------------------------
+    // STEP 1 – Create array of suffixes for all UAV and propeller states.
+    // ------------------------------------------------------------------------
     std::vector<std::string> state_suffixes = {
-        "_t", 
-        "_x", "_y", "_z", 
-        "_vx", "_vy", "_vz", 
-        "_ax", "_ay", "_az", 
+        "_t", "_x", "_y", "_z",
+        "_vx", "_vy", "_vz",
+        "_ax", "_ay", "_az",
         "_phi", "_theta", "_psi",
-        "_q0", "_q1", "_q2", "_q3", "_q4", 
-        "_wx", "_wy", "_wz", 
+        "_q0", "_q1", "_q2", "_q3", "_q4",
+        "_wx", "_wy", "_wz",
         "_alphx", "_alphy", "_alphz",
         "_muIx", "_muIy", "_muIz",
         "_muJx", "_muJy", "_muJz",
         "_tauJx", "_tauJy", "_tau_Jz"
     };
 
-    // Cache the number of propellers
+    // ------------------------------------------------------------------------
+    // STEP 2 – Query live platform for current number of propellers
+    // ------------------------------------------------------------------------
     int num_propellers = this->uav->GetPropCount();
 
-    // Final header name array
+    // ------------------------------------------------------------------------
+    // STEP 3 – Assemble header names for chassis and all propellers
+    // ------------------------------------------------------------------------
     std::vector<std::string> all_headers;
-
-    // Construct headers for chassis
     for (const auto& suffix : state_suffixes) {
         all_headers.push_back("chassis" + suffix);
     }
-
-    // Construct headers for each propeller
     for (int idx = 1; idx <= num_propellers; ++idx) {
         for (const auto& suffix : state_suffixes) {
             all_headers.push_back("propeller_" + std::to_string(idx) + suffix);
         }
     }
 
-    
-    // Write the headers to the log file.
+    // ------------------------------------------------------------------------
+    // STEP 4 – Concatenate all header names with a comma separator
+    // ------------------------------------------------------------------------
     std::ostringstream oss;
-    oss << ", "; // Fill up a delimiter to separate the tags from the first data point.
+    oss << ", "; // Leading delimiter for tag-data separation (if needed)
     for (const auto& name : all_headers) {
         oss << name << ", ";
     }
+
     try {
         // ------------------------------------------------------------------------
-        // STEP – Attach thread-local "Tag" attribute so the filter lets this log message through.
+        // STEP 5 – Attach thread-local "Tag" so the logger filter lets 
+        //          this log record through
         // ------------------------------------------------------------------------
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "PhysicsTag");
 
         // ------------------------------------------------------------------------
-        // STEP – Write the header string to the physics log via Boost.Log macro.
+        // STEP 6 – Write headers to the physics log using Boost.Log macro
         // ------------------------------------------------------------------------
         BOOST_LOG(m_logger.GetPhysicsLogger()) << oss.str();
         _message_::SIMULATOR_INFO("[SIMBRG] WROTE PHYSICS LOG HEADER DATA");
-        
     }
     catch (const std::exception& e) {
+        // ------------------------------------------------------------------------
+        // STEP 7 – Report errors to terminal logger if header write fails
+        // ------------------------------------------------------------------------
         _message_::SIMULATOR_ERROR("[SIMBRG] FAILED TO WRITE PHYSICS LOG HEADERS", e.what());
     }
-
 }
+
 
 void simbridge::LogData()
 {
