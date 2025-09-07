@@ -81,9 +81,9 @@ public:
         //   - Call the function to setup the chassis of the uav
         //   - Initiate the entire UAV and add it to the physics system
 
-        SetUAVPlatformName("qrbp");                             // <- Baseclass function
-        SetupInertialNEDFrame();                                // <- Baseclass function
-        SetUAVShapesDir("../chrono-assets/qrbp/qrbp_shapes/");  // <- Baseclass function
+        SetUAVPlatformName("qrbp");                                    // <- Baseclass function
+        SetupInertialNEDFrame();                                       // <- Baseclass function
+        SetUAVShapesDir("../chrono-assets/models/qrbp/qrbp_shapes/");  // <- Baseclass function
         
         ConfigureQRBPChassis();                                 // <- Compulsary derived class function
         ConfigureQRBPProps();                                   // <- Compulsary derived class function
