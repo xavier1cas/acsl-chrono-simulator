@@ -22,3 +22,6 @@
 [submodule "libraries/third-party/nlohmann-json"]
 	path = libraries/third-party/nlohmann-json
 	url = https://github.com/nlohmann/json.git
+[submodule "libraries/third-party/rncarpio-linterp"]
+	path = libraries/third-party/rncarpio-linterp
+	url = https://github.com/rncarpio/linterp.git
