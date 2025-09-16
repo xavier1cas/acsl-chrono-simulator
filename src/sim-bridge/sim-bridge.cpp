@@ -65,7 +65,8 @@ namespace _bridge_
 //   6. Populate all available UAV platforms by dynamically iterating the YAML config and registry.
 //      - Validates that one and only one platform is set true.
 //      - Instantiates the selected UAV via factory (createSelectedUAV).
-//   7. Log success messages about the loaded config, mode, and UAV/locale instantiation.
+//   7. Read the trajectory module parameters in and store it for instantiation.
+//   8. Log success messages about the loaded config, mode, and UAV/locale instantiation.
 //
 // Notes:
 //   - There is no hardcoding of platform or environment names in this function: all lookups and instantiation
@@ -144,12 +145,19 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
-    // STEP 7 – Log the loaded config and UAV instantiation
+    // STEP 7 - Load in the trajectory module
+    // ------------------------------------------------------------------------
+    this->available_trajectories.read(config_file);
+
+    // ------------------------------------------------------------------------
+    // STEP 8 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : " + std::to_string(efsl));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: " + active_platform);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: " + active_locale);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: " + available_trajectories.GetActiveModule());
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY FILE: " + available_trajectories.GetTrajectoryFile());
 }
 
 // =====================================================================================================================
@@ -313,9 +321,9 @@ void simbridge::UpdatePhysicsSystem()
             << states.vel.y() << ", "
             << states.vel.z() << "\n" << color_reset
             << color_label << "UAV rotation in NED frame: " << color_value
-            << _acsl_::_conversions_::rad2deg(states.eul.x()) << ", "
-            << _acsl_::_conversions_::rad2deg(states.eul.y()) << ", "
-            << _acsl_::_conversions_::rad2deg(states.eul.z()) << "\n" << color_reset
+            << _shared_::_conversions_::rad2deg(states.eul.x()) << ", "
+            << _shared_::_conversions_::rad2deg(states.eul.y()) << ", "
+            << _shared_::_conversions_::rad2deg(states.eul.z()) << "\n" << color_reset
             << color_label << "UAV ANGULAR VELOCITY IN NED FRAME: " << color_value
             << states.ovel.x() << ", "
             << states.ovel.y() << ", "
@@ -487,7 +495,7 @@ void simbridge::ConfigureHeaders()
         "_vx", "_vy", "_vz",
         "_ax", "_ay", "_az",
         "_phi", "_theta", "_psi",
-        "_q0", "_q1", "_q2", "_q3", 
+        "_q0", "_q1", "_q2", "_q3",
         "_wx", "_wy", "_wz",
         "_alphx", "_alphy", "_alphz",
         "_muIx", "_muIy", "_muIz",
@@ -571,7 +579,9 @@ void simbridge::LogData()
     // ------------------------------------------------------------------------
     std::ostringstream oss;
     oss << ", ";        // Add a delimiter before constructing the message.
-    _serialize_::SerializeStateData(oss, this->uav->GetUAVStateData());
+    // Use the SerialStateData function of the m_states structure to serialize
+    //  the data for output.
+    this->uav->GetUAVStateData().SerializeStateData(oss);
 
     // ------------------------------------------------------------------------
     // STEP 2 – Serialize all propeller states, appending them in order
@@ -579,7 +589,9 @@ void simbridge::LogData()
     int nop = this->uav->GetPropCount();
     for (int i = 1; i <= nop; ++i)
     {
-        _serialize_::SerializeStateData(oss, this->uav->GetUAVPropStateData(i));
+        // Use the SerialStateData function of the m_states structure to serialize
+        //  the data for output.
+        this->uav->GetUAVPropStateData(i).SerializeStateData(oss);
     }
 
     try {

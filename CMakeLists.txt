@@ -151,6 +151,9 @@ endif()
 
 include_directories(${CHRONO_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/fkYAML/single_include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/nlohmann-json/single_include/nlohmann)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/rncarpio-linterp/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/d99kris-rapidcsv/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-interface)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-main)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-system)
@@ -162,7 +165,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene/sim-locales)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene/sim-locales/sim-flat)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-bridge/)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-bridge)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/piecewise-polynomial)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/vector-interpolation)
 
 #-----------------------------------------------------------------------------
 # Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen
@@ -196,6 +204,8 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/sim-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene/sim-locales/sim-flat/sim-flat.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-bridge/sim-bridge.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/piecewise-polynomial/piecewise-polynomial-trajectory.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/vector-interpolation/vector-interpolation-trajectory.cpp
    )
 
 add_executable(acsl_sim ${SOURCES})

@@ -47,7 +47,7 @@ namespace _flat_
 void simflat::ConfigureFlatGround()
 {
     // Convert the dimensions into the Chrono frame
-    auto floorPlacementAbs = _transformations_::GetChronoPosFromNED(chrono::ChVector3d(::_acsl_::_flat_::FLOOR_PLACEMENT_X, 
+    auto floorPlacementAbs = _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(::_acsl_::_flat_::FLOOR_PLACEMENT_X, 
                                                                                        ::_acsl_::_flat_::FLOOR_PLACEMENT_Y, 
                                                                                        ::_acsl_::_flat_::FLOOR_PLACEMENT_Z));
     
@@ -66,7 +66,7 @@ void simflat::ConfigureFlatGround()
     
     // Set the properties of the floorBody
     floorBody->SetPos(floorPlacementAbs);
-    floorBody->SetRot(_transformations_::GetChronoOrientaitonFromNED());
+    floorBody->SetRot(_shared_::_transformations_::GetChronoOrientaitonFromNED());
     floorBody->SetFixed(true);
     floorBody->GetVisualShape(0)->SetTexture(chrono::GetChronoDataFile("textures/concrete.jpg"), // Texture file path
                                              ::_acsl_::_flat_::FLOOR_LENGTH,                     // Texture scale x

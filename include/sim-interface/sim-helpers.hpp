@@ -37,83 +37,160 @@
 #ifndef SIM_HELPERS_HPP_
 #define SIM_HELPERS_HPP_
 
+// ===============================
 // System includes
+// ===============================
 #include <cmath>
 
+// ===============================
 // Chrono includes
+// ===============================
 #include "chrono/core/ChQuaternion.h"
 #include "chrono/core/ChVector3.h"
 #include "chrono/core/ChRotation.h"
+#include "chrono/geometry/ChLineNurbs.h"
+#include "chrono/geometry/ChSurfaceNurbs.h"
+#include "chrono/assets/ChVisualShapeLine.h"
 
-namespace _acsl_
+// ===============================
+// RapidCSV include
+// ===============================
+#include "rapidcsv.h"
+
+
+// ============================================================================================================
+// Helper Function Declaration: _acsl_ helper namespaces
+// Define the functions for sim-helpers.hpp --> Do not include any templated functions. 
+//                                          --> Avoid data type ambiguity as much as possible. 
+//                                          --> Use doubles religiously.
+// ============================================================================================================
+namespace _shared_
 {
 
-// All the transformation functions
+// ============================================================================================================
+// Namespace: _transformations_
+// Description: Functions for coordinate and orientation conversions 
+//              between NED (North-East-Down) and Chrono's global frame
+// ============================================================================================================
 namespace _transformations_
 {
 
-// Functin to set the position in the Chrono global frame based on the NED positon
-chrono::ChVector3d GetChronoPosFromNED(const chrono::ChVector3d& nedpos);
+/**
+ * @brief Converts NED position vector to Chrono global frame vector.
+ * @param nedpos Position in North-East-Down frame (chrono::ChVector3<>)
+ * @return Equivalent position in Chrono's global frame (chrono::ChVector3<>)
+ */
+chrono::ChVector3<> GetChronoPosFromNED(const chrono::ChVector3<>& nedpos);           
 
-// Function to set the rotation in the Chrono global frame based on the NED rotation
-// If no input is given it gives the rotation to go from Chrono Frame to NED frame
+/**
+ * @brief Converts NED quaternion to Chrono orientation.
+ * @param q_ned Quaternion in NED frame (chrono::ChQuaternion<>)
+ * @return Corresponding orientation in Chrono global frame (chrono::ChQuaternion<>)
+ */
 chrono::ChQuaternion<> GetChronoOrientaitonFromNED(const chrono::ChQuaternion<>& q_ned = chrono::ChQuaternion<>(1, 0, 0, 0));
 
-// Converts from Chrono's global/world frame to NED position
-chrono::ChVector3d GetNEDPosFromChrono(const chrono::ChVector3d& pos_chrono);
+/**
+ * @brief Converts position from Chrono global frame to NED position.
+ * @param pos_chrono Position in Chrono's global/world frame (chrono::ChVector3<>)
+ * @return Equivalent position in the NED frame (chrono::ChVector3<>)
+ */
+chrono::ChVector3<> GetNEDPosFromChrono(const chrono::ChVector3<>& pos_chrono);   
 
-// Converts from Chrono's global frame to NED quaternion
-// If no input is given it gives the rotation to go from NED frame to Chrono Frame
+/**
+ * @brief Converts orientation from Chrono global world quaternion to NED quaternion.
+ * @param q_chrono Quaternion in Chrono world/global frame (chrono::ChQuaternion<>)
+ * @return Corresponding orientation in NED frame (chrono::ChQuaternion<>)
+ */
 chrono::ChQuaternion<> GetNEDOrientationFromChrono(const chrono::ChQuaternion<>& q_chrono = chrono::ChQuaternion<>(1, 0, 0, 0));
 
+} // namespace _transformations_
 
-}   // namespace _transformations_
-
-// All the unit conversions
+// ============================================================================================================
+// Namespace: _conversions_
+// Description: Utilities for physical unit conversion.
+// ============================================================================================================
 namespace _conversions_
 {
 
-// Converts radians to degrees
+/**
+ * @brief Converts radians to degrees.
+ * @param rad Angle in radians
+ * @return Equivalent angle in degrees
+ */
 double rad2deg(double rad);
 
-}   // namespace _conversions_
+} // namespace _conversions_
 
-// All the computation function
+// ============================================================================================================
+// Namespace: _compute_
+// Description: General-purpose computation and math utilities
+// ============================================================================================================
 namespace _compute_
 {
 
-// Function to evaluate a polynomial given its coefficients and a value at which to evaluate the polynomial
-// Example usage: double value = 3.0;
-//                Eigen::VectorXd coeffs(3);
-//                coeffs << 1, -2, 1; // Represents the polynomial x^2 - 2x + 1
-//                double result = evaluatePolynomial(coeffs, value);
+/**
+ * @brief Evaluate a polynomial for a given value.
+ *        Coefficients should be ordered from highest to lowest degree.
+ * @param coefficients Eigen vector of polynomial coefficients
+ * @param value Scalar at which to evaluate the polynomial
+ * @return Result of polynomial evaluation (double)
+ */
 double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value);
 
-}   // namespace _compute_
+} // namespace _compute_
 
-// All the serialization functions
+// ============================================================================================================
+// Namespace: _serialize_
+// Description: Serialization helpers for writing data to a file from the simulator
+// ============================================================================================================
 namespace _serialize_
 {
 
-// Helper that serializes *any* UAV state struct to CSV-compatible values
-template<typename State>
-void SerializeStateData(std::ostringstream& oss, const State& s) {
-    oss << s.time << ", "
-        << s.pos.x() << ", " << s.pos.y() << ", " << s.pos.z() << ", "
-        << s.vel.x() << ", " << s.vel.y() << ", " << s.vel.z() << ", "
-        << s.acc.x() << ", " << s.acc.y() << ", " << s.acc.z() << ", "
-        << s.eul.x() << ", " << s.eul.y() << ", " << s.eul.z() << ", "
-        << s.quat.e0() << ", " << s.quat.e1() << ", " << s.quat.e2() << ", " << s.quat.e3() << ", "
-        << s.ovel.x() << ", " << s.ovel.y() << ", " << s.ovel.z() << ", "
-        << s.oacc.x() << ", " << s.oacc.y() << ", " << s.oacc.z() << ", "
-        << s.muI.x() << ", " << s.muI.y() << ", " << s.muI.z() << ", "
-        << s.muJ.x() << ", " << s.muJ.y() << ", " << s.muJ.z() << ", "
-        << s.tauJ.x() << ", " << s.tauJ.y() << ", " << s.tauJ.z() << ", ";
-}
 
+} // namespace _serialize_
 
-}   // namespace _serialize_
+// ============================================================================================================
+// Namespace: _deserialize_
+// Description: Deserialization helpers for reading data from a file into the simulator environment 
+// ============================================================================================================
+namespace _deserialize_
+{
 
-}   // namespace _acsl_
+/**
+ * @brief Extracts a column of doubles from a RapidCSV document using a header label.
+ * @param doc  rapidcsv::Document object
+ * @param label String header of column to extract
+ * @return std::vector<double> containing the extracted column data
+ */
+std::vector<double> GetCSVColumn(const rapidcsv::Document& doc, const std::string& label);
+
+} // namespace _deserialize_
+
+// ============================================================================================================
+// Namespace: _visualize_
+// Description: Helper functions for visualization in the irrlicht environment
+// ============================================================================================================
+namespace _visualize_
+{
+
+/**
+ * @brief Creates a NURBS (Non-Uniform Rational B-Spline) visual line asset from a set of 3D control points.
+ * 
+ * This function generates a NURBS curve using the supplied control points and polynomial order,
+ * encapsulates it as a Project Chrono ChVisualShapeLine asset, and sets the display color.
+ *
+ * @param controlpoints Vector of ChVector3d points defining the NURBS control polygon.
+ * @param order         Degree of the NURBS curve (default: cubic, 3; must satisfy order < controlpoints.size()).
+ * @param color         Color of the rendered line (default: black RGB).
+ * @return std::shared_ptr<chrono::ChVisualShapeLine> Smart pointer to the created NURBS visual asset.
+ */
+std::shared_ptr<chrono::ChVisualShapeLine> createNurbsVisual(
+    std::vector<chrono::ChVector3d>& controlpoints,
+    int order = 3,
+    const chrono::ChColor& color = chrono::ChColor(0.0f, 0.0f, 0.0f));
+    
+} // namespace _visualize_
+
+} // namespace _shared_
 
 #endif // SIM_HELPERS_HPP_

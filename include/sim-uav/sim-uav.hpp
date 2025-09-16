@@ -277,6 +277,26 @@ struct m_states {
     chrono::ChVector3d muI;
     chrono::ChVector3d muJ;
     chrono::ChVector3d tauJ;
+
+    /**
+     * @brief Serializes the state data to a CSV-compatible output stream.
+     *        Fields are written as a single CSV line in the order defined above.
+     * @param oss Output stringstream to write the CSV line to.
+     */
+    void SerializeStateData(std::ostringstream& oss) const
+    {
+        oss << time << ", "
+            << pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
+            << vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
+            << acc.x() << ", " << acc.y() << ", " << acc.z() << ", "
+            << eul.x() << ", " << eul.y() << ", " << eul.z() << ", "
+            << quat.e0() << ", " << quat.e1() << ", " << quat.e2() << ", " << quat.e3() << ", "
+            << ovel.x() << ", " << ovel.y() << ", " << ovel.z() << ", "
+            << oacc.x() << ", " << oacc.y() << ", " << oacc.z() << ", "
+            << muI.x() << ", " << muI.y() << ", " << muI.z() << ", "
+            << muJ.x() << ", " << muJ.y() << ", " << muJ.z() << ", "
+            << tauJ.x() << ", " << tauJ.y() << ", " << tauJ.z() << ", ";
+    }
 };
 
 
@@ -450,6 +470,9 @@ public:
     // Return the inertial NED frame as a Chrono ChFrame object.
     virtual chrono::ChFrame<> GetInertialNEDFrame() = 0;
 
+    // Get the inertial NED frame auxiliary body pointer.
+    virtual std::shared_ptr<chrono::ChBodyAuxRef> GetInertialNEDFrameAuxBody() = 0;
+
     // Access the chassisstruct for modifying chassis parameters directly.
     virtual chassisstruct& GetUAVChassis() = 0;
 
@@ -485,9 +508,6 @@ protected:
 
     // Set the path to the UAV's shapes directory.
     virtual void SetUAVShapesDir(std::string dir) = 0;
-
-    // Get the inertial NED frame auxiliary body pointer.
-    virtual std::shared_ptr<chrono::ChBodyAuxRef> GetInertialNEDFrameAuxBody() = 0;
 
     // Create and set up the inertial NED frame in the simulation.
     virtual void SetupInertialNEDFrame() = 0;
@@ -611,6 +631,7 @@ public:
     int GetPropCount() override { return nop; }
 
     chrono::ChFrame<> GetInertialNEDFrame() override;
+    std::shared_ptr<chrono::ChBodyAuxRef> GetInertialNEDFrameAuxBody() override { return InertialFrameNED; }
     
     chassisstruct& GetUAVChassis() override { return chassis; }
     propstruct& GetUAVProp(size_t idx) override;
@@ -632,13 +653,12 @@ protected:
     // ---------------- Protected API overrides ----------------
 
     void SetUAVShapesDir(std::string dir) override { shapes_dir = dir; }
-    std::shared_ptr<chrono::ChBodyAuxRef> GetInertialNEDFrameAuxBody() override { return InertialFrameNED; }
     void SetupInertialNEDFrame() override;
 
     void ConfigureUAVChassisInitPos(chrono::ChVector3d pos) override { 
-         chassis.init_pos = _transformations_::GetChronoPosFromNED(pos); }
+         chassis.init_pos = _shared_::_transformations_::GetChronoPosFromNED(pos); }
     void ConfigureUAVChassisInitRot(chrono::ChQuaternion<> rot) override { 
-         chassis.init_rot = _transformations_::GetChronoOrientaitonFromNED(rot); }
+         chassis.init_rot = _shared_::_transformations_::GetChronoOrientaitonFromNED(rot); }
 
     void ConfigureUAVChassisMass(double mass) override { chassis.mass = mass; }
     void ConfigureUAVChassisInertiaXX(chrono::ChVector3d IXX) override { chassis.InertiaXX = IXX; }

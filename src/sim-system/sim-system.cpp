@@ -232,11 +232,11 @@ void simsystem::SetupPhysicsSystem()
     // ------------------------------------------------------------------------
     if (phyconfig.gravity) {
         m_physics.SetGravitationalAcceleration(
-            _transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 9.8))
+            _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 9.8))
         );
     } else {
         m_physics.SetGravitationalAcceleration(
-            _transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0))
+            _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0))
         );
     }
 
@@ -367,13 +367,13 @@ void simsystem::SetupVisualizationSystem()
     // ------------------------------------------------------------------------
     m_irrlicht.AddLogo();          // Overlay Project Chrono logo (optional branding)
     m_irrlicht.AddSkyBox();        // Add skybox textures for realistic environment
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, -100)), 
+    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, -100)), 
                                                          140, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, -100)), 
+    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, -100)), 
                                                          140, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, -100)), 
+    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, -100)), 
                                                          140, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, -100)), 
+    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, -100)), 
                                                          140, chrono::ChColor(0.7f, 0.7f, 0.7f));
 
     // ------------------------------------------------------------------------
@@ -418,12 +418,12 @@ void simsystem::SetupVisualizationSystem()
         // Set the camera to always follow the chassis
         m_camera->SetState(chrono::utils::ChChaseCamera::State::Follow);
         // Intializet the camera
-        m_camera->Initialize(_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0)),    // Attached to the COM of the drone
-                             this->m_physics.SearchBody("chassis")->GetCoordsys(),                   // Attached to the COM coordsys of the drone
-                             this->GetVisConfig().mv_cam_chase_dt,                                   // Chase distance
-                             this->GetVisConfig().mv_cam_chase_ht,                                   // Chase height
-                             _transformations_::GetChronoPosFromNED(chrono::ChVector3d(0 , 0, -1)),  // The up direction for the camera
-                             _transformations_::GetChronoPosFromNED(chrono::ChVector3d(1 , 0,  0))   // The fws direction for the camera
+        m_camera->Initialize(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0)),    // Attached to the COM of the drone
+                             this->m_physics.SearchBody("chassis")->GetCoordsys(),                             // Attached to the COM coordsys of the drone
+                             this->GetVisConfig().mv_cam_chase_dt,                                             // Chase distance
+                             this->GetVisConfig().mv_cam_chase_ht,                                             // Chase height
+                             _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0 , 0, -1)),  // The up direction for the camera
+                             _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(1 , 0,  0))   // The fws direction for the camera
         );
 
         // Add the camera to the system

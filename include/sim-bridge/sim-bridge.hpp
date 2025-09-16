@@ -38,12 +38,13 @@
 #ifndef SIM_BRIDGE_HPP_
 #define SIM_BRIDGE_HPP_
 
-#include "sim-system.hpp"       // Import the physics and visual system
-#include "sim-platforms.hpp"    // Import the header file with all the platforms
-#include "sim-uav.hpp"          // Import the header file for the UAV API
-#include "sim-locales.hpp"      // Import the header file with all the environments
-#include "sim-environment.hpp"  // Import the header file for the ENV API
-#include "sim-logger.hpp"       // Import the header file for the Logger API
+#include "sim-system.hpp"           // Import the physics and visual system
+#include "sim-platforms.hpp"        // Import the header file with all the platforms
+#include "sim-uav.hpp"              // Import the header file for the UAV API
+#include "sim-locales.hpp"          // Import the header file with all the environments
+#include "sim-environment.hpp"      // Import the header file for the ENV API
+#include "sim-logger.hpp"           // Import the header file for the Logger API
+#include "sim-traj-selection.hpp"   // Import the header file for the Trajectory selection module
 
 namespace _acsl_
 {
@@ -202,6 +203,11 @@ private:
     // ------------------------------------------------------------------------
     locales available_locals;
     std::string active_locale;
+
+    // ------------------------------------------------------------------------
+    //  Structure from sim-traj-selection that holds all the trajectories
+    // ------------------------------------------------------------------------
+    trajectories available_trajectories;
 
     // ------------------------------------------------------------------------
     // Unique pointer to store the UAV object.

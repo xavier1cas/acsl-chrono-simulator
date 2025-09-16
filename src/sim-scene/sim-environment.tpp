@@ -63,7 +63,7 @@ namespace _environment_
 template <int nxb, int nxd>
 void simenv<nxb, nxd>::ConfigureEnvInitPosList(const std::vector<chrono::ChVector3d>& positions) {
     for (int i = 0; i < nxb; ++i) {
-        envbodies.init_pos[i] = _transformations_::GetChronoPosFromNED(positions[i]);
+        envbodies.init_pos[i] = _shared_::_transformations_::GetChronoPosFromNED(positions[i]);
     }
 }
 
@@ -85,7 +85,7 @@ void simenv<nxb, nxd>::ConfigureEnvInitPosList(const std::vector<chrono::ChVecto
 template <int nxb, int nxd>
 void simenv<nxb, nxd>::ConfigureEnvInitRotList(const std::vector<chrono::ChQuaternion<>>& rotations) {
     for (int i = 0; i < nxb; ++i) {
-        envbodies.init_rot[i] = _transformations_::GetChronoOrientaitonFromNED(rotations[i]);
+        envbodies.init_rot[i] = _shared_::_transformations_::GetChronoOrientaitonFromNED(rotations[i]);
     }
 }
 
