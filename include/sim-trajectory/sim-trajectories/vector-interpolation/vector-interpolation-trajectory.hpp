@@ -95,6 +95,56 @@ protected:
     void SetQuatAcc(const Eigen::Quaterniond& quat_accel) override { this->c_state.quaternion_acceleration = quat_accel; }
     void SetAngVel(const Eigen::Vector3d& ang_vel) override { this->c_state.angular_velocity = ang_vel; }
     void SetAngAcc(const Eigen::Vector3d& ang_accel) override { this->c_state.angular_acceleration = ang_accel; }
+
+private:
+    // Class objects unique to vector-interpolation-trajectory
+    // Inerpolators
+    NDInterpolator_1_ML* interp_x = nullptr;
+    NDInterpolator_1_ML* interp_y = nullptr;
+    NDInterpolator_1_ML* interp_z = nullptr;
+
+    NDInterpolator_1_ML* interp_vx = nullptr;
+    NDInterpolator_1_ML* interp_vy = nullptr;
+    NDInterpolator_1_ML* interp_vz = nullptr;
+
+    NDInterpolator_1_ML* interp_ax = nullptr;
+    NDInterpolator_1_ML* interp_ay = nullptr;
+    NDInterpolator_1_ML* interp_az = nullptr;
+
+    NDInterpolator_1_ML* interp_eul_roll = nullptr;
+    NDInterpolator_1_ML* interp_eul_pitch = nullptr;
+    NDInterpolator_1_ML* interp_eul_yaw = nullptr;
+
+    NDInterpolator_1_ML* interp_eul_rate_r = nullptr;
+    NDInterpolator_1_ML* interp_eul_rate_p = nullptr;
+    NDInterpolator_1_ML* interp_eul_rate_y = nullptr;
+
+    NDInterpolator_1_ML* interp_eul_acc_r = nullptr;
+    NDInterpolator_1_ML* interp_eul_acc_p = nullptr;
+    NDInterpolator_1_ML* interp_eul_acc_y = nullptr;
+
+    NDInterpolator_1_ML* interp_quat_w = nullptr;
+    NDInterpolator_1_ML* interp_quat_x = nullptr;
+    NDInterpolator_1_ML* interp_quat_y = nullptr;
+    NDInterpolator_1_ML* interp_quat_z = nullptr;
+
+    NDInterpolator_1_ML* interp_quat_rate_w = nullptr;
+    NDInterpolator_1_ML* interp_quat_rate_x = nullptr;
+    NDInterpolator_1_ML* interp_quat_rate_y = nullptr;
+    NDInterpolator_1_ML* interp_quat_rate_z = nullptr;
+
+    NDInterpolator_1_ML* interp_quat_acc_w = nullptr;
+    NDInterpolator_1_ML* interp_quat_acc_x = nullptr;
+    NDInterpolator_1_ML* interp_quat_acc_y = nullptr;
+    NDInterpolator_1_ML* interp_quat_acc_z = nullptr;
+
+    NDInterpolator_1_ML* interp_angvel_x = nullptr;
+    NDInterpolator_1_ML* interp_angvel_y = nullptr;
+    NDInterpolator_1_ML* interp_angvel_z = nullptr;
+
+    NDInterpolator_1_ML* interp_angacc_x = nullptr;
+    NDInterpolator_1_ML* interp_angacc_y = nullptr;
+    NDInterpolator_1_ML* interp_angacc_z = nullptr;
 };
 
 

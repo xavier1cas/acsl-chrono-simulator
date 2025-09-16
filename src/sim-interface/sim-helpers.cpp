@@ -126,16 +126,16 @@ double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value)
 }
 
 // Creates and returns a 1-dimensional interpolator
-NDInterpolator_1_ML create1DInterpolator(const std::vector<double>& grid, const std::vector<double>& values)
+NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const std::vector<double>& values)
 {
     // ---- linterp expects pointers, not references, so we cast away constness ----
     double* grids_begin[1] = { const_cast<double*>(&grid.front()) };
     int grid_len[1] = { static_cast<int>(grid.size()) };
 
     // ---- Create interpolator over range [begin, end). Use &front() + size() for safety ----
-    return NDInterpolator_1_ML(grids_begin, grid_len,
-                               const_cast<double*>(&values.front()),
-                               const_cast<double*>(&values.front()) + values.size());
+    return new NDInterpolator_1_ML(grids_begin, grid_len,
+                                   const_cast<double*>(&values.front()),
+                                   const_cast<double*>(&values.front()) + values.size());
 }
 
 } // namespace _compute_

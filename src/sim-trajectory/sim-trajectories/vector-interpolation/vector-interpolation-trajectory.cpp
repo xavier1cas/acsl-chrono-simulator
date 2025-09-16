@@ -52,12 +52,55 @@ void interpolation::InitiateModule()
 
     // Process the csv datafile
     this->m_data.time = _shared_::_deserialize_::GetCSVColumn(doc, "time");
+
     this->m_data.pos_x = _shared_::_deserialize_::GetCSVColumn(doc, "pos_x");
     this->m_data.pos_y = _shared_::_deserialize_::GetCSVColumn(doc, "pos_y");
     this->m_data.pos_z = _shared_::_deserialize_::GetCSVColumn(doc, "pos_z");
 
+    this->m_data.vel_x = _shared_::_deserialize_::GetCSVColumn(doc, "vel_x");
+    this->m_data.vel_y = _shared_::_deserialize_::GetCSVColumn(doc, "vel_y");
+    this->m_data.vel_z = _shared_::_deserialize_::GetCSVColumn(doc, "vel_z");
+
+    this->m_data.acc_x = _shared_::_deserialize_::GetCSVColumn(doc, "acc_x");
+    this->m_data.acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "acc_y");
+    this->m_data.acc_z = _shared_::_deserialize_::GetCSVColumn(doc, "acc_z");
+
+    this->m_data.euler_roll = _shared_::_deserialize_::GetCSVColumn(doc, "euler_roll");
+    this->m_data.euler_pitch = _shared_::_deserialize_::GetCSVColumn(doc, "euler_pitch");
+    this->m_data.euler_yaw = _shared_::_deserialize_::GetCSVColumn(doc, "euler_yaw");
+
+    this->m_data.euler_rate_r = _shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_r");
+    this->m_data.euler_rate_p = _shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_p");
+    this->m_data.euler_rate_y = _shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_y");
+
+    this->m_data.euler_acc_r = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_r");
+    this->m_data.euler_acc_p = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_p");
+    this->m_data.euler_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_y");
+
     // Create and assign to interpolators
-    auto interpx = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_x);
+    this->interp_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_x);
+    this->interp_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_y);
+    this->interp_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_z);
+
+    this->interp_vx = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_x);
+    this->interp_vy = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_y);
+    this->interp_vz = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_z);
+
+    this->interp_ax = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_x);
+    this->interp_ay = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_y);
+    this->interp_az = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_z);
+    
+    this->interp_eul_roll = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_roll);
+    this->interp_eul_pitch = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_pitch);
+    this->interp_eul_yaw = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_yaw);
+
+    this->interp_eul_rate_r = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_r);
+    this->interp_eul_rate_p = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_p);
+    this->interp_eul_rate_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_y);
+
+    this->interp_eul_acc_r = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_r);
+    this->interp_eul_acc_p = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_p);
+    this->interp_eul_acc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_y);
 
     // Assign the maximum time
 
@@ -73,6 +116,13 @@ void interpolation::UpdateModule(const double t)
     this->SetTime(t);
 
     // Update the trajectory
+    this->SetPosition(Eigen::Vector3d(interp_x->interp(&t), 
+                                      interp_y->interp(&t), 
+                                      interp_z->interp(&t)));
+
+    this->SetVelocity(Eigen::Vector3d(interp_vx->interp(&t), 
+                                      interp_vy->interp(&t),
+                                      interp_vz->interp(&t)));
     
 }
 
