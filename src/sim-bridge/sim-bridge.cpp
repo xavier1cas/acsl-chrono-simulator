@@ -65,7 +65,8 @@ namespace _bridge_
 //   6. Populate all available UAV platforms by dynamically iterating the YAML config and registry.
 //      - Validates that one and only one platform is set true.
 //      - Instantiates the selected UAV via factory (createSelectedUAV).
-//   7. Log success messages about the loaded config, mode, and UAV/locale instantiation.
+//   7. Read the trajectory module parameters in and store it for instantiation.
+//   8. Log success messages about the loaded config, mode, and UAV/locale instantiation.
 //
 // Notes:
 //   - There is no hardcoding of platform or environment names in this function: all lookups and instantiation
@@ -144,12 +145,19 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
-    // STEP 7 – Log the loaded config and UAV instantiation
+    // STEP 7 - Load in the trajectory module
+    // ------------------------------------------------------------------------
+    this->available_trajectories.read(config_file);
+
+    // ------------------------------------------------------------------------
+    // STEP 8 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : " + std::to_string(efsl));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: " + active_platform);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: " + active_locale);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: " + available_trajectories.GetActiveModule());
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY FILE: " + available_trajectories.GetTrajectoryFile());
 }
 
 // =====================================================================================================================
