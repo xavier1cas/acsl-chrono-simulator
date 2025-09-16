@@ -26,3 +26,6 @@
 	path = libraries/third-party/rncarpio-linterp
 	url = https://github.com/rncarpio/linterp.git
         branch = master
+[submodule "libraries/third-party/d99kris-rapidcsv"]
+	path = libraries/third-party/d99kris-rapidcsv
+	url = https://github.com/d99kris/rapidcsv.git
