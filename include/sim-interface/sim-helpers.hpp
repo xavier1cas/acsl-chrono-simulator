@@ -41,6 +41,7 @@
 // System includes
 // ===============================
 #include <cmath>
+#include <vector>
 
 // ===============================
 // Chrono includes
@@ -53,9 +54,14 @@
 #include "chrono/assets/ChVisualShapeLine.h"
 
 // ===============================
-// RapidCSV include
+// RapidCSV includes
 // ===============================
 #include "rapidcsv.h"
+
+// ===============================
+// Linterp inlcudes
+// ===============================
+#include "linterp.h"
 
 
 // ============================================================================================================
@@ -136,6 +142,18 @@ namespace _compute_
  * @return Result of polynomial evaluation (double)
  */
 double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value);
+
+/**
+ * @brief Factory function for 1D linear interpolators. Given a grid (e.g., time) and its value
+ *        vector (e.g., position), returns a fully constructed NDInterpolator_1_ML object ready
+ *        for queries.
+ * @param grid vector of double, the grid points (must be monotonically increasing)
+ * @param values vector of double, values at each grid point (same size as grid)
+ * @return NDInterpolator_1_ML object configured for interpolation over the provided data.
+ * @note Both grid and value vectors must remain valid for the lifetime of returned interpolator.
+ *       Use with care if passing temporary/local vectors.       
+ */
+NDInterpolator_1_ML create1DInterpolator(const std::vector<double>& grid, const std::vector<double>& values);
 
 } // namespace _compute_
 

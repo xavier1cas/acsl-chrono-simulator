@@ -38,6 +38,7 @@
 #define SIM_TRAJECTORY_HPP_
 
 #include "Eigen/Dense"
+#include "sim-helpers.hpp"
 
 namespace _acsl_
 {
@@ -69,7 +70,7 @@ namespace _trajectory_
 //   angular_velocity        - Desired angular velocity in body frame (radians/second).
 //   angular_acceleration    - Desired angular acceleration in body frame (radians/second^2).
 // ----------------------------------------------------------------------------
-struct m_trajectory {
+struct trajectory_state {
     double time;
     Eigen::Vector3d position;
     Eigen::Vector3d velocity;
@@ -82,6 +83,104 @@ struct m_trajectory {
     Eigen::Quaterniond quaternion_acceleration;
     Eigen::Vector3d angular_velocity;
     Eigen::Vector3d angular_acceleration;
+};
+
+
+// -----------------------------------------------------------------------------
+// Structure: trajectory_data_arrays
+//
+// Purpose:
+//   Stores user-defined trajectory data as parallel arrays for each state variable
+//   and derivative, in both linear (NED frame) and rotational (Euler and quaternion) form.
+//   Each vector's index corresponds to the same trajectory time-step/sample.
+//
+// Members:
+//   time         - Timestamp of each trajectory sample (seconds).
+//   pos_x        - X coordinate in NED (meters).
+//   pos_y        - Y coordinate in NED (meters).
+//   pos_z        - Z coordinate in NED (meters).
+//   vel_x        - X component of linear velocity (meters/second).
+//   vel_y        - Y component of linear velocity (meters/second).
+//   vel_z        - Z component of linear velocity (meters/second).
+//   acc_x        - X component of linear acceleration (meters/second^2).
+//   acc_y        - Y component of linear acceleration (meters/second^2).
+//   acc_z        - Z component of linear acceleration (meters/second^2).
+//   euler_roll   - Euler roll angle (radians).
+//   euler_pitch  - Euler pitch angle (radians).
+//   euler_yaw    - Euler yaw angle (radians).
+//   euler_rate_r - Euler roll rate (radians/second).
+//   euler_rate_p - Euler pitch rate (radians/second).
+//   euler_rate_y - Euler yaw rate (radians/second).
+//   euler_acc_r  - Euler roll acceleration (radians/second^2).
+//   euler_acc_p  - Euler pitch acceleration (radians/second^2).
+//   euler_acc_y  - Euler yaw acceleration (radians/second^2).
+//   quat_w       - Quaternion W component.
+//   quat_x       - Quaternion X component.
+//   quat_y       - Quaternion Y component.
+//   quat_z       - Quaternion Z component.
+//   quat_rate_w  - Quaternion derivative W.
+//   quat_rate_x  - Quaternion derivative X.
+//   quat_rate_y  - Quaternion derivative Y.
+//   quat_rate_z  - Quaternion derivative Z.
+//   quat_acc_w   - Quaternion second derivative W.
+//   quat_acc_x   - Quaternion second derivative X.
+//   quat_acc_y   - Quaternion second derivative Y.
+//   quat_acc_z   - Quaternion second derivative Z.
+//   ang_vel_x    - X component of angular velocity (radians/second).
+//   ang_vel_y    - Y component of angular velocity (radians/second).
+//   ang_vel_z    - Z component of angular velocity (radians/second).
+//   ang_acc_x    - X component of angular acceleration (radians/second^2).
+//   ang_acc_y    - Y component of angular acceleration (radians/second^2).
+//   ang_acc_z    - Z component of angular acceleration (radians/second^2).
+// -----------------------------------------------------------------------------
+struct trajectory_data_arrays {
+    std::vector<double> time;         // Timestamp (seconds)
+    std::vector<double> pos_x;        // Position X (meters)
+    std::vector<double> pos_y;        // Position Y (meters)
+    std::vector<double> pos_z;        // Position Z (meters)
+
+    std::vector<double> vel_x;        // Velocity X (m/s)
+    std::vector<double> vel_y;        // Velocity Y (m/s)
+    std::vector<double> vel_z;        // Velocity Z (m/s)
+
+    std::vector<double> acc_x;        // Acceleration X (m/s^2)
+    std::vector<double> acc_y;        // Acceleration Y (m/s^2)
+    std::vector<double> acc_z;        // Acceleration Z (m/s^2)
+
+    std::vector<double> euler_roll;   // Euler roll angle (rad)
+    std::vector<double> euler_pitch;  // Euler pitch angle (rad)
+    std::vector<double> euler_yaw;    // Euler yaw angle (rad)
+
+    std::vector<double> euler_rate_r; // Euler roll rate (rad/s)
+    std::vector<double> euler_rate_p; // Euler pitch rate (rad/s)
+    std::vector<double> euler_rate_y; // Euler yaw rate (rad/s)
+
+    std::vector<double> euler_acc_r;  // Euler roll acceleration (rad/s^2)
+    std::vector<double> euler_acc_p;  // Euler pitch acceleration (rad/s^2)
+    std::vector<double> euler_acc_y;  // Euler yaw acceleration (rad/s^2)
+
+    std::vector<double> quat_w;       // Quaternion W
+    std::vector<double> quat_x;       // Quaternion X
+    std::vector<double> quat_y;       // Quaternion Y
+    std::vector<double> quat_z;       // Quaternion Z
+
+    std::vector<double> quat_rate_w;  // Quaternion derivative W
+    std::vector<double> quat_rate_x;  // Quaternion derivative X
+    std::vector<double> quat_rate_y;  // Quaternion derivative Y
+    std::vector<double> quat_rate_z;  // Quaternion derivative Z
+
+    std::vector<double> quat_acc_w;   // Quaternion second derivative W
+    std::vector<double> quat_acc_x;   // Quaternion second derivative X
+    std::vector<double> quat_acc_y;   // Quaternion second derivative Y
+    std::vector<double> quat_acc_z;   // Quaternion second derivative Z
+
+    std::vector<double> ang_vel_x;    // Angular velocity X (rad/s)
+    std::vector<double> ang_vel_y;    // Angular velocity Y (rad/s)
+    std::vector<double> ang_vel_z;    // Angular velocity Z (rad/s)
+
+    std::vector<double> ang_acc_x;    // Angular acceleration X (rad/s^2)
+    std::vector<double> ang_acc_y;    // Angular acceleration Y (rad/s^2)
+    std::vector<double> ang_acc_z;    // Angular acceleration Z (rad/s^2)
 };
 
 
@@ -139,6 +238,9 @@ public:
 
     // Getters for all trajectory variables (all const for read-only access)
 
+    /// @brief Get the current timestamp of the trajectory
+    virtual double GetTime() const = 0;
+
     /// @brief Get desired position (NED, meters)
     virtual const Eigen::Vector3d& GetPosition() const = 0;
 
@@ -183,6 +285,9 @@ protected:
 
     // Setters for all trajectory variables
 
+    /// @brief Set the timestamp of the trajectory
+    virtual void SetTime(double t) = 0;
+
     /// @brief Set desired position (NED, meters)
     virtual void SetPosition(const Eigen::Vector3d& pos) = 0;
 
@@ -217,7 +322,10 @@ protected:
     virtual void SetAngAcc(const Eigen::Vector3d& ang_accel) = 0;
 
     // User-defined trajectory state storage
-    m_trajectory m_user;
+    trajectory_state c_state;
+
+    // User-defined trajectory data vector of all states from t = 0 to Tmax
+    trajectory_data_arrays m_data;
 
     // User-defined trajectory data file
     std::string m_file;

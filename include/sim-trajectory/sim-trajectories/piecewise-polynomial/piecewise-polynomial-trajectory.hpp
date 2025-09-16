@@ -65,34 +65,36 @@ public:
     double GetTmax() const override { return this->tmax; }
 
     // Getters for user trajectory variables
-    const Eigen::Vector3d& GetPosition() const override { return this->m_user.position; }
-    const Eigen::Vector3d& GetVelocity() const override { return this->m_user.velocity; }
-    const Eigen::Vector3d& GetAcceleration() const override { return this->m_user.acceleration; }
-    const Eigen::Vector3d& GetEulerAngle() const override { return this->m_user.euler; }
-    const Eigen::Vector3d& GetEulerRate() const override { return this->m_user.euler_rate; }
-    const Eigen::Vector3d& GetEulerAcc() const override { return this->m_user.euler_acceleration; }
-    const Eigen::Quaterniond& GetQuat() const override { return this->m_user.quaternion; }
-    const Eigen::Quaterniond& GetQuatRate() const override { return this->m_user.quaternion_rate; }
-    const Eigen::Quaterniond& GetQuatAcc() const override { return this->m_user.quaternion_acceleration; }
-    const Eigen::Vector3d& GetAngVel() const override { return this->m_user.angular_velocity; }
-    const Eigen::Vector3d& GetAngAcc() const override { return this->m_user.angular_acceleration; }
+    double GetTime() const override { return this->c_state.time; }
+    const Eigen::Vector3d& GetPosition() const override { return this->c_state.position; }
+    const Eigen::Vector3d& GetVelocity() const override { return this->c_state.velocity; }
+    const Eigen::Vector3d& GetAcceleration() const override { return this->c_state.acceleration; }
+    const Eigen::Vector3d& GetEulerAngle() const override { return this->c_state.euler; }
+    const Eigen::Vector3d& GetEulerRate() const override { return this->c_state.euler_rate; }
+    const Eigen::Vector3d& GetEulerAcc() const override { return this->c_state.euler_acceleration; }
+    const Eigen::Quaterniond& GetQuat() const override { return this->c_state.quaternion; }
+    const Eigen::Quaterniond& GetQuatRate() const override { return this->c_state.quaternion_rate; }
+    const Eigen::Quaterniond& GetQuatAcc() const override { return this->c_state.quaternion_acceleration; }
+    const Eigen::Vector3d& GetAngVel() const override { return this->c_state.angular_velocity; }
+    const Eigen::Vector3d& GetAngAcc() const override { return this->c_state.angular_acceleration; }
 
 protected:
     // Setter for Tmax
     void SetTmax(double Tmax) override { this->tmax = Tmax; }
 
     // Setters for user trajectory variables
-    void SetPosition(const Eigen::Vector3d& pos) override { this->m_user.position = pos; }
-    void SetVelocity(const Eigen::Vector3d& vel) override { this->m_user.velocity = vel; }
-    void SetAcceleration(const Eigen::Vector3d& acc) override { this->m_user.acceleration = acc; }
-    void SetEulerAngle(const Eigen::Vector3d& euler) override { this->m_user.euler = euler; }
-    void SetEulerRate(const Eigen::Vector3d& euler_rate) override { this->m_user.euler_rate = euler_rate; }
-    void SetEulerAcc(const Eigen::Vector3d& euler_acc) override { this->m_user.euler_acceleration = euler_acc; }
-    void SetQuat(const Eigen::Quaterniond& quat) override { this->m_user.quaternion = quat; }
-    void SetQuatRate(const Eigen::Quaterniond& quat_rate) override { this->m_user.quaternion_rate = quat_rate; }
-    void SetQuatAcc(const Eigen::Quaterniond& quat_accel) override { this->m_user.quaternion_acceleration = quat_accel; }
-    void SetAngVel(const Eigen::Vector3d& ang_vel) override { this->m_user.angular_velocity = ang_vel; }
-    void SetAngAcc(const Eigen::Vector3d& ang_accel) override { this->m_user.angular_acceleration = ang_accel; }
+    void SetTime(double t) override { this->c_state.time = t; }
+    void SetPosition(const Eigen::Vector3d& pos) override { this->c_state.position = pos; }
+    void SetVelocity(const Eigen::Vector3d& vel) override { this->c_state.velocity = vel; }
+    void SetAcceleration(const Eigen::Vector3d& acc) override { this->c_state.acceleration = acc; }
+    void SetEulerAngle(const Eigen::Vector3d& euler) override { this->c_state.euler = euler; }
+    void SetEulerRate(const Eigen::Vector3d& euler_rate) override { this->c_state.euler_rate = euler_rate; }
+    void SetEulerAcc(const Eigen::Vector3d& euler_acc) override { this->c_state.euler_acceleration = euler_acc; }
+    void SetQuat(const Eigen::Quaterniond& quat) override { this->c_state.quaternion = quat; }
+    void SetQuatRate(const Eigen::Quaterniond& quat_rate) override { this->c_state.quaternion_rate = quat_rate; }
+    void SetQuatAcc(const Eigen::Quaterniond& quat_accel) override { this->c_state.quaternion_acceleration = quat_accel; }
+    void SetAngVel(const Eigen::Vector3d& ang_vel) override { this->c_state.angular_velocity = ang_vel; }
+    void SetAngAcc(const Eigen::Vector3d& ang_accel) override { this->c_state.angular_acceleration = ang_accel; }
 };
 
 
