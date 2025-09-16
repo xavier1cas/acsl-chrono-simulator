@@ -85,22 +85,20 @@ struct m_trajectory {
 };
 
 
-
 // =====================================================================================================================
-// Polymorphic base interface
+// Polymorphic base interface for trajectory modules
 //
 // Purpose:
-//   Defines the full Trajectory API contract so that any trajectory module can
-//   be managed through a trajectorybase pointer.
+//   Specifies the API contract for all trajectory module types, allowing polymorphic management via trajectorybase*.
+//   Provides getter/setter functions for both trajectory state and the associated user-defined data file.
 //
 // Structure:
-//   - Public section : General Trajectory API accessible externally.
-//   - Protected section: Setup/configuration API intended for derived classes.
+//   - Public section : Module API and all public getters (including user data file).
+//   - Protected section: State and file setters (for use by derived classes only).
 //
 // Notes:
-//   - All methods are pure virtual (= 0), forcing implementation in derived types.
-//   - This allows simbridge or other managers to store and manage trajectories
-//     polymorphically.
+//   - All methods are pure virtual (= 0) and must be implemented in derived types.
+//   - Includes documented getter/setter for std::string m_file for user trajectory data file association.
 // =====================================================================================================================
 
 class trajectorybase {
@@ -109,67 +107,125 @@ public:
 
     // ---------------- Public Getter API ----------------
 
-    // Update the trajectory time and thus states
+    /**
+     * @brief Update the trajectory module for time t, advancing internal state.
+     * @param t Current simulation or trajectory time [s].
+     */
     virtual void UpdateModule(const double t) = 0;
 
-    // Get desired position (NED, meters)
+    /**
+     * @brief Set the associated user trajectory data file.
+     * @param file String with filename/path.
+     */
+    virtual void SetFileName(const std::string& file) = 0;
+
+    /**
+     * @brief Get the associated user trajectory data file.
+     * @return const std::string& Reference to filename/path of data file.
+     */
+    virtual const std::string& GetFileName() const = 0;
+
+    /**
+     * @brief Initiate the trajectory module
+     * @note Reads the file, sets up all the needed parameters for the trajectory module
+     */
+    virtual void InitiateModule() = 0;
+
+    /**
+     * @brief Get the maximum time associated with the trajectory.
+     * @return double Value of tmax.
+     */
+    virtual double GetTmax() const = 0;
+
+    // Getters for all trajectory variables (all const for read-only access)
+
+    /// @brief Get desired position (NED, meters)
     virtual const Eigen::Vector3d& GetPosition() const = 0;
-    // Get desired velocity (NED, m/s)
+
+    /// @brief Get desired velocity (NED, m/s)
     virtual const Eigen::Vector3d& GetVelocity() const = 0;
-    // Get desired acceleration (NED, m/s^2)
+
+    /// @brief Get desired acceleration (NED, m/s^2)
     virtual const Eigen::Vector3d& GetAcceleration() const = 0;
 
-    // Get desired Euler angles (roll, pitch, yaw, radians)
+    /// @brief Get desired Euler angles (roll, pitch, yaw, radians)
     virtual const Eigen::Vector3d& GetEulerAngle() const = 0;
-    // Get desired Euler rates (rpy dot, radians/s)
+
+    /// @brief Get desired Euler rates (rpy dot, radians/s)
     virtual const Eigen::Vector3d& GetEulerRate() const = 0;
-    // Get desired Euler accelerations (rpy ddot, radians/s^2)
+
+    /// @brief Get desired Euler accelerations (rpy ddot, radians/s^2)
     virtual const Eigen::Vector3d& GetEulerAcc() const = 0;
 
-    // Get desired orientation as quaternion
+    /// @brief Get desired orientation as quaternion
     virtual const Eigen::Quaterniond& GetQuat() const = 0;
-    // Get desired quaternion derivative
+
+    /// @brief Get desired quaternion derivative
     virtual const Eigen::Quaterniond& GetQuatRate() const = 0;
-    // Get desired quaternion second derivative
+
+    /// @brief Get desired quaternion second derivative
     virtual const Eigen::Quaterniond& GetQuatAcc() const = 0;
 
-    // Get desired angular velocity (rad/s)
+    /// @brief Get desired angular velocity (rad/s)
     virtual const Eigen::Vector3d& GetAngVel() const = 0;
-    // Get desired angular acceleration (rad/s^2)
+
+    /// @brief Get desired angular acceleration (rad/s^2)
     virtual const Eigen::Vector3d& GetAngAcc() const = 0;
 
 protected:
     // ---------------- Protected Setter API ----------------
 
-    // Set position (NED, meters)
+    /**
+     * @brief Set the maximum time associated with the trajectory.
+     * @param tmax Value to set as maximum trajectory time.
+     */
+    virtual void SetTmax(double tmax) = 0;
+
+    // Setters for all trajectory variables
+
+    /// @brief Set desired position (NED, meters)
     virtual void SetPosition(const Eigen::Vector3d& pos) = 0;
-    // Set linear velocity (NED, m/s)
+
+    /// @brief Set linear velocity (NED, m/s)
     virtual void SetVelocity(const Eigen::Vector3d& vel) = 0;
-    // Set linear acceleration (NED, m/s^2)
+
+    /// @brief Set linear acceleration (NED, m/s^2)
     virtual void SetAcceleration(const Eigen::Vector3d& acc) = 0;
 
-    // Set Euler angles (radians)
+    /// @brief Set Euler angles (radians)
     virtual void SetEulerAngle(const Eigen::Vector3d& euler) = 0;
-    // Set Euler rates (radians/s)
+
+    /// @brief Set Euler rates (radians/s)
     virtual void SetEulerRate(const Eigen::Vector3d& euler_rate) = 0;
-    // Set Euler accelerations (radians/s^2)
+
+    /// @brief Set Euler accelerations (radians/s^2)
     virtual void SetEulerAcc(const Eigen::Vector3d& euler_acc) = 0;
 
-    // Set orientation as quaternion
+    /// @brief Set orientation as quaternion
     virtual void SetQuat(const Eigen::Quaterniond& quat) = 0;
-    // Set quaternion rate
+
+    /// @brief Set quaternion rate
     virtual void SetQuatRate(const Eigen::Quaterniond& quat_rate) = 0;
-    // Set quaternion acceleration
+
+    /// @brief Set quaternion acceleration
     virtual void SetQuatAcc(const Eigen::Quaterniond& quat_accel) = 0;
 
-    // Set angular velocity (rad/s)
+    /// @brief Set angular velocity (rad/s)
     virtual void SetAngVel(const Eigen::Vector3d& ang_vel) = 0;
-    // Set angular acceleration (rad/s^2)
+
+    /// @brief Set angular acceleration (rad/s^2)
     virtual void SetAngAcc(const Eigen::Vector3d& ang_accel) = 0;
 
-    // User-defined trajectory data storage
+    // User-defined trajectory state storage
     m_trajectory m_user;
+
+    // User-defined trajectory data file
+    std::string m_file;
+
+    // Maximum time of the trajectory
+    double tmax;
 };
+
 
 
 }   // namespace _trajectory_
