@@ -579,7 +579,9 @@ void simbridge::LogData()
     // ------------------------------------------------------------------------
     std::ostringstream oss;
     oss << ", ";        // Add a delimiter before constructing the message.
-    _serialize_::SerializeStateData(oss, this->uav->GetUAVStateData());
+    // Use the SerialStateData function of the m_states structure to serialize
+    //  the data for output.
+    this->uav->GetUAVStateData().SerializeStateData(oss);
 
     // ------------------------------------------------------------------------
     // STEP 2 – Serialize all propeller states, appending them in order
@@ -587,7 +589,9 @@ void simbridge::LogData()
     int nop = this->uav->GetPropCount();
     for (int i = 1; i <= nop; ++i)
     {
-        _serialize_::SerializeStateData(oss, this->uav->GetUAVPropStateData(i));
+        // Use the SerialStateData function of the m_states structure to serialize
+        //  the data for output.
+        this->uav->GetUAVPropStateData(i).SerializeStateData(oss);
     }
 
     try {

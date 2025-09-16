@@ -265,6 +265,7 @@ struct motorstruct {
 //   muJ   - Forces acting on the body in the body frame (NED).
 //   tauJ  - Torque acting on the body in the body frame (NED).
 // ----------------------------------------------------------------------------
+
 struct m_states {
     double time;
     chrono::ChVector3d pos;
@@ -277,6 +278,26 @@ struct m_states {
     chrono::ChVector3d muI;
     chrono::ChVector3d muJ;
     chrono::ChVector3d tauJ;
+
+    /**
+     * @brief Serializes the state data to a CSV-compatible output stream.
+     *        Fields are written as a single CSV line in the order defined above.
+     * @param oss Output stringstream to write the CSV line to.
+     */
+    void SerializeStateData(std::ostringstream& oss) const
+    {
+        oss << time << ", "
+            << pos.x() << ", " << pos.y() << ", " << pos.z() << ", "
+            << vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
+            << acc.x() << ", " << acc.y() << ", " << acc.z() << ", "
+            << eul.x() << ", " << eul.y() << ", " << eul.z() << ", "
+            << quat.e0() << ", " << quat.e1() << ", " << quat.e2() << ", " << quat.e3() << ", "
+            << ovel.x() << ", " << ovel.y() << ", " << ovel.z() << ", "
+            << oacc.x() << ", " << oacc.y() << ", " << oacc.z() << ", "
+            << muI.x() << ", " << muI.y() << ", " << muI.z() << ", "
+            << muJ.x() << ", " << muJ.y() << ", " << muJ.z() << ", "
+            << tauJ.x() << ", " << tauJ.y() << ", " << tauJ.z() << ", ";
+    }
 };
 
 

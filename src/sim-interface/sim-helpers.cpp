@@ -36,71 +36,120 @@
 
 #include "sim-helpers.hpp"
 
+// ============================================================================================================
+// Helper Function Implementation: _acsl_ helper namespaces
+// Place this block in sim_helpers.cpp --> Do not include any templated functions. 
+//                                     --> Avoid data type ambiguity as much as possible. 
+//                                     --> Use doubles religiously.
+// ============================================================================================================
+
 namespace _acsl_
 {
 
+// ------------------------------------------------------------------------------------------------------------
+// _transformations_ : Coordinate and orientation conversions between NED and Chrono frames
+// ------------------------------------------------------------------------------------------------------------
 namespace _transformations_
 {
 
-// Function to set the position in the Chrono global frame based on NED position
-chrono::ChVector3d GetChronoPosFromNED(const chrono::ChVector3d& nedpos)
+// Converts vector from NED to Chrono global frame using a 90-degree rotation about X.
+chrono::ChVector3<> GetChronoPosFromNED(const chrono::ChVector3<>& nedpos)
 {
+    // Chrono uses 90° rot about X to match NED <-> ENU
     chrono::ChQuaternion<> RotChABSFrametoNEDFrame = chrono::QuatFromAngleX(chrono::CH_PI_2);
+    // Rotate the input vector to global ENU frame
     return RotChABSFrametoNEDFrame.Rotate(nedpos);
 }
 
-// Function to set the rotation in the Chrono global frame based on NED rotation
+// Converts quaternion from NED to Chrono global frame.
 chrono::ChQuaternion<> GetChronoOrientaitonFromNED(const chrono::ChQuaternion<>& q_ned)
 {
-    chrono::ChQuaternion<> q_rot = chrono::QuatFromAngleX(chrono::CH_PI_2); // 90° rotation about X
+    // 90° rotation about X to convert orientation (ENU <-> NED)
+    chrono::ChQuaternion<> q_rot = chrono::QuatFromAngleX(chrono::CH_PI_2);
     chrono::ChQuaternion<> q_result;
-    q_result.Cross(q_ned, q_rot);  // Post-multiply
+    q_result.Cross(q_ned, q_rot);  // Quaternion multiplication: q_ned * q_rot
     return q_result;
 }
 
-// Converts from Chrono's global/world frame to NED position
-chrono::ChVector3d GetNEDPosFromChrono(const chrono::ChVector3d& pos_chrono)
+// Converts vector from Chrono global frame to NED frame using inverse rotation.
+chrono::ChVector3<> GetNEDPosFromChrono(const chrono::ChVector3<>& pos_chrono)
 {
-    chrono::ChQuaternion<> RotChABSFrametoNEDFrame = chrono::QuatFromAngleX(-chrono::CH_PI_2); // inverse rotation
+    // -90° rotation about X for inverse conversion
+    chrono::ChQuaternion<> RotChABSFrametoNEDFrame = chrono::QuatFromAngleX(-chrono::CH_PI_2);
     return RotChABSFrametoNEDFrame.Rotate(pos_chrono);
 }
 
-// Converts from Chrono's global frame to NED quaternion
+// Converts quaternion from Chrono global frame to NED orientation.
 chrono::ChQuaternion<> GetNEDOrientationFromChrono(const chrono::ChQuaternion<>& q_chrono)
 {
+    // Inverse 90° rotation about X for ENU->NED conversion
     chrono::ChQuaternion<> q_rot = chrono::QuatFromAngleX(-chrono::CH_PI_2);
     chrono::ChQuaternion<> q_result;
-    q_result.Cross(q_chrono, q_rot);
+    q_result.Cross(q_chrono, q_rot);  // Quaternion multiplication: q_chrono * q_rot
     return q_result;
 }
 
+} // namespace _transformations_
 
 
-}   // namespace _transformations_
-
-
+// ------------------------------------------------------------------------------------------------------------
+// _conversions_ : Unit conversion utilities
+// ------------------------------------------------------------------------------------------------------------
 namespace _conversions_
 {
 
-// Converts radians to degrees
-double rad2deg(double rad) { return rad * 180.0 / chrono::CH_PI; }
-
+// Converts radians to degrees, works with any arithmetic double.
+double rad2deg(double rad)
+{
+    // Use Chrono's value for pi for consistency with the simulation environment
+    return rad * 180.0 / chrono::CH_PI;
 }
 
+} // namespace _conversions_
 
+
+// ------------------------------------------------------------------------------------------------------------
+// _compute_ : General-purpose computation
+// ------------------------------------------------------------------------------------------------------------
 namespace _compute_
 {
 
+// Evaluates a polynomial at a given value. Coefficients ordered [highest degree ... lowest].
 double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value)
 {
     double result = 0.0;
+    // Evaluate: result = c0*x^n + c1*x^(n-1) + ... + cn
     for (int i = 0, deg = coefficients.size() - 1; deg >= 0; deg--, i++) {
         result += coefficients[i] * std::pow(value, deg);
     }
     return result;
 }
 
+} // namespace _compute_
+
+
+// ------------------------------------------------------------------------------------------------------------
+// _serialize_ : Serialize data to output from the simulator
+// ------------------------------------------------------------------------------------------------------------
+namespace _serialize_
+{
+
+
+} // namespace _serialize_
+
+
+// ------------------------------------------------------------------------------------------------------------
+// _deserialize_ : De-serialize data to read from file
+// ------------------------------------------------------------------------------------------------------------
+namespace _deserialize_
+{
+
+std::vector<double> GetCSVColumn(const rapidcsv::Document& doc, const std::string& label)
+{
+    // Quickly extract a single column from CSV into std::vector<T>
+    return doc.GetColumn<double>(label);
 }
 
+} // namespace _deserialize_
 
-}   // namespace _acsl_
+} // namespace _acsl_
