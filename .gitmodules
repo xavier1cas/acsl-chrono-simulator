@@ -25,3 +25,4 @@
 [submodule "libraries/third-party/rncarpio-linterp"]
 	path = libraries/third-party/rncarpio-linterp
 	url = https://github.com/rncarpio/linterp.git
+        branch = master
