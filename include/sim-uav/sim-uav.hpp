@@ -47,7 +47,6 @@
 
 // ACSL physics sim includes
 #include "sim-helpers.hpp"
-#include "sim-messages.hpp"
 #include "fkYAML/node.hpp"
 #include "Eigen/Dense"
 

@@ -42,6 +42,9 @@
 // ===============================
 #include <cmath>
 #include <vector>
+#include <filesystem>
+#include <string>
+#include <stdexcept>
 
 // ===============================
 // Chrono includes
@@ -62,6 +65,11 @@
 // Linterp inlcudes
 // ===============================
 #include "linterp.h"
+
+// ===============================
+// ACSL inlcudes
+// ===============================
+#include "sim-messages.hpp"
 
 
 // ============================================================================================================
@@ -181,6 +189,13 @@ namespace _deserialize_
  * @return std::vector<double> containing the extracted column data
  */
 std::vector<double> GetCSVColumn(const rapidcsv::Document& doc, const std::string& label);
+
+/**
+ * @brief Checks that the file exists, throws an error if not.
+ * @param filepath Path or filename to check.
+ * @throws std::runtime_error if the file does not exist.
+ */
+void FileExists(const std::string& filepath);
 
 } // namespace _deserialize_
 

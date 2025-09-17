@@ -70,7 +70,7 @@
 
 #include "sim-platforms.hpp"    // Import the header file with all the platforms
 #include "fkYAML/node.hpp"      // Import the header file for the yaml functionality
-#include "sim-messages.hpp"     // Import the sim-message helpers
+#include "sim-helpers.hpp"      // Import the sim-message helpers
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;

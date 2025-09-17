@@ -39,7 +39,7 @@
 
 #include <string>
 #include "fkYAML/node.hpp"
-#include "sim-messages.hpp"
+#include "sim-helpers.hpp"
 
 // -----------------------------------------------------------------------------
 // Includes for the different trajectory modules (add more as needed)

@@ -47,6 +47,9 @@ namespace _trajectory_
 // NOTE: Should only be run after the SetFileName() command is run.
 void interpolation::InitiateModule()
 {
+    // Check if the file exists
+    _shared_::_deserialize_::FileExists(this->GetFileName());
+
     // Read in the data file
     rapidcsv::Document doc(this->GetFileName());
 
@@ -77,6 +80,29 @@ void interpolation::InitiateModule()
     this->m_data.euler_acc_p = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_p");
     this->m_data.euler_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_y");
 
+    this->m_data.quat_w = _shared_::_deserialize_::GetCSVColumn(doc, "quat_w");
+    this->m_data.quat_x = _shared_::_deserialize_::GetCSVColumn(doc, "quat_x");
+    this->m_data.quat_y = _shared_::_deserialize_::GetCSVColumn(doc, "quat_y");
+    this->m_data.quat_z = _shared_::_deserialize_::GetCSVColumn(doc, "quat_z");
+
+    this->m_data.quat_rate_w = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_w");
+    this->m_data.quat_rate_x = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_x");
+    this->m_data.quat_rate_y = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_y");
+    this->m_data.quat_rate_z = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_z");
+
+    this->m_data.quat_acc_w = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_w");
+    this->m_data.quat_acc_x = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_x");
+    this->m_data.quat_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_y");
+    this->m_data.quat_acc_z = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_z");
+
+    this->m_data.ang_vel_x = _shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_x");
+    this->m_data.ang_vel_y = _shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_y");
+    this->m_data.ang_vel_z = _shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_z");
+    
+    this->m_data.ang_acc_x = _shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_x");
+    this->m_data.ang_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_y");
+    this->m_data.ang_acc_z = _shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_z");
+
     // Create and assign to interpolators
     this->interp_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_x);
     this->interp_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_y);
@@ -102,6 +128,29 @@ void interpolation::InitiateModule()
     this->interp_eul_acc_p = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_p);
     this->interp_eul_acc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_y);
 
+    this->interp_quat_w = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_w);
+    this->interp_quat_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_x);
+    this->interp_quat_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_y);
+    this->interp_quat_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_z);
+
+    this->interp_quat_rate_w = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_w);
+    this->interp_quat_rate_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_x);
+    this->interp_quat_rate_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_y);
+    this->interp_quat_rate_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_z);
+
+    this->interp_quat_acc_w = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_w);
+    this->interp_quat_acc_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_y);
+    this->interp_quat_acc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_x);
+    this->interp_quat_acc_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_z);
+
+    this->interp_angvel_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_x);
+    this->interp_angvel_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_y);
+    this->interp_angvel_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_z);
+
+    this->interp_angacc_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_x);
+    this->interp_angacc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_y);
+    this->interp_angacc_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_z);
+
     // Assign the maximum time
 
     // Create and assign to nurbsasset
@@ -123,6 +172,45 @@ void interpolation::UpdateModule(const double t)
     this->SetVelocity(Eigen::Vector3d(interp_vx->interp(&t), 
                                       interp_vy->interp(&t),
                                       interp_vz->interp(&t)));
+
+    this->SetAcceleration(Eigen::Vector3d(interp_ax->interp(&t),
+                                          interp_ay->interp(&t),
+                                          interp_az->interp(&t)));
+
+    this->SetEulerAngle(Eigen::Vector3d(interp_eul_roll->interp(&t),
+                                        interp_eul_pitch->interp(&t),
+                                        interp_eul_yaw->interp(&t)));
+
+    this->SetEulerRate(Eigen::Vector3d(interp_eul_rate_r->interp(&t),
+                                       interp_eul_rate_p->interp(&t),
+                                       interp_eul_rate_y->interp(&t)));
+
+    this->SetEulerAcc(Eigen::Vector3d(interp_eul_acc_r->interp(&t),
+                                      interp_eul_acc_p->interp(&t),
+                                      interp_eul_acc_y->interp(&t)));
+
+    this->SetQuat(Eigen::Quaterniond(interp_quat_w->interp(&t),
+                                     interp_quat_x->interp(&t),
+                                     interp_quat_y->interp(&t),
+                                     interp_quat_z->interp(&t)));
+
+    this->SetQuatRate(Eigen::Quaterniond(interp_quat_rate_w->interp(&t),
+                                         interp_quat_rate_x->interp(&t),
+                                         interp_quat_rate_y->interp(&t),
+                                         interp_quat_rate_z->interp(&t)));
+
+    this->SetQuatAcc(Eigen::Quaterniond(interp_quat_acc_w->interp(&t),
+                                        interp_quat_acc_x->interp(&t),
+                                        interp_quat_acc_y->interp(&t),
+                                        interp_quat_acc_z->interp(&t)));
+
+    this->SetAngVel(Eigen::Vector3d(interp_angvel_x->interp(&t),
+                                    interp_angvel_y->interp(&t),
+                                    interp_angvel_z->interp(&t)));
+
+    this->SetAngAcc(Eigen::Vector3d(interp_angacc_x->interp(&t),
+                                    interp_angacc_y->interp(&t),
+                                    interp_angacc_z->interp(&t)));
     
 }
 

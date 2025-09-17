@@ -48,7 +48,6 @@
 #include <ctime>
 
 // ACSL physics sim includes
-#include "sim-messages.hpp"
 #include "sim-helpers.hpp"
 #include "fkYAML/node.hpp"
 

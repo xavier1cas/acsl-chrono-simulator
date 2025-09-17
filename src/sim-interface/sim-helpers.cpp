@@ -164,6 +164,14 @@ std::vector<double> GetCSVColumn(const rapidcsv::Document& doc, const std::strin
     return doc.GetColumn<double>(label);
 }
 
+// Function checks if the given file exists in the path
+void FileExists(const std::string& filepath)
+{
+    if (!std::filesystem::exists(filepath)) {
+        ::_acsl_::_message_::SIMULATOR_ERROR("[SIMHLP]: FILE DOES NOT EXIST" + filepath);
+    }
+}
+
 } // namespace _deserialize_
 
 
