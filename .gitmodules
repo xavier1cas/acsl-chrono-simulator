@@ -29,3 +29,6 @@
 [submodule "libraries/third-party/d99kris-rapidcsv"]
 	path = libraries/third-party/d99kris-rapidcsv
 	url = https://github.com/d99kris/rapidcsv.git
+[submodule "libraries/third-party/yamlmatlab"]
+	path = libraries/third-party/yamlmatlab
+	url = https://github.com/ewiger/yamlmatlab.git
