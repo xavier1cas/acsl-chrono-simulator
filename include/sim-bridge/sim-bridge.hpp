@@ -39,12 +39,13 @@
 #define SIM_BRIDGE_HPP_
 
 #include "sim-system.hpp"           // Import the physics and visual system
+#include "sim-logger.hpp"           // Import the header file for the Logger API
 #include "sim-platforms.hpp"        // Import the header file with all the platforms
 #include "sim-uav.hpp"              // Import the header file for the UAV API
 #include "sim-locales.hpp"          // Import the header file with all the environments
 #include "sim-environment.hpp"      // Import the header file for the ENV API
-#include "sim-logger.hpp"           // Import the header file for the Logger API
 #include "sim-traj-selection.hpp"   // Import the header file for the Trajectory selection module
+#include "sim-trajectory.hpp"       // Import the header file for the Trajectory API
 
 namespace _acsl_
 {
@@ -147,13 +148,19 @@ private:
     // Accessor: Returns a reference to the UAV unique pointer so that
     // the external code can access or reset the UAV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<:: _acsl_:: _uav_::simuavbase>& GetUAV() { return uav; }
+    std::unique_ptr<::_acsl_::_uav_::simuavbase>& GetUAV() { return uav; }
 
     // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the ENV unique pointer so that
     // the external code can access or reset the ENV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<:: _acsl_:: _environment_::simenvbase>& GetEnv() { return env; }
+    std::unique_ptr<::_acsl_::_environment_::simenvbase>& GetEnv() { return env; }
+
+    // ------------------------------------------------------------------------
+    // Accessor: Retruns a reference to the Traj unique pointer so that
+    // the external code can access or reset the Traj object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_trajectory_::trajectorybase>& GetTraj() { return trj; }
 
     // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the real-time stepper object used to
@@ -208,6 +215,7 @@ private:
     //  Structure from sim-traj-selection that holds all the trajectories
     // ------------------------------------------------------------------------
     trajectories available_trajectories;
+    std::string active_trajectory;
 
     // ------------------------------------------------------------------------
     // Unique pointer to store the UAV object.
@@ -218,6 +226,11 @@ private:
     // Unique pointer to store the ENV object.
     // ------------------------------------------------------------------------
     std::unique_ptr<::_acsl_::_environment_::simenvbase> env;
+
+    // ------------------------------------------------------------------------
+    // Unique pointer to store the TRAJECTORY object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_trajectory_::trajectorybase> trj;
 
     // ------------------------------------------------------------------------
     // Realtime stepper object to track the simulation's real life duration

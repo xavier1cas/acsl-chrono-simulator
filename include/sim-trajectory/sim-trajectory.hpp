@@ -236,6 +236,13 @@ public:
      */
     virtual double GetTmax() const = 0;
 
+    /**
+     * @brief Get the NURBS visual asset for trajectory visualization.
+     * @return Const reference to the shared pointer of ChVisualShapeLine.
+     */
+    virtual const std::shared_ptr<chrono::ChVisualShapeLine>& GetVisualShape() const = 0;
+
+
     // Getters for all trajectory variables (all const for read-only access)
 
     /// @brief Get the current timestamp of the trajectory
@@ -282,6 +289,7 @@ protected:
      * @param tmax Value to set as maximum trajectory time.
      */
     virtual void SetTmax(double tmax) = 0;
+    
 
     // Setters for all trajectory variables
 
@@ -332,6 +340,9 @@ protected:
 
     // Maximum time of the trajectory
     double tmax;
+
+    // Pointer to the nurbs asset for visualization
+    std::shared_ptr<chrono::ChVisualShapeLine> visualshape;
 };
 
 

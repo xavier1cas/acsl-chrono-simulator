@@ -150,13 +150,40 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->available_trajectories.read(config_file);
 
     // ------------------------------------------------------------------------
+    // STEP 7.1 – Validate and get the active trajectory module name
+    // ------------------------------------------------------------------------
+    this->active_trajectory = available_trajectories.GetActiveModule();
+
+    // ------------------------------------------------------------------------
+    // STEP 7.2 – Instantiate the selected traj using the factory in structure
+    //   - Store the module in simbridge::trj (std::unique_ptr<trajectorybase>).
+    //   - Set the trajectory file from sim-config.yaml
+    //   - Initiate the trajectory module
+    // ------------------------------------------------------------------------
+    this->trj = available_trajectories.createSelectedModule();
+    this->trj->SetFileName(available_trajectories.GetTrajectoryFile());
+    this->trj->InitiateModule();
+
+    // ------------------------------------------------------------------------
+    // STEP 7.3 – If the trajectory is to be visualized, attach it to the NED 
+    //            auxilliary refrence body for visualization.
+    //            - This means you will always run this logic after the uav obj
+    //            has been created and make sure the SetupInertialNEDFrame()
+    //            was executed prior to this logic.
+    // ------------------------------------------------------------------------
+    if (this->m_sys.GetVisConfig().render_trajectory) {
+        this->uav->GetInertialNEDFrameAuxBody()->AddVisualShape(this->trj->GetVisualShape());
+    }
+
+
+    // ------------------------------------------------------------------------
     // STEP 8 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : " + std::to_string(efsl));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: " + active_platform);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: " + active_locale);
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: " + available_trajectories.GetActiveModule());
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: " + active_trajectory);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY FILE: " + available_trajectories.GetTrajectoryFile());
 }
 
@@ -191,7 +218,7 @@ void simbridge::UpdateVisualizationSystem()
     // ------------------------------------------------------------------------
     // STEP 1 – Check if visualization is enabled for this simulator run.
     // ------------------------------------------------------------------------
-    if (this->m_sys.GetVisConfig().enable_vis)
+    if (this->m_sys.GetVisConfig().enable_vis && this->m_sys.GetVisionSystem().Run())
     {
         // --------------------------------------------------------------------
         // STEP 2 – Begin a new scene to set up rendering for this step.
@@ -613,19 +640,19 @@ void simbridge::LogData()
     }
 }
 
-// Prototype ever run function - will need traj module integrated and will house the logic for all the modes.
+// Prototype ever run function -  will house the logic for all the modes.
 void simbridge::EverRun()
 {
-    // While the vision system is running
-    while (this->m_sys.GetVisionSystem().Run()) {
-            
-        // Update the visualization
+    // Make sure the current time is lesser than Tmax
+    while (this->m_sys.GetPhysicsSystem().GetChTime() < this->trj->GetTmax())
+    {
+        // Update the vision system
         this->UpdateVisualizationSystem();
 
-        // Update the physics
+        // Update the physics system
         this->UpdatePhysicsSystem();
-		
     }
+    
 }
 
 

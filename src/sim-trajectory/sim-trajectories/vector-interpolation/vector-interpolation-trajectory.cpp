@@ -152,8 +152,11 @@ void interpolation::InitiateModule()
     this->interp_angacc_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_z);
 
     // Assign the maximum time
+    this->SetTmax(_shared_::_compute_::vecmax(m_data.time));
 
     // Create and assign to nurbsasset
+    auto controlpts = _shared_::_serialize_::serialize2ChVector3d(m_data.pos_x, m_data.pos_y, m_data.pos_z);
+    this->visualshape = _shared_::_visualize_::createNurbsVisual(controlpts);
     
 }
 

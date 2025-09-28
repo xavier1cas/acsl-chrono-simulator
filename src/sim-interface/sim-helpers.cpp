@@ -138,6 +138,16 @@ NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const
                                    const_cast<double*>(&values.front()) + values.size());
 }
 
+// Function returns the max value in a vector array
+double vecmax(const std::vector<double>& v)
+{
+    if (v.empty()) {
+        ::_acsl_::_message_::SIMULATOR_ERROR("[SIMHLP]: VECMAX: INPUT VECTOR IS EMPTY");
+    }
+    
+    return *std::max_element(v.begin(), v.end());
+}
+
 } // namespace _compute_
 
 
@@ -147,6 +157,21 @@ NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const
 namespace _serialize_
 {
 
+// Function takes in any 3 equal length vectors and returns a ChVector3d vector array with the data arranged 
+// in the same order as the input.
+std::vector<chrono::ChVector3d> serialize2ChVector3d(
+    const std::vector<double>& xs,
+    const std::vector<double>& ys,
+    const std::vector<double>& zs)
+{
+    size_t N = xs.size();
+    std::vector<chrono::ChVector3d> out;
+    out.reserve(N);
+    for (size_t i = 0; i < N; ++i) {
+        out.emplace_back(xs[i], ys[i], zs[i]);
+    }
+    return out;
+}
 
 } // namespace _serialize_
 

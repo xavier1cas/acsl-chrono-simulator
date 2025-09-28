@@ -40,6 +40,9 @@
 #include <string>
 #include "fkYAML/node.hpp"
 #include "sim-helpers.hpp"
+#include "sim-trajectory.hpp"
+#include "piecewise-polynomial-trajectory.hpp"
+#include "vector-interpolation-trajectory.hpp"
 
 // -----------------------------------------------------------------------------
 // Includes for the different trajectory modules (add more as needed)
@@ -52,19 +55,53 @@ namespace _acsl_
 namespace _bridge_
 {
 
+// -----------------------------------------------------------------------------
+// Structure: traj_vars
+//
+// Holds configuration fields for a single trajectory module.
+// Members:
+//   enabled   - Set to true to activate the module for simulation/control.
+//   filename  - Name of the trajectory input file (without path or extension).
+//   filetype  - Expected file extension/type for the trajectory data file.
+// -----------------------------------------------------------------------------
 struct traj_vars {
     bool enabled;            // Boolean for the activation of the module
-    std::string filename;    // String for the filename to be injested
-    std::string filetype;    // String for the filetype to be injested 
+    std::string filename;    // String for the filename to be ingested
+    std::string filetype;    // String for the filetype to be ingested 
 };
 
 
+// -----------------------------------------------------------------------------
+// Structure: trajectories
+//
+// Purpose:
+//   Aggregates all trajectory modules for selection.
+//   Supports modular YAML configuration parsing and dynamic control logic.
+//
+// Members:
+//   interp     - Trajectory variables for the interpolation trajectory module.
+//   polynomial - Trajectory variables for the minimum jerk polynomial
+//                trajectory module.
+//
+// API:
+//   - read(config): Loads YAML settings for all modules, ensures only one is
+//                   enabled, and checks filetype rules.
+//   - GetActiveModule(): Returns the currently enabled trajectory module as
+//                        a readable string.
+//   - GetTrajectoryFile(): Constructs and returns the expected file path for 
+//                          the selected module's trajectory.
+// -----------------------------------------------------------------------------
 struct trajectories
 {
     traj_vars interp;       // Trajectory variables for the interpolation module
     traj_vars polynomial;   // Trajectory variables for the polynomial module
 
-    // Member function to load values from yaml node
+
+    // -----------------------------------------------------------------------------
+    // Reads and validates YAML configuration for all trajectory modules.
+    // Ensures only one trajectory module is enabled and checks filetype constraints.
+    // Throws/logs error if misconfigured.
+    // -----------------------------------------------------------------------------
     void read(const fkyaml::node& config) {
         // Parameters for the interpolation trajectory
         const auto& interp_node = config.at("interp");
@@ -92,30 +129,68 @@ struct trajectories
         if (polynomial.enabled && polynomial.filetype != "json") {
             _message_::SIMULATOR_ERROR("[SIMBRG]: POLYNOMIAL MODULE REQUIRES FILETYPE 'JSON'");
         }
-
     }
 
-    // Member function to return the enabled trajectory module
+
+    // -----------------------------------------------------------------------------
+    // Returns the name of the enabled trajectory module for reporting or control logic.
+    // -----------------------------------------------------------------------------
     std::string GetActiveModule() const {
         if (interp.enabled) { return "Interpolation Trajectory Module"; }
         else if (polynomial.enabled) { return "Minimum Jerk Polynomial Trajectory Module"; }
         else { return "No active module"; }
     }
 
-    // Member funciton to return the filename for the trajectory to be run
+    // -----------------------------------------------------------------------------
+    // Constructs the full file path for the enabled trajectory module's input file.
+    // Returns "ERR" if none is enabled.
+    // -----------------------------------------------------------------------------
     std::string GetTrajectoryFile() const {
         std::string base = "../chrono-assets/trajectories/";
         
         // If the interpolation module is picked 
         if (interp.enabled) { return base + "interpolation/" + interp.filename + "." + interp.filetype; }
         // If the minimum jerk polynomial module is picked
-        else if (polynomial.enabled) { return base + "minjerkpoly/" + polynomial.filename + "." + interp.filetype; }
+        else if (polynomial.enabled) { return base + "minjerkpoly/" + polynomial.filename + "." + polynomial.filetype; }
         // Default return 
         else { return "ERR"; }
     }
 
-};
+    // -------------------------------------------------------------------------
+    // Factory: createSelectedModule()
+    //
+    // Purpose:
+    //   Instantiate the trajectory object corresponding to the active module and
+    //   return it as a polymorphic std::unique_ptr<trajectorybase>.
+    //
+    // Returns:
+    //   std::unique_ptr<_acsl_::_uav_::trajectorybase> pointing to
+    //   the constructed trajectory module instance.
+    //
+    // Workflow:
+    //   1. Based on which boolean is true, construct the matching module.
+    //   3. Return the base-class pointer (trajectorybase) to the caller.
+    //
+    // Notes:
+    //   - Requires that the derived trajectory class headers are included
+    //     in sim-traj-selection.hpp.
+    // -------------------------------------------------------------------------
+    std::unique_ptr< ::_acsl_::_trajectory_::trajectorybase >
+    createSelectedModule() const {
+        if (interp.enabled) {
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING VECTOR INTERP TRAJ MODULE TO SYS");
+            return std::unique_ptr< ::_acsl_::_trajectory_::trajectorybase >( new ::_acsl_::_trajectory_::interpolation );
+        }
+        else if (polynomial.enabled) {
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING MINJERKPOLY TRAJ MODULE TO SYS");
+            return std::unique_ptr< ::_acsl_::_trajectory_::trajectorybase >( new ::_acsl_::_trajectory_::minjerkpoly );
+        }
 
+        // Default retrun type
+        return nullptr;
+
+    }
+};
 
 
 

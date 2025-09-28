@@ -64,6 +64,9 @@ public:
     // Getter for Tmax
     double GetTmax() const override { return this->tmax; }
 
+    // Getter for the visual shape
+    const std::shared_ptr<chrono::ChVisualShapeLine>& GetVisualShape() const override { return this->visualshape; }
+
     // Getters for user trajectory variables
     double GetTime() const override { return this->c_state.time; }
     const Eigen::Vector3d& GetPosition() const override { return this->c_state.position; }

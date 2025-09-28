@@ -175,6 +175,7 @@ void simsystem::ReadVisionConfigFile()
     visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();          // Show collision zone meshes
     visconfig.render_all_COG_frames  = config_file["main"]["render_all_COG_frames"].as_bool();           // Draw all COG frames
     visconfig.render_prop_frames     = config_file["main"]["render_prop_frames"].as_bool();              // Draw all the propeller frames
+    visconfig.render_trajectory      = config_file["main"]["render_trajectory"].as_bool();               // Draw the trajectory in the scene
 
     // ------------------------------------------------------------------------
     // STEP 5 – Extract "window" options
@@ -388,6 +389,7 @@ void simsystem::SetupVisualizationSystem()
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER BODY FRAME: ", visconfig.render_body_frame);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER PROP FRAMES: ", visconfig.render_prop_frames);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER ALL COG FRAMES: ", visconfig.render_all_COG_frames);
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER TRAJECTORY: ", visconfig.render_trajectory);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER COLLISION ZONES: ", visconfig.render_collision_zones);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER SHADOWS: ", visconfig.render_shadows);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - ENABLE STATIC CAM: ", visconfig.enable_static_cam);

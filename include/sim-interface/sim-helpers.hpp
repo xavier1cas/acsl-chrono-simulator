@@ -163,6 +163,14 @@ double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value);
  */
 NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const std::vector<double>& values);
 
+/**
+ * @brief Finds the maximum value in a vector of doubles.
+ * @param v Input vector of doubles.
+ * @return Maximum value in the vector.
+ * @note Behavior is undefined for empty vectors; add a check as needed.
+ */
+double vecmax(const std::vector<double>& v);
+
 } // namespace _compute_
 
 // ============================================================================================================
@@ -172,6 +180,17 @@ NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const
 namespace _serialize_
 {
 
+/**
+ * @brief Combines three parallel double vectors into a vector of ChVector3d for 3D point serialization.
+ * @param xs Vector of X coordinates.
+ * @param ys Vector of Y coordinates.
+ * @param zs Vector of Z coordinates.
+ * @return std::vector<chrono::ChVector3d> Combined 3D points.
+ */
+std::vector<chrono::ChVector3d> serialize2ChVector3d(
+    const std::vector<double>& xs,
+    const std::vector<double>& ys,
+    const std::vector<double>& zs);
 
 } // namespace _serialize_
 
