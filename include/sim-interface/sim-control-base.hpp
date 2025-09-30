@@ -43,6 +43,7 @@
 //  ACSL Physics Sim includes
 // ====================================================================================
 #include "sim-helpers.hpp"               // Import for the helper functions
+#include "sim-templated-helpers.hpp"     // Import the header for the templated headers
 #include "sim-logger.hpp"                // Import the header file for the Logger API
 #include "sim-trajectory.hpp"            // Import for the trajectory API
 
@@ -66,46 +67,6 @@ namespace _acsl_
 
 namespace _control_
 {
-
-// =========================================================================================================
-// RK4 State Array Type Alias
-// ------------------------------------------------------------------------------------------
-// Purpose:
-//   - Defines a state array type for ODE integrators (e.g., RK4).
-//   - Uses boost::array for fixed-size storage, template parameterized by scalar type and size.
-//
-// Usage Example:
-//   rk4_array<double, 78> state_vector_double;  // 78-element double precision state vector
-//   rk4_array<float, 100> state_vector_float;   // 100-element single precision state vector
-//
-// Notes:
-//   - 'T' is the scalar type (e.g. float, double)
-//   - 'N' is the dimensionality (number of states)
-//   - Suitable for use as the main state variable in Runge-Kutta (RK4) ODE integration routines
-// =========================================================================================================
-template<typename T, std::size_t N>
-using rk4_array = boost::array<T, N>;
-
-// =========================================================================================================
-// RK4 State Vector Type Alias
-// ------------------------------------------------------------------------------------------
-// Purpose:
-//   - Defines a state vector type for ODE integrators (e.g., RK4).
-//   - Uses boost::numeric::ublas::vector for dynamic-size storage, template parameterized by scalar type.
-//
-// Usage Example:
-//   rk4_vector<double> state_vector_double;  // double precision state vector (size set at runtime)
-//   rk4_vector<float>  state_vector_float;   // single precision state vector (size set at runtime)
-//
-// Notes:
-//   - 'T' is the scalar type (e.g. float, double)
-//   - Suitable for use as the main state variable in Runge-Kutta (RK4) ODE integration routines
-//   - The vector size is set at runtime and can be changed for flexibility.
-//   - Fully compatible with Boost.Odeint integrators and numeric algorithms.
-// =========================================================================================================
-template<typename T>
-using rk4_vector = boost::numeric::ublas::vector<T>;
-
 
 // =====================================================================================================================
 // class controller_base

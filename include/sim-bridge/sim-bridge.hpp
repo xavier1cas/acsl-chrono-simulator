@@ -47,6 +47,18 @@
 #include "sim-traj-selection.hpp"   // Import the header file for the Trajectory selection module
 #include "sim-trajectory.hpp"       // Import the header file for the Trajectory API
 
+// ##################################################################################
+// PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+// ##################################################################################
+
+#include "pid-omega-qrbp.hpp"
+
+
+// ##################################################################################
+// PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+// ##################################################################################
+
+
 namespace _acsl_
 {
 
@@ -109,6 +121,18 @@ public:
 
         // Setup the physics log file if requested
         if (this->log2file) { InitiateLogging(); ConfigureHeaders(); }
+
+
+        // ##################################################################################
+        // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+        // ##################################################################################
+
+        m_controller = std::unique_ptr< ::_acsl_::_control_::controller_base >( new ::_acsl_::_qrbp_::_pid_omega_::pid_omega(m_logger, *GetTraj()) );
+
+        // ##################################################################################
+        // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+        // ##################################################################################
+
     }
 
     // ------------------------------------------------------------------------
@@ -240,7 +264,7 @@ private:
     // ------------------------------------------------------------------------
     // Reference to external simlog logger instance for centralized logging.
     // ------------------------------------------------------------------------
-    _acsl_::_logger_::simlog& m_logger;
+    ::_acsl_::_logger_::simlog& m_logger;
 
     // ------------------------------------------------------------------------
     // Blackbox functions for the physics logger.
@@ -248,6 +272,16 @@ private:
     void ConfigureHeaders() override;
     bool InitiateLogging() override;
     void LogData() override;
+
+    // ##################################################################################
+    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // ##################################################################################
+
+    std::unique_ptr<::_acsl_::_control_::controller_base> m_controller;
+
+    // ##################################################################################
+    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // ##################################################################################
 
 };
 

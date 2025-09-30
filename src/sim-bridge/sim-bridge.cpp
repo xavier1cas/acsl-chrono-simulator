@@ -312,6 +312,7 @@ void simbridge::UpdateVisualizationSystem()
 // =====================================================================================================================
 void simbridge::UpdatePhysicsSystem()
 {
+
     // ------------------------------------------------------------------------
     // STEP 1 – Advance Chrono physics simulation by one step using config step size.
     // ------------------------------------------------------------------------
@@ -321,11 +322,51 @@ void simbridge::UpdatePhysicsSystem()
     // STEP 2 – Spin in place to maintain soft real-time pacing for this simulation tick.
     // ------------------------------------------------------------------------
     this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
-    
+        
+
+    // ##################################################################################
+    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // ##################################################################################
+
     // ------------------------------------------------------------------------
     // STEP 3 – Extract current UAV state variables for reporting and logging.
     // ------------------------------------------------------------------------
     auto states = this->uav->GetUAVStateData();
+
+    this->m_controller->update( states.time, 
+                                states.pos.x(),
+                                states.pos.y(),
+                                states.pos.z(),
+                                states.vel.x(),
+                                states.vel.y(),
+                                states.vel.z(),
+                                states.quat.e0(),
+                                states.quat.e1(),
+                                states.quat.e2(),
+                                states.quat.e3(),
+                                states.eul.x(),
+                                states.eul.y(),
+                                states.eul.z(),
+                                states.ovel.x(),
+                                states.ovel.y(),
+                                states.ovel.z() );
+                                 
+    this->m_controller->run(this->m_sys.GetPhyConfig().StepSize);
+    
+    this->uav->SetThrustSetPoint(1, this->m_controller->get_t1());
+    this->uav->SetThrustSetPoint(2, this->m_controller->get_t2());
+    this->uav->SetThrustSetPoint(3, this->m_controller->get_t3());
+    this->uav->SetThrustSetPoint(4, this->m_controller->get_t4());
+
+    // this->uav->SetActuator(1, m_controller->get_t1(), 0.0, 10);
+    // this->uav->SetActuator(1, m_controller->get_t2(), 0.0, 10);
+    // this->uav->SetActuator(1, m_controller->get_t3(), 0.0, 10);
+    // this->uav->SetActuator(1, m_controller->get_t4(), 0.0, 10);
+
+    // ##################################################################################
+    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // ##################################################################################
+
 
     // ------------------------------------------------------------------------
     // STEP 4 – If terminal logging is enabled, print state block in color.

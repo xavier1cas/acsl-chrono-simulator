@@ -80,7 +80,6 @@
 // ACSL inlcudes
 // ===============================
 #include "sim-messages.hpp"
-#include "sim-control-base.hpp"
 
 
 // ============================================================================================================
@@ -240,6 +239,29 @@ NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const
  */
 double vecmax(const std::vector<double>& v);
 
+/**
+ * @brief Wraps a double angle `alpha` to the interval [-pi, pi].
+ *
+ * @param[in] alpha Angle (in radians) to wrap.
+ * @returns Wrapped angle in [-pi, pi] (in radians).
+ */
+double wrapAngleToMinusPiAndPi(double alpha);
+
+/**
+ * @brief Computes a continuous yaw angular error considering the discontinuity at +/- pi.
+ *
+ * Example usage: 
+ * @code
+ * double result = makeYawAngularErrorContinuous(yaw, user_defined_yaw);
+ * @endcode
+ *
+ * @param[in] yaw Current yaw angle (in radians).
+ * @param[in] user_defined_yaw Reference yaw angle (in radians).
+ * @returns Continuous angular error (in radians), accounting for discontinuity at +/- pi.
+ */
+double makeYawAngularErrorContinuous(double yaw, double user_defined_yaw);
+
+
 } // namespace _compute_
 
 // ============================================================================================================
@@ -260,30 +282,6 @@ std::vector<chrono::ChVector3d> serialize2ChVector3d(
     const std::vector<double>& xs,
     const std::vector<double>& ys,
     const std::vector<double>& zs);
-
-/**
- * @brief Copies elements from an Eigen matrix/vector to a segment in a boost array.
- *
- * Assigns matrix/vector data from the Eigen object into the target boost::array starting at current_index.
- * Typically used for serializing state data before integration or output.
- *
- * @tparam T         Scalar type in the Eigen matrix/vector and boost array (e.g. double, float).
- * @tparam Rows      Number of rows in the Eigen matrix/vector.
- * @tparam Cols      Number of columns in the Eigen matrix/vector.
- * @tparam N         Total number of elements in the boost array.
- * @param entity         Source Eigen matrix or vector to copy from.
- * @param dxdt           Destination boost::array to receive the data.
- * @param current_index  Starting index for assignment into dxdt (incremented by number of elements copied).
- */
-template<typename T, int Rows, int Cols, std::size_t N>
-inline void assignElementsToDxdt(Eigen::Matrix<T, Rows, Cols>& entity, boost::array<T, N>& dxdt,
-                                 int& current_index)
-{
-    std::size_t elements_to_copy = std::min<std::size_t>(entity.size(), dxdt.size() - current_index);
-    std::copy(entity.data(), entity.data() + elements_to_copy, dxdt.begin() + current_index);
-    current_index += elements_to_copy;
-}
-
 
 } // namespace _serialize_
 
@@ -324,32 +322,6 @@ Eigen::MatrixXd jsonToMatrixXd(const nlohmann::json& jsonMatrix, int rows, int c
  * @param cols no of cols in the array
  */
 Eigen::MatrixXd jsonToScaledMatrixXd(const nlohmann::json& jsonMatrix, int rows, int cols);
-
-/**
- * @brief Assigns elements from a boost array segment to an Eigen matrix or vector.
- *
- * Maps the relevant segment of the boost array starting at current_index into the target Eigen matrix/vector.
- * This is typically used for deserialization after integration or bulk loading states.
- *
- * @tparam T         Scalar type for Eigen matrix/vector and boost array (usually double or float).
- * @tparam Rows      Number of rows in target Eigen matrix/vector (static size).
- * @tparam Cols      Number of columns in target Eigen matrix/vector (static size).
- * @tparam N         Total number of elements in the boost array.
- * @param entity     Target Eigen matrix or vector for assignment (e.g. Eigen::Vector2d).
- * @param x          Source boost::array containing deserialized data.
- * @param current_index Starting index in the boost array where assignment should begin; incremented by matrix size.
- */
-template<typename T, int Rows, int Cols, std::size_t N>
-inline void assignElementsToMembers(Eigen::Matrix<T, Rows, Cols>& entity, boost::array<T, N>& x,
-                                    int& current_index)
-{
-    // Map the segment of the boost array to the Eigen matrix
-    Eigen::Map<Eigen::Matrix<T, Rows, Cols>>(entity.data(), Rows, Cols) = 
-        Eigen::Map<Eigen::Matrix<T, Rows, Cols>>(x.data() + current_index, Rows, Cols);
-
-    // Update the current index by the number of elements in the matrix
-    current_index += Rows * Cols;
-}
 
 } // namespace _deserialize_
 

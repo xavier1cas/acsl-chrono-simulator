@@ -243,6 +243,33 @@ double vecmax(const std::vector<double>& v)
     return *std::max_element(v.begin(), v.end());
 }
 
+// Wraps a double angle `alpha` to the interval [-pi, pi]
+double wrapAngleToMinusPiAndPi(double alpha)
+{
+    return alpha - 2.0 * M_PI * std::floor((alpha + M_PI) / (2.0 * M_PI));
+}
+
+// Makes the yaw angular error continuous considering the discontinuity at +/- pi
+double makeYawAngularErrorContinuous(double yaw, double user_defined_yaw)
+{
+    user_defined_yaw = wrapAngleToMinusPiAndPi(user_defined_yaw);
+
+    double raw_error = yaw - user_defined_yaw;
+    double continuous_error;
+
+    if (std::abs(raw_error) >= M_PI && std::abs(raw_error) < 2.0 * M_PI && raw_error < 0.0) {
+        continuous_error = std::fmod(raw_error, M_PI) + M_PI;
+    }
+    else if (std::abs(raw_error) >= M_PI && std::abs(raw_error) < 2.0 * M_PI && raw_error > 0.0) {
+        continuous_error = std::fmod(raw_error, M_PI) - M_PI;
+    }
+    else {
+        continuous_error = std::fmod(raw_error, M_PI);
+    }
+
+    return continuous_error;
+}
+
 } // namespace _compute_
 
 

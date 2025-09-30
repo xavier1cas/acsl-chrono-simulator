@@ -151,7 +151,7 @@ endif()
 
 include_directories(${CHRONO_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/fkYAML/single_include)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/nlohmann-json/single_include/nlohmann)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/nlohmann-json/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/rncarpio-linterp/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/d99kris-rapidcsv/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-interface)
@@ -170,6 +170,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/piecewise-polynomial)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/vector-interpolation)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/pid-omega)
 
 #-----------------------------------------------------------------------------
 # Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen
@@ -205,6 +207,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-bridge/sim-bridge.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/piecewise-polynomial/piecewise-polynomial-trajectory.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/vector-interpolation/vector-interpolation-trajectory.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/pid-omega/pid-omega-qrbp.cpp
    )
 
 add_executable(acsl_sim ${SOURCES})

@@ -1183,7 +1183,16 @@ void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
     // Cache the values
     auto thrust = _shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2newt, thrustSP);
     auto torque = 0.15 * motors[idx - 1].ct * thrust;       // Cq = 0.15 * ct -> Cq is the backtorque constant
-    auto rps = _shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP);
+
+    // ##################################################################################
+    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // ##################################################################################
+
+    auto rps = 0.01*(_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP));
+
+    // ##################################################################################
+    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // ##################################################################################
 
     // Set the values
     this->SetActuator(idx, thrust, torque, rps);
