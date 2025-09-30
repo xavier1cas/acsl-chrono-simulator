@@ -21,11 +21,18 @@ waypoints:
     phi: 0.0
     theta: -90.0
     psi: 0.0
-    time: 2
-  - x: 2
+    time: 4
+  - x: 2.0
     y: 0.0
     z: -1.0
     phi: 0.0
     theta: -90.0
     psi: 0.0
-    time: 2
+    time: 6
+  - x: 10.0
+    y: 0.0
+    z: -1.0
+    phi: 0.0
+    theta: -90.0
+    psi: 0.0
+    time: 14
