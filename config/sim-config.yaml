@@ -69,6 +69,16 @@ platform:
   acslquad: false
 
 # ============================================================================
+# CONTROLLER Selection
+# !!! IMPORTANT: 1. Only one controller can be active at any given time. 
+#                2. Controller and platform should match. Please see platform
+#                   setting to see the currently active platform.
+# ============================================================================
+controller:
+  qrbp:
+    pid_omega: true
+
+# ============================================================================
 # SIMULATION Environment Selection
 # !!! IMPORTANT: Only one environment should be imported at a time !!!
 # ============================================================================
@@ -95,4 +105,5 @@ poly:
   filename: temp
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
+
 

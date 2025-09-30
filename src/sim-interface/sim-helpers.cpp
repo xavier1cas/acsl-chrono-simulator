@@ -89,6 +89,101 @@ chrono::ChQuaternion<> GetNEDOrientationFromChrono(const chrono::ChQuaternion<>&
     return q_result;
 }
 
+
+// Computes the 3-2-1 rotation matrix for global-to-local transformation.
+Eigen::Matrix3d rotationMatrix321GlobalToLocal(double roll, double pitch, double yaw)
+{
+    Eigen::Matrix3d R1t, R2t, R3t;
+    R1t <<  1.0, 0.0, 0.0,
+            0.0, std::cos(roll), std::sin(roll),
+            0.0, -std::sin(roll), std::cos(roll);
+    R2t <<  std::cos(pitch), 0.0, -std::sin(pitch),
+            0.0, 1.0, 0.0,
+            std::sin(pitch), 0.0, std::cos(pitch);
+    R3t <<  std::cos(yaw), std::sin(yaw), 0.0,
+            -std::sin(yaw), std::cos(yaw), 0.0,
+            0.0, 0.0, 1.0;
+    return R1t * R2t * R3t;
+}
+
+// Computes the 3-2-1 rotation matrix for local-to-global transformation.
+Eigen::Matrix3d rotationMatrix321LocalToGlobal(double roll, double pitch, double yaw)
+{
+    Eigen::Matrix3d R1, R2, R3;
+    R1 <<  1.0, 0.0, 0.0,
+           0.0, std::cos(roll), -std::sin(roll),
+           0.0, std::sin(roll),  std::cos(roll);
+    R2 <<  std::cos(pitch), 0.0, std::sin(pitch),
+           0.0, 1.0, 0.0,
+           -std::sin(pitch), 0.0, std::cos(pitch);
+    R3 <<  std::cos(yaw), -std::sin(yaw), 0.0,
+           std::sin(yaw),  std::cos(yaw), 0.0,
+           0.0, 0.0, 1.0;
+    return R3 * R2 * R1;
+}
+
+// Returns the inverse of the Euler angle rates Jacobian matrix.
+Eigen::Matrix3d jacobianMatrixInverse(double roll, double pitch)
+{
+    if (std::abs(std::cos(pitch)) < 1e-6) {
+        throw std::invalid_argument("Pitch value results in division by zero.");
+    }
+    Eigen::Matrix3d Jinv;
+    Jinv(0, 0) = 1.0;
+    Jinv(0, 1) = (std::sin(roll) * std::sin(pitch)) / std::cos(pitch);
+    Jinv(0, 2) = (std::cos(roll) * std::sin(pitch)) / std::cos(pitch);
+
+    Jinv(1, 0) = 0.0;
+    Jinv(1, 1) = std::cos(roll);
+    Jinv(1, 2) = -std::sin(roll);
+
+    Jinv(2, 0) = 0.0;
+    Jinv(2, 1) = std::sin(roll) / std::cos(pitch);
+    Jinv(2, 2) = std::cos(roll) / std::cos(pitch);
+
+    return Jinv;
+}
+
+// Computes the Euler angle rates Jacobian matrix for roll and pitch.
+Eigen::Matrix3d jacobianMatrix(double roll, double pitch)
+{
+    Eigen::Matrix3d J;
+    J(0, 0) = 1.0;
+    J(0, 1) = 0.0;
+    J(0, 2) = -std::sin(pitch);
+
+    J(1, 0) = 0.0;
+    J(1, 1) = std::cos(roll);
+    J(1, 2) = std::sin(roll) * std::cos(pitch);
+
+    J(2, 0) = 0.0;
+    J(2, 1) = -std::sin(roll);
+    J(2, 2) = std::cos(roll) * std::cos(pitch);
+
+    return J;
+}
+
+// Computes the time derivative of the Euler angle rates Jacobian matrix.
+Eigen::Matrix3d jacobianMatrixDerivative(double roll, double pitch, double roll_dot, double pitch_dot)
+{
+    Eigen::Matrix3d Jdot;
+    Jdot(0, 0) = 0.0;
+    Jdot(0, 1) = 0.0;
+    Jdot(0, 2) = -std::cos(pitch) * pitch_dot;
+
+    Jdot(1, 0) = 0.0;
+    Jdot(1, 1) = -std::sin(roll) * roll_dot;
+    Jdot(1, 2) =  std::cos(roll) * std::cos(pitch) * roll_dot
+                 - std::sin(roll) * std::sin(pitch) * pitch_dot;
+
+    Jdot(2, 0) = 0.0;
+    Jdot(2, 1) = -std::cos(roll) * roll_dot;
+    Jdot(2, 2) = -std::sin(roll) * std::cos(pitch) * roll_dot
+                 - std::cos(roll) * std::sin(pitch) * pitch_dot;
+
+    return Jdot;
+}
+
 } // namespace _transformations_
 
 
@@ -195,6 +290,28 @@ void FileExists(const std::string& filepath)
     if (!std::filesystem::exists(filepath)) {
         ::_acsl_::_message_::SIMULATOR_ERROR("[SIMHLP]: FILE DOES NOT EXIST" + filepath);
     }
+}
+
+// Extract Eigen::MatrixXd from JSON array of arrays
+Eigen::MatrixXd jsonToMatrixXd(const nlohmann::json& jsonMatrix, int rows, int cols) {
+    Eigen::MatrixXd matrix(rows, cols);
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            matrix(i, j) = jsonMatrix[i][j];
+    return matrix;
+}
+
+// Extract Eigen::MatrixXd from JSON with scaling
+// Expects JSON like: { "matrix": [[...],...], "scaling_coef": value }
+Eigen::MatrixXd jsonToScaledMatrixXd(const nlohmann::json& jsonMatrix, int rows, int cols) {
+    double scaling_coef = jsonMatrix["scaling_coef"];
+    const auto& arr = jsonMatrix["matrix"];
+    Eigen::MatrixXd matrix(rows, cols);
+    for (int i = 0; i < rows; ++i)
+        for (int j = 0; j < cols; ++j)
+            matrix(i, j) = arr[i][j];
+    matrix *= scaling_coef;
+    return matrix;
 }
 
 } // namespace _deserialize_

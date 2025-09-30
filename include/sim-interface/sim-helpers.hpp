@@ -62,6 +62,16 @@
 #include "rapidcsv.h"
 
 // ===============================
+// JSON includes
+// ===============================
+#include <nlohmann/json.hpp>            
+
+// ===============================
+// Eigen includes
+// ===============================
+#include <Eigen/Dense>  
+
+// ===============================
 // Linterp inlcudes
 // ===============================
 #include "linterp.h"
@@ -70,6 +80,7 @@
 // ACSL inlcudes
 // ===============================
 #include "sim-messages.hpp"
+#include "sim-control-base.hpp"
 
 
 // ============================================================================================================
@@ -116,6 +127,64 @@ chrono::ChVector3<> GetNEDPosFromChrono(const chrono::ChVector3<>& pos_chrono);
  * @return Corresponding orientation in NED frame (chrono::ChQuaternion<>)
  */
 chrono::ChQuaternion<> GetNEDOrientationFromChrono(const chrono::ChQuaternion<>& q_chrono = chrono::ChQuaternion<>(1, 0, 0, 0));
+
+/**
+ * @brief Computes the 3-2-1 rotation matrix that transforms a vector from global to local coordinates.
+ * 
+ * The returned matrix is: R1ᵀ * R2ᵀ * R3ᵀ (roll, pitch, yaw).
+ * 
+ * @param roll  Roll angle in radians.
+ * @param pitch Pitch angle in radians.
+ * @param yaw   Yaw angle in radians.
+ * @return Eigen::Matrix3d The global-to-local rotation matrix.
+ */
+Eigen::Matrix3d rotationMatrix321GlobalToLocal(double roll, double pitch, double yaw);
+
+/**
+ * @brief Computes the 3-2-1 rotation matrix that transforms a vector from local to global coordinates.
+ * 
+ * The returned matrix is: R3 * R2 * R1 (yaw, pitch, roll).
+ * 
+ * @param roll  Roll angle in radians.
+ * @param pitch Pitch angle in radians.
+ * @param yaw   Yaw angle in radians.
+ * @return Eigen::Matrix3d The local-to-global rotation matrix.
+ */
+Eigen::Matrix3d rotationMatrix321LocalToGlobal(double roll, double pitch, double yaw);
+
+/**
+ * @brief Returns a 3x3 Jacobian matrix inverse for given roll and pitch angles.
+ *
+ * Exception is thrown if the pitch angle results in a singular configuration.
+ * 
+ * @param roll  Roll angle in radians.
+ * @param pitch Pitch angle in radians.
+ * @return Eigen::Matrix3d Inverse of the Euler angle rates Jacobian.
+ * @throws std::invalid_argument if pitch near ±pi/2.
+ */
+Eigen::Matrix3d jacobianMatrixInverse(double roll, double pitch);
+
+/**
+ * @brief Computes the 3x3 Euler angle rates Jacobian matrix for given roll and pitch.
+ * 
+ * @param roll  Roll angle in radians.
+ * @param pitch Pitch angle in radians.
+ * @return Eigen::Matrix3d Euler angle rates Jacobian.
+ */
+Eigen::Matrix3d jacobianMatrix(double roll, double pitch);
+
+/**
+ * @brief Computes the time derivative of the Jacobian matrix for given roll, pitch, and their time derivatives.
+ * 
+ * @param roll      Roll angle in radians.
+ * @param pitch     Pitch angle in radians.
+ * @param roll_dot  Time derivative of roll (rad/s).
+ * @param pitch_dot Time derivative of pitch (rad/s).
+ * @return Eigen::Matrix3d Time derivative of the Jacobian matrix.
+ */
+Eigen::Matrix3d jacobianMatrixDerivative(
+    double roll, double pitch, double roll_dot, double pitch_dot
+);
 
 } // namespace _transformations_
 
@@ -192,6 +261,30 @@ std::vector<chrono::ChVector3d> serialize2ChVector3d(
     const std::vector<double>& ys,
     const std::vector<double>& zs);
 
+/**
+ * @brief Copies elements from an Eigen matrix/vector to a segment in a boost array.
+ *
+ * Assigns matrix/vector data from the Eigen object into the target boost::array starting at current_index.
+ * Typically used for serializing state data before integration or output.
+ *
+ * @tparam T         Scalar type in the Eigen matrix/vector and boost array (e.g. double, float).
+ * @tparam Rows      Number of rows in the Eigen matrix/vector.
+ * @tparam Cols      Number of columns in the Eigen matrix/vector.
+ * @tparam N         Total number of elements in the boost array.
+ * @param entity         Source Eigen matrix or vector to copy from.
+ * @param dxdt           Destination boost::array to receive the data.
+ * @param current_index  Starting index for assignment into dxdt (incremented by number of elements copied).
+ */
+template<typename T, int Rows, int Cols, std::size_t N>
+inline void assignElementsToDxdt(Eigen::Matrix<T, Rows, Cols>& entity, boost::array<T, N>& dxdt,
+                                 int& current_index)
+{
+    std::size_t elements_to_copy = std::min<std::size_t>(entity.size(), dxdt.size() - current_index);
+    std::copy(entity.data(), entity.data() + elements_to_copy, dxdt.begin() + current_index);
+    current_index += elements_to_copy;
+}
+
+
 } // namespace _serialize_
 
 // ============================================================================================================
@@ -215,6 +308,48 @@ std::vector<double> GetCSVColumn(const rapidcsv::Document& doc, const std::strin
  * @throws std::runtime_error if the file does not exist.
  */
 void FileExists(const std::string& filepath);
+
+/**
+ * @brief Extract Eigen::MatrixXd from JSON array of arrays
+ * @param jsonMatrix Matrix input that is in the json format
+ * @param rows no of rows in the array
+ * @param cols no of cols in the array
+ */
+Eigen::MatrixXd jsonToMatrixXd(const nlohmann::json& jsonMatrix, int rows, int cols);
+
+/**
+ * @brief Extract Eigen::MatrixXd from JSON with scaling
+ * @param jsonMatrix Matrix input that is in the json format
+ * @param rows no of rows in the array
+ * @param cols no of cols in the array
+ */
+Eigen::MatrixXd jsonToScaledMatrixXd(const nlohmann::json& jsonMatrix, int rows, int cols);
+
+/**
+ * @brief Assigns elements from a boost array segment to an Eigen matrix or vector.
+ *
+ * Maps the relevant segment of the boost array starting at current_index into the target Eigen matrix/vector.
+ * This is typically used for deserialization after integration or bulk loading states.
+ *
+ * @tparam T         Scalar type for Eigen matrix/vector and boost array (usually double or float).
+ * @tparam Rows      Number of rows in target Eigen matrix/vector (static size).
+ * @tparam Cols      Number of columns in target Eigen matrix/vector (static size).
+ * @tparam N         Total number of elements in the boost array.
+ * @param entity     Target Eigen matrix or vector for assignment (e.g. Eigen::Vector2d).
+ * @param x          Source boost::array containing deserialized data.
+ * @param current_index Starting index in the boost array where assignment should begin; incremented by matrix size.
+ */
+template<typename T, int Rows, int Cols, std::size_t N>
+inline void assignElementsToMembers(Eigen::Matrix<T, Rows, Cols>& entity, boost::array<T, N>& x,
+                                    int& current_index)
+{
+    // Map the segment of the boost array to the Eigen matrix
+    Eigen::Map<Eigen::Matrix<T, Rows, Cols>>(entity.data(), Rows, Cols) = 
+        Eigen::Map<Eigen::Matrix<T, Rows, Cols>>(x.data() + current_index, Rows, Cols);
+
+    // Update the current index by the number of elements in the matrix
+    current_index += Rows * Cols;
+}
 
 } // namespace _deserialize_
 

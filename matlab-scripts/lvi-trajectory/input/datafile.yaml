@@ -1,0 +1,31 @@
+name: fw_trajectory
+codebase: matlab
+waypoints:
+  - x: 0.0
+    y: 0.0
+    z: 0.0
+    phi: 0.0
+    theta: 0.0
+    psi: 0.0
+    time: 0.0
+  - x: 0.0
+    y: 0.0
+    z: -1.0
+    phi: 0.0
+    theta: 0.0
+    psi: 0.0
+    time: 2
+  - x: 1.0
+    y: 0.0
+    z: -1.0
+    phi: 0.0
+    theta: -90.0
+    psi: 0.0
+    time: 2
+  - x: 2
+    y: 0.0
+    z: -1.0
+    phi: 0.0
+    theta: -90.0
+    psi: 0.0
+    time: 2
