@@ -341,6 +341,12 @@ void pid_omega::run(const double time_step_rk4_) {
     
 }
 
+
+void pid_omega::initiateLogging()
+{
+    std::cout << "blah" << std::endl;
+}
+
 }   // namespace _pid_omega_
 
 }   // namespace _qrbp_
