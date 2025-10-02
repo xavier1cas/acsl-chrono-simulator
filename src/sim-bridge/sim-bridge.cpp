@@ -457,13 +457,14 @@ bool simbridge::InitiateLogging() {
         // Prepare the log file stream
         auto file_stream = boost::make_shared<std::ofstream>(physics_log_filename);
         if (!file_stream->is_open()) {
-            _message_::SIMULATOR_ERROR("[SIMBRG] FAILED TO OPEN LOG FILE: ", 
+            _message_::SIMULATOR_ERROR("[SIMBRG]: FAILED TO OPEN LOG FILE: ", 
                                         physics_log_filename.c_str());
             return false;
         }
 
         // --------------------------------------------------------------------
-        // STEP 2 – Add the "Tag" attribute for VIO log filtering, only if not already present.
+        // STEP 2 – Add the "Tag" attribute for Physics log filtering, only if
+        //          not already present.
         // --------------------------------------------------------------------
         if (!m_logger.GetPhysicsLogger().get_attributes().count("Tag")) {
             m_logger.GetPhysicsLogger().add_attribute("Tag", 
@@ -505,7 +506,7 @@ bool simbridge::InitiateLogging() {
         logging::core::get()->add_sink(physics_sink);
 
         // --------------------------------------------------------------------
-        // STEP 7 – Set filter to only accept logs with Tag == "VioTag".
+        // STEP 7 – Set filter to only accept logs with Tag == "PhysicsTag".
         // --------------------------------------------------------------------
         physics_sink->set_filter(expr::has_attr("Tag") && expr::attr<std::string>("Tag") == "PhysicsTag");
 
@@ -513,16 +514,16 @@ bool simbridge::InitiateLogging() {
         // STEP 8 – Add common Boost.Log attributes for timestamps, IDs, etc.
         // --------------------------------------------------------------------
         logging::add_common_attributes();
-        _message_::SIMULATOR_INFO("[SIMBRG] SIMULATOR PHYSICS LOG FILE OPENED");
+        _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR PHYSICS LOG FILE OPENED");
 
         // --------------------------------------------------------------------
         // Return true if all logging setup steps were successful.
         // --------------------------------------------------------------------
         return true;
     } catch (const std::filesystem::filesystem_error& e) {
-        _message_::SIMULATOR_ERROR("[SIMBRG] FILESYSTEM ERROR: ", e.what());
+        _message_::SIMULATOR_ERROR("[SIMBRG]: FILESYSTEM ERROR: ", e.what());
     } catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMBRG] EXCEPTION: ", e.what());
+        _message_::SIMULATOR_ERROR("[SIMBRG]: EXCEPTION: ", e.what());
     }
 
     // ------------------------------------------------------------------------

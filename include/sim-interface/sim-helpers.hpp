@@ -57,6 +57,17 @@
 #include "chrono/assets/ChVisualShapeLine.h"
 
 // ===============================
+// Boost includes
+// ===============================
+#include <boost/make_shared.hpp>
+#include <boost/log/core.hpp>
+#include <boost/log/sinks/text_ostream_backend.hpp>
+#include <boost/log/sinks/sync_frontend.hpp>
+#include <boost/log/attributes/constant.hpp>
+#include <boost/log/utility/setup/common_attributes.hpp>
+
+
+// ===============================
 // RapidCSV includes
 // ===============================
 #include "rapidcsv.h"

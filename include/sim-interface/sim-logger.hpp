@@ -70,7 +70,6 @@
 
 #include "sim-platforms.hpp"    // Import the header file with all the platforms
 #include "fkYAML/node.hpp"      // Import the header file for the yaml functionality
-#include "sim-helpers.hpp"      // Import the sim-message helpers
 
 namespace logging = boost::log;
 namespace sinks = boost::log::sinks;
@@ -238,6 +237,37 @@ public:
     virtual void LogData() = 0;
 };
 
+
+// ============================================================================================================
+// Namespace: _filesystem_
+// Description: Helper functions for filesystem operations
+// ============================================================================================================
+namespace _filesystem_
+{
+    
+/**
+ * @brief Sets up the Boost.Log controller logging infrastructure for a specific controller.
+ *
+ * This function prepares the logging environment for a controller by creating its log directory,
+ * initializing a log file, and configuring Boost.Log sinks and formatters. It should be called
+ * during controller initialization to ensure diagnostic logging support.
+ *
+ * @param m_logger Reference to the simulator logging instance used for log directory access and attribute management.
+ * @param controller_name The name of the controller (used as subfolder under the log directory, e.g., "PID_OMEGA").
+ *
+ * @return true if log directory and log file creation, stream initialization, and Boost.Log sink setup succeed; false otherwise.
+ *
+ * @details
+ * - Creates a subdirectory inside the logger's root directory using the controller's name.
+ * - Initializes a log file named "controller_log.log" inside that subdirectory.
+ * - Configures a Boost.Log synchronous text sink, adds the file stream, sets the log format, 
+ *   and restricts log output to records tagged with "ControllerTag".
+ * - Adds common Boost.Log attributes such as timestamp and IDs.
+ * - Logs error messages if directory or file creation fails.
+ */
+bool setupControllerLogging(::_acsl_::_logger_::simlog& m_logger, const std::string& controller_name);
+
+} // namespace _filesystem_
 
 }   // namespace _logger_
 

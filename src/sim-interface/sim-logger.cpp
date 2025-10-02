@@ -117,10 +117,10 @@ void simlog::ConfigureLogDirectory()
     // STEP 5 – Report outcome of directory creation
     // ------------------------------------------------------------------------
     if (ec) {
-        _message_::SIMULATOR_ERROR("[SIMLOG]: Error creating directories: ", ec.message());
+        _message_::SIMULATOR_ERROR("[SIMLOG]: ERROR CREATING DIRECTORIES: ", ec.message());
         return;
     } else {
-        _message_::SIMULATOR_INFO("[SIMLOG]: Created log directory: " + this->log_dir.string());
+        _message_::SIMULATOR_INFO("[SIMLOG]: CREATED LOG DIRECTORY: " + this->log_dir.string());
     }
 
     // ------------------------------------------------------------------------
@@ -148,15 +148,114 @@ void simlog::ConfigureLogDirectory()
         );
         if (copy_ec) {
             _message_::SIMULATOR_ERROR(
-                "[SIMLOG]: Error copying config file: " + src.string() + " -> " + dst.string(),
+                "[SIMLOG]: ERROR COPYING CONFIG FILE: " + src.string() + " -> " + dst.string(),
                 copy_ec.message()
             );
         } else {
-            _message_::SIMULATOR_INFO("[SIMLOG]: Copied: " + src.string() + " to " + dst.string());
+            _message_::SIMULATOR_INFO("[SIMLOG]: COPIED: " + src.string() + " to " + dst.string());
         }
     }
 }
 
+
+// ============================================================================================================
+// _filesystem_ : Helper functions for filesystem operations
+// ============================================================================================================
+namespace _filesystem_
+{
+/**
+ * @brief Configures the logging system for a controller using Boost.Log.
+ * 
+ * @param m_logger        Reference to the logger instance managing application-wide logging.
+ * @param controller_name Name of the controller; becomes the name of the subdirectory for log storage.
+ * 
+ * @return true on successful setup and file opening, false if any step fails.
+ * 
+ * @details
+ * This function creates a dedicated directory for the given controller, 
+ * sets up a log file, and configures a synchronous Boost.Log sink to 
+ * stream log messages to the designated file. 
+ * Proper error handling ensures robust operation and reliable diagnostics.
+ */
+bool setupControllerLogging(_acsl_::_logger_::simlog& m_logger, const std::string& controller_name) 
+{
+    try {
+        // Get the root logging directory from the logger instance.
+        std::filesystem::path directory = m_logger.GetLogDirectory();
+        // Create the controller-specific log directory under the root directory.
+        std::filesystem::path control_log_directory = directory / controller_name;
+
+        // Try to create the log directory (and any needed parent directories).
+        std::error_code ec;
+        std::filesystem::create_directories(control_log_directory, ec);
+        if (ec) {
+            // If directory creation fails, log an error and exit.
+            ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: ERROR CREATING DIRECTORY: ", ec.message());
+            return false;
+        } else {
+            // Log successful creation of the controller log directory.
+            ::_acsl_::_message_::SIMULATOR_INFO("[SIMCTL]: CREATED CONTROLLER LOG DIRECTORY: " + control_log_directory.string());
+        }
+
+        // Build the full path to the controller's log file.
+        std::filesystem::path log_file_path = control_log_directory / "controller_log.log";
+        ::_acsl_::_message_::SIMULATOR_INFO("[SIMCTL]: ATTEMPTING FILE CREATION AT: " + log_file_path.string());
+
+        // Attempt to open the log file stream for writing.
+        auto file_stream = boost::make_shared<std::ofstream>(log_file_path.string());
+        if (!file_stream->is_open()) {
+            // If file cannot be opened, log an error and exit.
+            ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO OPEN LOG FILE: ", log_file_path.string());
+            return false;
+        }
+
+        // Add a "Tag" attribute for filtering controller log messages, if not present.
+        if (!m_logger.GetControlLogger().get_attributes().count("Tag")) {
+            m_logger.GetControlLogger().add_attribute("Tag",
+                    attrs::constant<std::string>("ControllerTag"));
+        }
+
+        // Define and set up a synchronous Boost.Log sink for text file output.
+        typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
+        boost::shared_ptr<text_sink> controller_sink = boost::make_shared<text_sink>();
+        // Ensure immediate flushing of log messages to the file.
+        controller_sink->locked_backend()->auto_flush(true);
+        // Add the log file stream to the sink backend.
+        controller_sink->locked_backend()->add_stream(file_stream);
+        // Configure the sink with a detailed log message formatter.
+        controller_sink->set_formatter(
+            expr::stream
+                << "[" << expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f") << "] "
+                << "[" << expr::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID") << "] "
+                << "[" << expr::attr<std::string>("Tag") << "] "
+                << "[" << expr::attr<boost::log::attributes::current_process_id::value_type>("ProcessID") << "] "
+                << "[" << expr::attr<unsigned int>("LineID") << "] "
+                << expr::smessage
+        );
+        // Register the sink with the core logging system.
+        logging::core::get()->add_sink(controller_sink);
+        // Only allow log messages with "Tag" == "ControllerTag" to be written to this file.
+        controller_sink->set_filter(expr::has_attr("Tag") && expr::attr<std::string>("Tag") == "ControllerTag");
+        // Add common log attributes (timestamps, line IDs, etc.).
+        logging::add_common_attributes();
+        // Log successful log file opening.
+        ::_acsl_::_message_::SIMULATOR_INFO("[SIMCTL]: CONTROLLER LOG FILE OPENED");
+
+        // Return success if all steps completed.
+        return true;
+    } catch (const std::filesystem::filesystem_error& e) {
+        // Log any filesystem-specific exception and exit.
+        ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: FILESYSTEM ERROR: ", e.what());
+    } catch (const std::exception& e) {
+        // Log any other exception and exit.
+        ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: EXCEPTION: ", e.what());
+    }
+
+    // Return failure if an error occurred.
+    return false;
+}
+
+} // namespace _filesystem_
 
 
 }   // namespace _logger_

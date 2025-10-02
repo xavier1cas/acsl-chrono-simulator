@@ -54,11 +54,8 @@ namespace _pid_omega_
 pid_omega::pid_omega(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
                     : ::_acsl_::_control_::controller_base(logger, trajectory)
 {
-    // Reading in the parameters
-    read_params("../chrono-assets/parameters/qrbp/pid_omega/gains_pid_omega.json");
-
     // Initial Conditions
-    init();    
+    init();   
 }
 
 // -------------------------------------------------------------------------
@@ -86,10 +83,16 @@ void pid_omega::read_params(const std::string& jsonFile)
 
 // Implementing virutal functions from controller_base
 void pid_omega::init(){
+    // Reading in the parameters
+    read_params("../chrono-assets/parameters/qrbp/pid_omega/gains_PID_OMEGA.json");
 
     // Set the inital conditions
     y.fill(0.0);
     dy.fill(0.0);
+
+    // Setup the logging
+    initiateLogging();
+    setupLogHeaders();
 }
 
 // Update function for the controller
@@ -133,8 +136,6 @@ void pid_omega::update(double time,
     cim.r_user = m_traj.GetPosition();
     cim.r_dot_user = m_traj.GetVelocity();
     cim.r_ddot_user = m_traj.GetAcceleration();   
-
-    std::cout << cim.r_user << std::endl;
 
     // Set the desired yaw and yaw_rate; we don't need the acceleration as 
     // we are going to compute it from the filter.
@@ -338,14 +339,194 @@ void pid_omega::run(const double time_step_rk4_) {
                             cim.alg_end_time - cim.alg_start_time).count();
 
     // 7. Log the Data after all the calculataions
+    this->logData();
     
 }
 
-
-void pid_omega::initiateLogging()
+// Function that is called during the constructor. 
+bool pid_omega::initiateLogging()
 {
-    std::cout << "blah" << std::endl;
+    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "PID_OMEGA");
+    return status;
 }
+
+// Funciton that setups up the headers for the log file
+void pid_omega::setupLogHeaders()
+{
+
+    // Create the oss object
+    std::ostringstream oss;
+
+    oss << ", "
+        << "Controller Time [s], "
+        << "Algorithm Execution Time [us], "
+        << "Position x [m], "
+        << "Position y [m], "
+        << "Position z [m], "
+        << "Velocity x [m/s], "
+        << "Velocity y [m/s], "
+        << "Velocity z [m/s], "
+        << "Phi [rad], "
+        << "Theta [rad], "
+        << "Psi [rad], "
+        << "omega_x [rad/s], "
+        << "omega_y [rad/s], "
+        << "omega_z [rad/s], "
+        << "User Position x [m], "
+        << "User Position y [m], "
+        << "User Position z [m], "
+        << "User Velocity x [m], "
+        << "User Velocity y [m], "
+        << "User Velocity z [m], "
+        << "Desired Phi [rad], "
+        << "Desired Theta [rad], "
+        << "Desired Psi [rad], "
+        << "Deisred Phi rate [rad/s], "
+        << "Deisred Theta rate [rad/s], "
+        << "Deisred Psi rate [rad/s], "
+        << "Desired Omega_x [rad/s], "
+        << "Desired Omega_y [rad/s], "
+        << "Desired Omega_z [rad/s], "
+        << "Desired Alpha_x [rad/s^2], "
+        << "Desired Alpha_y [rad/s^2], "
+        << "Desired Alpha_z [rad/s^2], "
+        << "Error in x [m], "
+        << "Error in y [m], "
+        << "Error in z [m], "
+        << "Integral Error in x [m], "
+        << "Integral Error in y [m], "
+        << "Integral Error in z [m], "
+        << "Error in vx [m/s], "
+        << "Error in vy [m/s], "
+        << "Error in vz [m/s], "
+        << "Error in Phi [rad], "
+        << "Error in Theta [rad], "
+        << "Error in Psi [rad], "
+        << "Integral Error in Phi [rad], "
+        << "Integral Error in Theta [rad], "
+        << "Integral Error in Psi [rad], "
+        << "Error in omega_x [rad/s], "
+        << "Error in omega_y [rad/s], "
+        << "Error in omega_z [rad/s], "
+        << "Virtual Mu x I [N], "
+        << "Virtual Mu y I [N], "
+        << "Virtual Mu z I [N], "
+        << "Virtual Mu x J [N], "
+        << "Virtual Mu y J [N], "
+        << "Virtual Mu z J [N], "
+        << "u1 [N], "
+        << "u2 [Nm], "
+        << "u3 [Nm], "
+        << "u4 [Nm], "
+        << "Thrust Motor 1 [N], "
+        << "Thrust Motor 2 [N], "
+        << "Thrust Motor 3 [N], "
+        << "Thrust Motor 4 [N], "
+        << "Normalized Thrust Motor 1 [-], "
+        << "Normalized Thrust Motor 2 [-], "
+        << "Normalized Thrust Motor 3 [-], "
+        << "Normalized Thrust Motor 4 [-], "
+        ;    
+
+    try {
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
+
+        BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
+
+        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE PID OMEGA LOG HEADER DATA");
+    }
+    catch (const std::exception& e) {
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE PID OMEGA LOG HEADER DATA", e.what());
+    }
+
+}
+
+void pid_omega::logData()
+{
+    // Log the data
+    std::ostringstream oss;
+
+    oss << ", "
+        << cim.t << ", "
+        << cim.alg_duration << ", "
+        << cim.x_tran_pos(0) << ", "
+        << cim.x_tran_pos(1) << ", "
+        << cim.x_tran_pos(2) << ", "
+        << cim.x_tran_vel(0) << ", "
+        << cim.x_tran_vel(1) << ", "
+        << cim.x_tran_vel(2) << ", "
+        << cim.eta_rot(0) << ", "
+        << cim.eta_rot(1) << ", "
+        << cim.eta_rot(2) << ", "
+        << cim.omega_rot(0) << ", "
+        << cim.omega_rot(1) << ", "
+        << cim.omega_rot(2) << ", "
+        << cim.r_user(0) << ", "
+        << cim.r_user(1) << ", "
+        << cim.r_user(2) << ", "
+        << cim.r_dot_user(0) << ", "
+        << cim.r_dot_user(1) << ", "
+        << cim.r_dot_user(2) << ", "
+        << cim.eta_rot_d(0) << ", "
+        << cim.eta_rot_d(1) << ", "
+        << cim.eta_rot_d(2) << ", "
+        << cim.eta_rot_rate_d(0) << ", "
+        << cim.eta_rot_rate_d(1) << ", "
+        << cim.eta_rot_rate_d(2) << ", "
+        << cim.omega_rot_d(0) << ", "
+        << cim.omega_rot_d(1) << ", "
+        << cim.omega_rot_d(2) << ", "
+        << cim.alpha_rot_d(0) << ", "
+        << cim.alpha_rot_d(1) << ", "
+        << cim.alpha_rot_d(2) << ", "
+        << cim.e_tran_pos(0) << ", "
+        << cim.e_tran_pos(1) << ", "
+        << cim.e_tran_pos(2) << ", "
+        << csm.e_tran_pos_I(0) << ", "
+        << csm.e_tran_pos_I(1) << ", "
+        << csm.e_tran_pos_I(2) << ", "
+        << cim.e_tran_vel(0) << ", "
+        << cim.e_tran_vel(1) << ", "
+        << cim.e_tran_vel(2) << ", "
+        << cim.e_rot_eta(0) << ", "
+        << cim.e_rot_eta(1) << ", "
+        << cim.e_rot_eta(2) << ", "
+        << csm.e_rot_eta_I(0) << ", "
+        << csm.e_rot_eta_I(1) << ", "
+        << csm.e_rot_eta_I(2) << ", "
+        << cim.e_rot_omega(0) << ", "
+        << cim.e_rot_omega(1) << ", "
+        << cim.e_rot_omega(2) << ", "
+        << cim.mu_tran_I(0) << ", "
+        << cim.mu_tran_I(1) << ", "
+        << cim.mu_tran_I(2) << ", "
+        << cim.mu_tran_J(0) << ", "
+        << cim.mu_tran_J(1) << ", "
+        << cim.mu_tran_J(2) << ", "
+        << cim.u(0) << ", "
+        << cim.u(1) << ", "
+        << cim.u(2) << ", "
+        << cim.u(3) << ", "
+        << cim.Thrust(0) << ", "
+        << cim.Thrust(1) << ", "
+        << cim.Thrust(2) << ", "
+        << cim.Thrust(3) << ", "
+        << control_input(0) << ", "
+        << control_input(1) << ", "
+        << control_input(2) << ", "
+        << control_input(3) << ", "
+        ;
+
+    try {
+        BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
+
+        BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
+    }
+    catch (const std::exception& e) {
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE PID OMEGA LOG HEADER DATA", e.what());
+    }
+}
+
 
 }   // namespace _pid_omega_
 

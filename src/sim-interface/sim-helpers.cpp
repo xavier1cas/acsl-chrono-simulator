@@ -373,8 +373,6 @@ std::shared_ptr<chrono::ChVisualShapeLine> createNurbsVisual(
     return nurbsasset;
 }
 
-
 } // namespace _visualize_
-
 
 } // namespace _shared_

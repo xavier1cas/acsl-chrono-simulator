@@ -128,7 +128,20 @@ public:
     //   - Creates the log folder structure.
     //   - Copies the gains to the logs.
     // -------------------------------------------------------------------------------------------------
-    virtual void initiateLogging() {}
+    virtual bool initiateLogging() { return true; }
+
+    // -------------------------------------------------------------------------------------------------
+    // Function: setupLogHeaders
+    //   - Simple function that has an oss stream and writes the headers to the log file
+    // -------------------------------------------------------------------------------------------------
+    virtual void setupLogHeaders() {}
+
+    // -------------------------------------------------------------------------------------------------
+    // Function: logData
+    //   - Simple function that has an oss stream and writes the data corresponding to the headers to
+    //     the log file.
+    // -------------------------------------------------------------------------------------------------
+    virtual void logData() {}
 
     // -------------------------------------------------------------------------------------------------
     // Function: update

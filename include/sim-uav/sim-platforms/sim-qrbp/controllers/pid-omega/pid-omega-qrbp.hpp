@@ -398,7 +398,19 @@ public:
     // Override: initiateLogging()
     //   - Provides the initiation for the logging structure
     // ------------------------------------------------------------------------- 
-    void initiateLogging() override;
+    bool initiateLogging() override;
+
+    // ------------------------------------------------------------------------- 
+    // Override: setupLogHeaders()
+    //   - Sets up an oss stream to log the headers
+    // ------------------------------------------------------------------------- 
+    void setupLogHeaders() override;
+
+    // -------------------------------------------------------------------------
+    // Override: logData() 
+    //   - Logs the data for every iteration
+    // -------------------------------------------------------------------------
+    void logData() override;
 
     // -------------------------------------------------------------------------
     // Override: run()
