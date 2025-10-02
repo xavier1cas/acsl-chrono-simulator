@@ -338,10 +338,7 @@ void pid_omega::run(const double time_step_rk4_) {
                             cim.alg_end_time - cim.alg_start_time).count();
 
     // 7. Log the Data after all the calculataions
-    // logger.logLogData();
-
-    // optional debug
-    // debug2terminal();
+    
 }
 
 }   // namespace _pid_omega_

@@ -123,6 +123,14 @@ public:
     virtual void init() {}
 
     // -------------------------------------------------------------------------------------------------
+    // Function: initiateLogging
+    //   - Initiates the logging for the controller.
+    //   - Creates the log folder structure.
+    //   - Copies the gains to the logs.
+    // -------------------------------------------------------------------------------------------------
+    virtual void initiateLogging() {}
+
+    // -------------------------------------------------------------------------------------------------
     // Function: update
     //   - Updates controller state using system and trajectory data.
     //   - To be overridden for platform-specific control logic.

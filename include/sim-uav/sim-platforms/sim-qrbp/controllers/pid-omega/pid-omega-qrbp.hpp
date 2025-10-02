@@ -395,6 +395,12 @@ public:
     void init() override;
 
     // -------------------------------------------------------------------------
+    // Override: initiateLogging()
+    //   - Provides the initiation for the logging structure
+    // ------------------------------------------------------------------------- 
+    void initiateLogging() override;
+
+    // -------------------------------------------------------------------------
     // Override: run()
     //   - Provides the entire logic of the controller.
     // -------------------------------------------------------------------------
