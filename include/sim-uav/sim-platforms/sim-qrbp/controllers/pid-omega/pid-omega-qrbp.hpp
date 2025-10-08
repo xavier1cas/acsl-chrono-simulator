@@ -345,8 +345,9 @@ struct controller_internal_members {
 // pid_omega.hpp   -- QRBP PID Omega Controller
 //   - Implements a PID controller for angular rates on the QRBP platform.
 //   - Inherits base routines and actuator interface from controller_base.
+//   - Inherits base routines from blackbox to setup the logging.
 // =====================================================================================
-class pid_omega : public ::_acsl_::_control_::controller_base
+class pid_omega : public ::_acsl_::_control_::controller_base , public ::_acsl_::_logger_::blackbox
 {
 
 public:
@@ -394,23 +395,31 @@ public:
     // -------------------------------------------------------------------------
     void init() override;
 
-    // -------------------------------------------------------------------------
-    // Override: initiateLogging()
-    //   - Provides the initiation for the logging structure
-    // ------------------------------------------------------------------------- 
-    bool initiateLogging() override;
+    // ------------------------------------------------------------------------
+    // Blackbox functions for the physics logger.
+    // ------------------------------------------------------------------------
+    // -------------------------------------------
+    // Function: InitiateLogging
+    //   - Initiates the logging for controller.
+    //   - Creates the log folder structure.
+    //   - Copies the gains to the logs.
+    // -------------------------------------------
+    bool InitiateLogging() override;
 
-    // ------------------------------------------------------------------------- 
-    // Override: setupLogHeaders()
-    //   - Sets up an oss stream to log the headers
-    // ------------------------------------------------------------------------- 
-    void setupLogHeaders() override;
-
-    // -------------------------------------------------------------------------
-    // Override: logData() 
-    //   - Logs the data for every iteration
-    // -------------------------------------------------------------------------
-    void logData() override;
+    // -------------------------------------------
+    // Function: ConfigureHeaders
+    //   - Simple function that has an oss stream 
+    //     and writes the headers to the log file
+    // -------------------------------------------
+    void ConfigureHeaders() override;
+        
+    // -------------------------------------------
+    // Function: LogData
+    //   - Simple function that has an oss stream 
+    //     and writes the data corresponding to 
+    //     the headers to the log file.
+    // ------------------------------------------
+    void LogData() override;
 
     // -------------------------------------------------------------------------
     // Override: run()

@@ -253,19 +253,19 @@ namespace _filesystem_
  * during controller initialization to ensure diagnostic logging support.
  *
  * @param m_logger Reference to the simulator logging instance used for log directory access and attribute management.
+ * @param platform_name   Name of the platform; becomes the name of the subdirctory to search for the gains.
  * @param controller_name The name of the controller (used as subfolder under the log directory, e.g., "PID_OMEGA").
  *
  * @return true if log directory and log file creation, stream initialization, and Boost.Log sink setup succeed; false otherwise.
  *
  * @details
- * - Creates a subdirectory inside the logger's root directory using the controller's name.
- * - Initializes a log file named "controller_log.log" inside that subdirectory.
- * - Configures a Boost.Log synchronous text sink, adds the file stream, sets the log format, 
- *   and restricts log output to records tagged with "ControllerTag".
- * - Adds common Boost.Log attributes such as timestamp and IDs.
- * - Logs error messages if directory or file creation fails.
+ * This function creates a dedicated directory for the given controller, 
+ * sets up a log file, and configures a synchronous Boost.Log sink to 
+ * stream log messages to the designated file. This function also copies
+ * over the gains for the controller to the log structure.
+ * Proper error handling ensures robust operation and reliable diagnostics.
  */
-bool setupControllerLogging(::_acsl_::_logger_::simlog& m_logger, const std::string& controller_name);
+bool setupControllerLogging(_acsl_::_logger_::simlog& m_logger, const std::string& platform_name, const std::string& controller_name) ;
 
 } // namespace _filesystem_
 

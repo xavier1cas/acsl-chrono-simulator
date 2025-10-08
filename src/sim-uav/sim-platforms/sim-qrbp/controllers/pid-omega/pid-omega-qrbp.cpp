@@ -84,15 +84,15 @@ void pid_omega::read_params(const std::string& jsonFile)
 // Implementing virutal functions from controller_base
 void pid_omega::init(){
     // Reading in the parameters
-    read_params("../chrono-assets/parameters/qrbp/pid_omega/gains_PID_OMEGA.json");
+    read_params("../chrono-assets/parameters/qrbp/PID_OMEGA/gains_PID_OMEGA.json");
 
     // Set the inital conditions
     y.fill(0.0);
     dy.fill(0.0);
 
     // Setup the logging
-    initiateLogging();
-    setupLogHeaders();
+    InitiateLogging();
+    ConfigureHeaders();
 }
 
 // Update function for the controller
@@ -339,19 +339,19 @@ void pid_omega::run(const double time_step_rk4_) {
                             cim.alg_end_time - cim.alg_start_time).count();
 
     // 7. Log the Data after all the calculataions
-    this->logData();
+    this->LogData();
     
 }
 
 // Function that is called during the constructor. 
-bool pid_omega::initiateLogging()
+bool pid_omega::InitiateLogging()
 {
-    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "PID_OMEGA");
+    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "qrbp" ,"PID_OMEGA");
     return status;
 }
 
 // Funciton that setups up the headers for the log file
-void pid_omega::setupLogHeaders()
+void pid_omega::ConfigureHeaders()
 {
 
     // Create the oss object
@@ -441,7 +441,7 @@ void pid_omega::setupLogHeaders()
 
 }
 
-void pid_omega::logData()
+void pid_omega::LogData()
 {
     // Log the data
     std::ostringstream oss;

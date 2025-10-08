@@ -123,27 +123,6 @@ public:
     virtual void init() {}
 
     // -------------------------------------------------------------------------------------------------
-    // Function: initiateLogging
-    //   - Initiates the logging for the controller.
-    //   - Creates the log folder structure.
-    //   - Copies the gains to the logs.
-    // -------------------------------------------------------------------------------------------------
-    virtual bool initiateLogging() { return true; }
-
-    // -------------------------------------------------------------------------------------------------
-    // Function: setupLogHeaders
-    //   - Simple function that has an oss stream and writes the headers to the log file
-    // -------------------------------------------------------------------------------------------------
-    virtual void setupLogHeaders() {}
-
-    // -------------------------------------------------------------------------------------------------
-    // Function: logData
-    //   - Simple function that has an oss stream and writes the data corresponding to the headers to
-    //     the log file.
-    // -------------------------------------------------------------------------------------------------
-    virtual void logData() {}
-
-    // -------------------------------------------------------------------------------------------------
     // Function: update
     //   - Updates controller state using system and trajectory data.
     //   - To be overridden for platform-specific control logic.

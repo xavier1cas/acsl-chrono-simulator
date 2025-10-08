@@ -167,6 +167,7 @@ namespace _filesystem_
  * @brief Configures the logging system for a controller using Boost.Log.
  * 
  * @param m_logger        Reference to the logger instance managing application-wide logging.
+ * @param platform_name   Name of the platform; becomes the name of the subdirctory to search for the gains.
  * @param controller_name Name of the controller; becomes the name of the subdirectory for log storage.
  * 
  * @return true on successful setup and file opening, false if any step fails.
@@ -174,10 +175,11 @@ namespace _filesystem_
  * @details
  * This function creates a dedicated directory for the given controller, 
  * sets up a log file, and configures a synchronous Boost.Log sink to 
- * stream log messages to the designated file. 
+ * stream log messages to the designated file. This function also copies
+ * over the gains for the controller to the log structure.
  * Proper error handling ensures robust operation and reliable diagnostics.
  */
-bool setupControllerLogging(_acsl_::_logger_::simlog& m_logger, const std::string& controller_name) 
+bool setupControllerLogging(_acsl_::_logger_::simlog& m_logger, const std::string& platform_name, const std::string& controller_name) 
 {
     try {
         // Get the root logging directory from the logger instance.
@@ -240,6 +242,37 @@ bool setupControllerLogging(_acsl_::_logger_::simlog& m_logger, const std::strin
         logging::add_common_attributes();
         // Log successful log file opening.
         ::_acsl_::_message_::SIMULATOR_INFO("[SIMCTL]: CONTROLLER LOG FILE OPENED");
+
+        // Copy over the parameter files.
+        // 1. Build path to the source parameter file
+        std::filesystem::path param_source = "../chrono-assets/parameters";
+        param_source /= platform_name;
+        param_source /= controller_name;
+        param_source /= "gains_" + controller_name + ".json";
+
+        // 2. Check if the source file exists
+        if (!std::filesystem::exists(param_source)) {
+            ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: GAINS FILE NOT FOUND: ", param_source.string());
+        } else {
+            // 3. Create the params folder within the controller log directory
+            std::filesystem::path param_dest_dir = control_log_directory / "params";
+            std::error_code param_ec;
+            std::filesystem::create_directories(param_dest_dir, param_ec);
+            if (param_ec) {
+                ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO CREATE PARAMETER DIRECTORY: ", param_dest_dir.string());
+            } else {
+                // 4. Build the destination file path
+                std::filesystem::path param_dest = param_dest_dir / ("gains_" + controller_name + ".json");
+                // 5. Copy the file
+                std::error_code copy_ec;
+                std::filesystem::copy_file(param_source, param_dest, std::filesystem::copy_options::overwrite_existing, copy_ec);
+                if (copy_ec) {
+                    ::_acsl_::_message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO COPY GAINS FILE: ", copy_ec.message());
+                } else {
+                    ::_acsl_::_message_::SIMULATOR_INFO("[SIMCTL]: COPIED GAINS FILE TO: " + param_dest.string());
+                }
+            }
+        }
 
         // Return success if all steps completed.
         return true;
