@@ -37,6 +37,46 @@
 #ifndef SIM_CONTROLLERS_HPP_
 #define SIM_CONTROLLERS_HPP_
 
+#include "sim-messages.hpp"
+#include "sim-control-base.hpp"
+#include "sim-trajectory.hpp"
+#include "sim-logger.hpp"
+
+/* =====================================================================================================================
+  sim-controllers.hpp
+
+  Purpose:
+    - Central registry for all UAV controller class includes.
+    - This ensures that `sim-bridge.hpp` (and related simulation code)
+      can discover, instantiate, and use all available controller definitions for each platform.
+
+  How to add a new controller:
+    1. Include your derived controller class header in the "Includes" section below.
+    2. Add a new `bool <controller_name>{};` member to the appropriate platform struct inside `controllers`.
+       !! The member name **must exactly match** the name used in your YAML config. !!
+    3. Update the `asVectorRef()` helper inside `controllers` with a tuple for the new entry,
+       so that dynamic iteration and assignment can be performed without hardcoding.
+    4. Update the factory logic in `createSelectedController()` to handle instantiation and
+       initialization for the new controller type.
+    5. Verify the controller is listed in the YAML configuration file for its platform,
+       and that a matching implementation exists in your codebase.
+
+  Notes:
+    - Keep includes grouped and sorted alphabetically for maintainability.
+    - This file is intentionally limited to includes and the **controllers** struct —
+      no functional or simulation logic belongs here.
+==================================================================================================================== */
+
+
+// -----------------------------------------------------------------------------
+// Includes for the different UAV platforms' controllers (add more as needed)
+// -----------------------------------------------------------------------------
+#include "pid-omega-qrbp.hpp"
+// #include "mrac-omega-qrbp.hpp"
+// #include "pid-x8copter.hpp"
+// #include "mrac-x8copter.hpp"
+// #include "pid-acslquad.hpp"
+// #include "mrac-acslquad.hpp"
 
 namespace _acsl_
 {
@@ -44,6 +84,186 @@ namespace _acsl_
 namespace _bridge_
 {
 
+// -----------------------------------------------------------------------------
+// Structure: controllers
+//
+// Purpose:
+//   Holds grouped controller selection flags for each UAV platform. Each inner
+//   struct (qrbp, x8copter, acslquad) contains boolean flags for available
+//   control algorithms (e.g., PID, MRAC).
+//
+// Pattern:
+//   1) For each platform (e.g., qrbp, x8copter), add controller flags inside
+//      the matching inner struct, named for clarity (e.g., pid, mrac, tlmrac).
+//   2) Use asVectorRef() for dynamic access and assignment, regardless of the
+//      concrete platform or controller set.
+//
+// How to add a new platform or controller flag:
+//   a) Extend the relevant platform struct with a new bool member.
+//   b) Add a corresponding entry to asVectorRef()—the tuple includes platform,
+//      controller, and the reference to the flag.
+//   c) Update createSelectedController() with the logic to instantiate the
+//      matching controller, passing required arguments.
+//
+// How to remove a platform or controller flag:
+//   a) Remove the bool from its struct.
+//   b) Remove the tuple entry from asVectorRef().
+//   c) Remove/adjust factories and logic in createSelectedController().
+//
+// Notes:
+//   - All controller flags are expected to be mutually exclusive: exactly one
+//     controller should be active (set to true) per simulation run.
+//   - Mismatches between controller request and selected platform are detected
+//     and reported via errors in validateExclusiveSelection().
+// -----------------------------------------------------------------------------
+
+struct controllers
+{
+    // -------------------------------------------------------------------------
+    // Platform group: QRBP
+    // Holds controller flags specific to quadrotor biplane platform.
+    // -------------------------------------------------------------------------
+    struct qrbp
+    {
+        bool pid_omega{};   // PID omega controller for QRBP
+        bool mrac_omega{};  // MRAC omega controller for QRBP
+    } qrbp;
+
+    // -------------------------------------------------------------------------
+    // Platform group: X8 copter
+    // Holds controller flags specific to coaxial X8 drone platform.
+    // -------------------------------------------------------------------------
+    struct x8copter
+    {
+        bool pid{};         // Standard PID controller
+        bool mrac{};        // Model Reference Adaptive Controller
+        bool tlmrac{};      // Two-Layer MRAC controller
+    } x8copter;
+
+    // -------------------------------------------------------------------------
+    // Platform group: ACSL quad
+    // Holds controller flags specific to ACSL quadrotor testbed.
+    // -------------------------------------------------------------------------
+    struct acslquad
+    {
+        bool pid{};         // Standard PID controller
+        bool mrac{};        // Model Reference Adaptive Controller
+    } acslquad;
+
+    // -------------------------------------------------------------------------
+    // Returns all controller selection flags as:
+		// 	 {platform, controller, reference} tuples.
+    //
+    // Usage:
+    //   Mutable iteration (can assign to flags):
+    //     for (auto& [platform_name, controller_name, ref] : ctrls.asVectorRef()) { ref = true; }
+    // -------------------------------------------------------------------------
+    std::vector<std::tuple<std::string, std::string, bool&>> asVectorRef() {
+        return {
+            {"qrbp", "pid_omega", qrbp.pid_omega},
+            {"qrbp", "mrac_omega", qrbp.mrac_omega},
+            {"x8copter", "pid", x8copter.pid},
+            {"x8copter", "mrac", x8copter.mrac},
+            {"x8copter", "tlmrac", x8copter.tlmrac},
+            {"acslquad", "pid", acslquad.pid},
+            {"acslquad", "mrac", acslquad.mrac},
+        };
+    }
+
+    // -------------------------------------------------------------------------
+    // Factory: createSelectedController()
+    //
+    // Purpose:
+    //   Instantiates and returns a unique pointer to the selected controller
+    //   implementation, based on which controller flag is active for the
+    //   specified platform.
+    //
+    // Parameters:
+    //   platform    - String name ("qrbp", "x8copter", "acslquad") indicating
+		// 							   current active platform attached to the system
+    //   logger      - Reference to the simulator's logging instance.
+    //   trajectory  - Reference to the currently active trajectory object.
+    //
+    // Returns:
+    //   std::unique_ptr<controller_base> to the newly created controller.
+    //   Returns nullptr if selection is invalid or not implemented.
+    //
+    // Workflow:
+    //   1. Calls validateExclusiveSelection(platform) to verify the selection,
+    //      and retrieves the (platform, controller) pair.
+    //   2. Based on the result, instantiates the correct controller, passing
+    //      necessary log and trajectory objects to the constructor.
+    //   3. Logs the attachment action for traceability.
+    //   4. Returns a base-class pointer for polymorphic control.
+    //
+    // Notes:
+    //   - Return nullptr for unimplemented controller types or mismatches.
+    // -------------------------------------------------------------------------
+    std::unique_ptr< ::_acsl_::_control_::controller_base >
+    createSelectedController(std::string platform,
+                            ::_acsl_::_logger_::simlog& logger,
+                            ::_acsl_::_trajectory_::trajectorybase& trajectory) const
+    {
+        auto active = this->validateExclusiveSelection(platform);
+
+        if (active.first == "qrbp" && active.second == "pid_omega") {
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING PID OMEGA CONTROLLER TO QRBP");
+            return std::make_unique< ::_acsl_::_qrbp_::_pid_omega_::pid_omega >(logger, trajectory);
+        }
+        else if (active.first == "qrbp" && active.second == "mrac_omega") {
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC OMEGA CONTROLLER TO QRBP");
+            // return std::make_unique< ::_acsl_::_qrbp_::_mrac_omega_::mrac_oemga >(logger, trajectory); // Implement when available
+        }
+        // [Add more else if branches for other controllers as needed]
+        // e.g., x8copter and acslquad controllers
+        // else if (active.first == "x8copter" && active.second == "pid") { ... }
+        // else if (active.first == "acslquad" && active.second == "pid") { ... }
+
+        return nullptr;
+    }
+
+    // -------------------------------------------------------------------------
+    // Validates mutual exclusivity for controller selection, ensuring that
+    // exactly one controller is set to true, and returns its (platform, controller)
+    // name pair. Reports errors if none or multiple are selected, or if the platform
+    // passed doesn't match the selected controller's platform.
+    //
+    // Parameters:
+    //   platform  - String for the expected platform to match against selected controller.
+    //
+    // Returns:
+    //   pair of strings {platform_name, controller_name} representing active controller.
+    //
+    // Workflow:
+    //   1. Iterates all controller flags using asVectorRef().
+    //   2. Counts and identifies which controller is selected.
+    //   3. Error if count != 1, or if platform does not match.
+    // -------------------------------------------------------------------------
+    std::pair<std::string, std::string> validateExclusiveSelection(std::string platform) const
+    {
+        std::string crrplatform;
+        std::string crrcontroller;
+        int count = 0;
+        for (const auto& [p, c, val] : const_cast<controllers*>(this)->asVectorRef()) {
+            if (val) {
+                crrplatform = p;
+                crrcontroller = c;
+                count++;
+            }
+        }
+        if (count == 0) {
+            _message_::SIMULATOR_ERROR("[SIMCTL]: NO CONTROLLER SELECTED - EXACTLY ONE MUST BE SET TO TRUE.");
+        } else if (count > 1) {
+            _message_::SIMULATOR_ERROR("[SIMCTL]: MULTIPLE CONTROLLERS SELECTED - EXACTLY ONE MUST BE SET TO TRUE.");
+        } else if (crrplatform != platform) {
+            std::ostringstream oss;
+            oss << "[SIMCTL]: PLATFORM & CONTROLLER MISMATCH, PICKED PLATFORM: "
+                << crrplatform << ", PICKED CONTROLLER: " << crrcontroller;
+            _message_::SIMULATOR_ERROR(oss.str());
+        }
+        return {crrplatform, crrcontroller};
+    }
+};
 
 
 } // namespace _bridge_

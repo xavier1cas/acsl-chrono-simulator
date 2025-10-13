@@ -77,6 +77,14 @@ platform:
 controller:
   qrbp:
     pid_omega: true
+    mrac_omega: false
+  x8copter: 
+    pid: false
+    mrac: false
+    tlmrac: false
+  acslquad:
+    pid: false
+    mrac: false
 
 # ============================================================================
 # SIMULATION Environment Selection

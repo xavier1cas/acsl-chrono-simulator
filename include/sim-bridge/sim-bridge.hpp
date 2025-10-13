@@ -45,19 +45,7 @@
 #include "sim-locales.hpp"          // Import the header file with all the environments
 #include "sim-environment.hpp"      // Import the header file for the ENV API
 #include "sim-traj-selection.hpp"   // Import the header file for the Trajectory selection module
-#include "sim-trajectory.hpp"       // Import the header file for the Trajectory API
-
-// ##################################################################################
-// PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-// ##################################################################################
-
-#include "pid-omega-qrbp.hpp"
-
-
-// ##################################################################################
-// PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-// ##################################################################################
-
+#include "sim-controllers.hpp"      // Import the header file for the controllers
 
 namespace _acsl_
 {
@@ -122,17 +110,8 @@ public:
         // Setup the physics log file if requested
         if (this->log2file) { InitiateLogging(); ConfigureHeaders(); }
 
-
-        // ##################################################################################
-        // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-        // ##################################################################################
-
-        m_controller = std::unique_ptr< ::_acsl_::_control_::controller_base >( new ::_acsl_::_qrbp_::_pid_omega_::pid_omega(m_logger, *GetTraj()) );
-
-        // ##################################################################################
-        // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-        // ##################################################################################
-
+        // Say you are going to start the simulation
+        _message_::SIMULATOR_INFO("[SIMBRG]:\033[5;97;41m RUNNING SIMULATION! \033[0m");
     }
 
     // ------------------------------------------------------------------------
@@ -163,6 +142,16 @@ private:
     void UpdatePhysicsSystem();
 
     // ------------------------------------------------------------------------
+    // Function: Updates the actuator control from the controller
+    // ------------------------------------------------------------------------
+    void UpdateControlAction();
+
+    // ------------------------------------------------------------------------
+    // Function: Updates the physics system for the acsl physics simulator
+    // ------------------------------------------------------------------------
+    bool GetSimMode() { return efsl; }
+
+    // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the underlying simulator system class
     // so that external changes can be made.
     // ------------------------------------------------------------------------
@@ -172,19 +161,19 @@ private:
     // Accessor: Returns a reference to the UAV unique pointer so that
     // the external code can access or reset the UAV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_uav_::simuavbase>& GetUAV() { return uav; }
+    std::unique_ptr<::_acsl_::_uav_::simuavbase>& GetUAV() { return m_uav; }
 
     // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the ENV unique pointer so that
     // the external code can access or reset the ENV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_environment_::simenvbase>& GetEnv() { return env; }
+    std::unique_ptr<::_acsl_::_environment_::simenvbase>& GetEnv() { return m_env; }
 
     // ------------------------------------------------------------------------
     // Accessor: Retruns a reference to the Traj unique pointer so that
     // the external code can access or reset the Traj object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_trajectory_::trajectorybase>& GetTraj() { return trj; }
+    std::unique_ptr<::_acsl_::_trajectory_::trajectorybase>& GetTraj() { return m_trj; }
 
     // ------------------------------------------------------------------------
     // Accessor: Returns a reference to the real-time stepper object used to
@@ -242,19 +231,35 @@ private:
     std::string active_trajectory;
 
     // ------------------------------------------------------------------------
+    // Structure form sim-controllers that holds all the controllers
+    // ------------------------------------------------------------------------
+    controllers available_controllers;
+    std::pair<std::string, std::string> active_controller;
+
+    // ------------------------------------------------------------------------
     // Unique pointer to store the UAV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_uav_::simuavbase> uav;
+    std::unique_ptr<::_acsl_::_uav_::simuavbase> m_uav;
 
     // ------------------------------------------------------------------------
     // Unique pointer to store the ENV object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_environment_::simenvbase> env;
+    std::unique_ptr<::_acsl_::_environment_::simenvbase> m_env;
 
     // ------------------------------------------------------------------------
     // Unique pointer to store the TRAJECTORY object.
     // ------------------------------------------------------------------------
-    std::unique_ptr<::_acsl_::_trajectory_::trajectorybase> trj;
+    std::unique_ptr<::_acsl_::_trajectory_::trajectorybase> m_trj;
+
+    // ------------------------------------------------------------------------
+    // Object to store the state of the UAV object.
+    // ------------------------------------------------------------------------
+    ::_acsl_::_uav_::m_states m_state;
+
+    // ------------------------------------------------------------------------
+    // Unique pointer to store the CONTROLLER object.
+    // ------------------------------------------------------------------------
+    std::unique_ptr<::_acsl_::_control_::controller_base> m_ctrl;
 
     // ------------------------------------------------------------------------
     // Realtime stepper object to track the simulation's real life duration
@@ -272,16 +277,6 @@ private:
     void ConfigureHeaders() override;
     bool InitiateLogging() override;
     void LogData() override;
-
-    // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-    // ##################################################################################
-
-    std::unique_ptr<::_acsl_::_control_::controller_base> m_controller;
-
-    // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-    // ##################################################################################
 
 };
 

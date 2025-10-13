@@ -30,7 +30,7 @@
  *              a.lafflitto@vt.edu
  * 
  * Description: The brains of the acsl physics simulator. This file is responsible for running the simulation mode
- *              (HIL, SIL, MIL simulations) and loading the appropirate uav into the simulation.
+ *              (HIL, SIL, MIL simulations) and loading the appropirate m_uav into the simulation.
  * 
  * GitHub:    https://github.com/girimugundankumar/acsl-physics-sim.git
  **********************************************************************************************************************/
@@ -66,14 +66,15 @@ namespace _bridge_
 //      - Validates that one and only one platform is set true.
 //      - Instantiates the selected UAV via factory (createSelectedUAV).
 //   7. Read the trajectory module parameters in and store it for instantiation.
-//   8. Log success messages about the loaded config, mode, and UAV/locale instantiation.
+//   8. Read the controller module paramters ina nd store it for instantiation.
+//   9. Log success messages about the loaded config, mode, and UAV/locale instantiation.
 //
 // Notes:
 //   - There is no hardcoding of platform or environment names in this function: all lookups and instantiation
 //     logic are handled by iterating struct registries and using the YAML keys.
 //   - To add a new UAV/platform or environment/locale, only sim-platforms.hpp, sim-locales.hpp, and sim-config.yaml
 //     need updating — not this function.
-//   - `m_sys` refers to the physics system object; `uav` and `env` are unique_ptrs owned by simbridge.
+//   - `m_sys` refers to the physics system object; `m_uav` and `m_env` are unique_ptrs owned by simbridge.
 //   - Errors (e.g., missing config, invalid selection) are reported via SIMULATOR_ERROR and halt execution.
 // =====================================================================================================================
 void simbridge::ConfigureSimulatorFromConfig()
@@ -122,7 +123,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     //   - Pass in the Chrono physics system from m_sys for ENV construction.
     //   - Store the ENV in simbridge::locale (std::unique_ptr<simenvbase>).
     // ------------------------------------------------------------------------
-    this->env = available_locals.createSelectedLocale(this->m_sys.GetPhysicsSystem());
+    this->m_env = available_locals.createSelectedLocale(this->m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
     // STEP 6 – Populate available_uavs dynamically from YAML
@@ -140,9 +141,9 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     // STEP 6.2 – Instantiate the selected UAV using the factory in platforms
     //   - Pass in the Chrono physics system from m_sys for UAV construction.
-    //   - Store the UAV in simbridge::uav (std::unique_ptr<simuavbase>).
+    //   - Store the UAV in simbridge::m_uav (std::unique_ptr<simuavbase>).
     // ------------------------------------------------------------------------
-    this->uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
+    this->m_uav = available_uavs.createSelectedUAV(this->m_sys.GetPhysicsSystem());
 
     // ------------------------------------------------------------------------
     // STEP 7 - Load in the trajectory module
@@ -156,28 +157,48 @@ void simbridge::ConfigureSimulatorFromConfig()
 
     // ------------------------------------------------------------------------
     // STEP 7.2 – Instantiate the selected traj using the factory in structure
-    //   - Store the module in simbridge::trj (std::unique_ptr<trajectorybase>).
+    //   - Store the module in simbridge::m_trj (std::unique_ptr<trajectorybase>).
     //   - Set the trajectory file from sim-config.yaml
     //   - Initiate the trajectory module
     // ------------------------------------------------------------------------
-    this->trj = available_trajectories.createSelectedModule();
-    this->trj->SetFileName(available_trajectories.GetTrajectoryFile());
-    this->trj->InitiateModule();
+    this->m_trj = available_trajectories.createSelectedModule();
+    this->m_trj->SetFileName(available_trajectories.GetTrajectoryFile());
+    this->m_trj->InitiateModule();
 
     // ------------------------------------------------------------------------
     // STEP 7.3 – If the trajectory is to be visualized, attach it to the NED 
     //            auxilliary refrence body for visualization.
-    //            - This means you will always run this logic after the uav obj
+    //            - This means you will always run this logic after the m_uav obj
     //            has been created and make sure the SetupInertialNEDFrame()
     //            was executed prior to this logic.
     // ------------------------------------------------------------------------
     if (this->m_sys.GetVisConfig().render_trajectory) {
-        this->uav->GetInertialNEDFrameAuxBody()->AddVisualShape(this->trj->GetVisualShape());
+        this->m_uav->GetInertialNEDFrameAuxBody()->AddVisualShape(this->m_trj->GetVisualShape());
     }
 
+    // ------------------------------------------------------------------------
+    // STEP 8 – Populate available_controllers dynamically from YAML
+    //   asVectorRef() iterates all platform bools by name without hardcoding.
+    // ------------------------------------------------------------------------
+    for (auto& [platform_name, controller_name, ref] : available_controllers.asVectorRef()) {
+        ref = config_file["controller"][platform_name][controller_name].as_bool();
+    }
 
     // ------------------------------------------------------------------------
-    // STEP 8 – Log the loaded config and UAV instantiation
+    // STEP 8.1 – Validate and get the active platform & controller name
+    // ------------------------------------------------------------------------
+    this->active_controller = available_controllers.validateExclusiveSelection(this->active_platform);
+
+    // ------------------------------------------------------------------------
+    //  STEP 8.2 – Instantiate the selected controller using the factory
+    //    - Pass in the platform for validation 
+    //    - Pass in the trajectory object for attaching to the controller
+    //    - Pass in the logger for logging.
+    // ------------------------------------------------------------------------
+    this->m_ctrl = available_controllers.createSelectedController(this->active_platform, this->m_logger, *this->m_trj);
+
+    // ------------------------------------------------------------------------
+    // STEP 9 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : " + std::to_string(efsl));
@@ -185,6 +206,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: " + active_locale);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: " + active_trajectory);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY FILE: " + available_trajectories.GetTrajectoryFile());
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE CONTROLLER: " + active_controller.second);
 }
 
 // =====================================================================================================================
@@ -234,22 +256,22 @@ void simbridge::UpdateVisualizationSystem()
         // STEP 4 – If enabled, render the inertial NED frame in the visualization.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_ned_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(uav->GetInertialNEDFrame(), 1);
+            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetInertialNEDFrame(), 1);
         }
 
         // --------------------------------------------------------------------
         // STEP 5 – If enabled, render the body frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_body_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(uav->GetUAVChassis().body->GetFrameRefToAbs(), 0.6);
+            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVChassis().body->GetFrameRefToAbs(), 0.6);
         }
 
         // --------------------------------------------------------------------
         // STEP 6 – If enabled, render frames for all UAV propellers.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_prop_frames) {
-            for (int idx = 1; idx <= this->uav->GetPropCount(); ++idx) {
-                this->m_sys.GetVisionSystem().RenderFrame(uav->GetUAVProp(idx).body->GetFrameRefToAbs(), 0.3);
+            for (int idx = 1; idx <= this->m_uav->GetPropCount(); ++idx) {
+                this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVProp(idx).body->GetFrameRefToAbs(), 0.3);
             }
         }
 
@@ -290,6 +312,87 @@ void simbridge::UpdateVisualizationSystem()
     }
 }
 
+// =====================================================================================================================
+// UpdatePhysicsSystem()
+//
+// Purpose:
+//   Advances the physics simulation for the current step, manages real-time synchronization,
+//   retrieves the UAV state, and prints color-coded state information to the terminal (if enabled).
+//
+// Workflow:
+//   1. Perform one physics simulation time step using Chrono with the configured step size.
+//   2. Maintain soft real-time pacing by spinning until step duration matches target (avoids CPU overrun).
+//   3. Query the UAV's current states (position, velocity, rotation, etc.).
+//   4. If terminal logging is enabled, format and print the state block in color for operator readability.
+//
+// Notes:
+//   - Real-time spinning helps match simulation wall-clock to desired step size, especially in live/interactive modes.
+//   - State block includes simulation time, position, velocity, Euler angles, angular velocity, forces, and torques.
+//   - Color-coding improves operational clarity in high-frequency terminal output scenarios.
+//   - Updates are performed every simulation tick; rapid terminal output may occur if log2terminal is set true.
+// =====================================================================================================================
+void simbridge::UpdateControlAction() {
+    int propCount = m_uav->GetPropCount();
+    switch (propCount) {
+        case 1: // Single-prop
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            break;
+        case 2: // Twin-prop
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            break;
+        case 3: // Tricopters
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+            break;
+        case 4: // Quadcopters
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+            break;
+        case 5: // Weird-stuff-I-guess
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+            break;
+        case 6: // Hexacopters
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+            m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+            break;
+        case 7: // Weirder-stuff-I-think
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+            m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+            m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
+            break;
+        case 8: // Octocopters
+            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+            m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+            m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
+            m_uav->SetThrustSetPoint(8, m_ctrl->get_t8());
+            break;
+        default:
+            _message_::SIMULATOR_ERROR("[SIMBRG]: ONLY 1-8 ACTUATORS SUPPORTED. YOU HAVE" 
+                                       "ASKED FOR SOMETHING I CANNOT GIVE YOU - GIRI");
+            break;
+    }
+}
+
 
 // =====================================================================================================================
 // UpdatePhysicsSystem()
@@ -322,50 +425,40 @@ void simbridge::UpdatePhysicsSystem()
     // STEP 2 – Spin in place to maintain soft real-time pacing for this simulation tick.
     // ------------------------------------------------------------------------
     this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
-        
-
-    // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-    // ##################################################################################
 
     // ------------------------------------------------------------------------
     // STEP 3 – Extract current UAV state variables for reporting and logging.
     // ------------------------------------------------------------------------
-    auto states = this->uav->GetUAVStateData();
+    m_state = this->m_uav->GetUAVStateData();
 
-    this->m_controller->update( states.time, 
-                                states.pos.x(),
-                                states.pos.y(),
-                                states.pos.z(),
-                                states.vel.x(),
-                                states.vel.y(),
-                                states.vel.z(),
-                                states.quat.e0(),
-                                states.quat.e1(),
-                                states.quat.e2(),
-                                states.quat.e3(),
-                                states.eul.x(),
-                                states.eul.y(),
-                                states.eul.z(),
-                                states.ovel.x(),
-                                states.ovel.y(),
-                                states.ovel.z() );
-                                 
-    this->m_controller->run(this->m_sys.GetPhyConfig().StepSize);
-    
-    this->uav->SetThrustSetPoint(1, this->m_controller->get_t1());
-    this->uav->SetThrustSetPoint(2, this->m_controller->get_t2());
-    this->uav->SetThrustSetPoint(3, this->m_controller->get_t3());
-    this->uav->SetThrustSetPoint(4, this->m_controller->get_t4());
+    // ------------------------------------------------------------------------
+    // STEP 3 – IF EFSL is not on. i.e no software/hardware-in-the-loop
+    //          THEN apply model in the loop control.
+    // ------------------------------------------------------------------------
+    if (!this->GetSimMode()) {
+        this->m_ctrl->update(m_state.time, 
+                            m_state.pos.x(),
+                            m_state.pos.y(),
+                            m_state.pos.z(),
+                            m_state.vel.x(),
+                            m_state.vel.y(),
+                            m_state.vel.z(),
+                            m_state.quat.e0(),
+                            m_state.quat.e1(),
+                            m_state.quat.e2(),
+                            m_state.quat.e3(),
+                            m_state.eul.x(),
+                            m_state.eul.y(),
+                            m_state.eul.z(),
+                            m_state.ovel.x(),
+                            m_state.ovel.y(),
+                            m_state.ovel.z() );
+                                    
+        this->m_ctrl->run(this->m_sys.GetPhyConfig().StepSize);
+        
+        this->UpdateControlAction();
 
-    // this->uav->SetActuator(1, m_controller->get_t1(), 0.0, 10);
-    // this->uav->SetActuator(1, m_controller->get_t2(), 0.0, 10);
-    // this->uav->SetActuator(1, m_controller->get_t3(), 0.0, 10);
-    // this->uav->SetActuator(1, m_controller->get_t4(), 0.0, 10);
-
-    // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-    // ##################################################################################
+    }
 
 
     // ------------------------------------------------------------------------
@@ -379,35 +472,35 @@ void simbridge::UpdatePhysicsSystem()
 
         std::ostringstream msg;
         msg << "\n"
-            << color_label << "SIMULATION TIME: " << color_value << states.time << " s\n" << color_reset
+            << color_label << "SIMULATION TIME: " << color_value << m_state.time << " s\n" << color_reset
             << color_label << "UAV POSITION IN NED FRAME: " << color_value
-            << states.pos.x() << ", "
-            << states.pos.y() << ", "
-            << states.pos.z() << "\n" << color_reset
+            << m_state.pos.x() << ", "
+            << m_state.pos.y() << ", "
+            << m_state.pos.z() << "\n" << color_reset
             << color_label << "UAV VELOCITY IN NED FRAME: " << color_value
-            << states.vel.x() << ", "
-            << states.vel.y() << ", "
-            << states.vel.z() << "\n" << color_reset
+            << m_state.vel.x() << ", "
+            << m_state.vel.y() << ", "
+            << m_state.vel.z() << "\n" << color_reset
             << color_label << "UAV rotation in NED frame: " << color_value
-            << _shared_::_conversions_::rad2deg(states.eul.x()) << ", "
-            << _shared_::_conversions_::rad2deg(states.eul.y()) << ", "
-            << _shared_::_conversions_::rad2deg(states.eul.z()) << "\n" << color_reset
+            << _shared_::_conversions_::rad2deg(m_state.eul.x()) << ", "
+            << _shared_::_conversions_::rad2deg(m_state.eul.y()) << ", "
+            << _shared_::_conversions_::rad2deg(m_state.eul.z()) << "\n" << color_reset
             << color_label << "UAV ANGULAR VELOCITY IN NED FRAME: " << color_value
-            << states.ovel.x() << ", "
-            << states.ovel.y() << ", "
-            << states.ovel.z() << "\n" << color_reset
+            << m_state.ovel.x() << ", "
+            << m_state.ovel.y() << ", "
+            << m_state.ovel.z() << "\n" << color_reset
             << color_label << "UAV FORCES IN NED FRAME [I]: " << color_value
-            << states.muI.x() << ", "
-            << states.muI.y() << ", "
-            << states.muI.z() << "\n" << color_reset
+            << m_state.muI.x() << ", "
+            << m_state.muI.y() << ", "
+            << m_state.muI.z() << "\n" << color_reset
             << color_label << "UAV FORCES IN NED FRAME [J]: " << color_value
-            << states.muJ.x() << ", "
-            << states.muJ.y() << ", "
-            << states.muJ.z() << "\n" << color_reset
+            << m_state.muJ.x() << ", "
+            << m_state.muJ.y() << ", "
+            << m_state.muJ.z() << "\n" << color_reset
             << color_label << "UAV TORQUES IN NED FRAME: " << color_value
-            << states.tauJ.x() << ", "
-            << states.tauJ.y() << ", "
-            << states.tauJ.z() << color_reset;
+            << m_state.tauJ.x() << ", "
+            << m_state.tauJ.y() << ", "
+            << m_state.tauJ.z() << color_reset;
         
         // Print the colorized output to the terminal.
         std::cout << msg.str() << std::endl;
@@ -575,7 +668,7 @@ void simbridge::ConfigureHeaders()
     // ------------------------------------------------------------------------
     // STEP 2 – Query live platform for current number of propellers
     // ------------------------------------------------------------------------
-    int num_propellers = this->uav->GetPropCount();
+    int num_propellers = this->m_uav->GetPropCount();
 
     // ------------------------------------------------------------------------
     // STEP 3 – Assemble header names for chassis and all propellers
@@ -650,17 +743,17 @@ void simbridge::LogData()
     oss << ", ";        // Add a delimiter before constructing the message.
     // Use the SerialStateData function of the m_states structure to serialize
     //  the data for output.
-    this->uav->GetUAVStateData().SerializeStateData(oss);
+    this->m_uav->GetUAVStateData().SerializeStateData(oss);
 
     // ------------------------------------------------------------------------
     // STEP 2 – Serialize all propeller states, appending them in order
     // ------------------------------------------------------------------------
-    int nop = this->uav->GetPropCount();
+    int nop = this->m_uav->GetPropCount();
     for (int i = 1; i <= nop; ++i)
     {
         // Use the SerialStateData function of the m_states structure to serialize
         //  the data for output.
-        this->uav->GetUAVPropStateData(i).SerializeStateData(oss);
+        this->m_uav->GetUAVPropStateData(i).SerializeStateData(oss);
     }
 
     try {
@@ -686,7 +779,7 @@ void simbridge::LogData()
 void simbridge::EverRun()
 {
     // Make sure the current time is lesser than Tmax
-    while (this->m_sys.GetPhysicsSystem().GetChTime() < this->trj->GetTmax())
+    while (this->m_sys.GetPhysicsSystem().GetChTime() < this->m_trj->GetTmax())
     {
         // Update the vision system
         this->UpdateVisualizationSystem();
