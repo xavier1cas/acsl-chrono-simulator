@@ -49,6 +49,7 @@
 #include "sim-helpers.hpp"
 #include "fkYAML/node.hpp"
 #include "Eigen/Dense"
+#include "sim-templated-helpers.hpp"
 
 // Chrono includes
 #include "chrono/physics/ChSystemNSC.h"

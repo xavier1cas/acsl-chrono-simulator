@@ -100,7 +100,7 @@ environment:
 # ============================================================================
 interp:
   # Set to true to use the interpolation trajectory module
-  enabled: true
+  enabled: false
   # Type in the trajectory filename that needs to be imported
   filename: temp
   # Type in the filetype of the trajectory filename that needs to be imported
@@ -108,9 +108,9 @@ interp:
 
 poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
-  enabled: false
+  enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: temp
+  filename: bean_trajectory0p3
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

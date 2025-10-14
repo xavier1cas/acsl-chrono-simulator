@@ -209,17 +209,6 @@ double rad2deg(double rad)
 namespace _compute_
 {
 
-// Evaluates a polynomial at a given value. Coefficients ordered [highest degree ... lowest].
-double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value)
-{
-    double result = 0.0;
-    // Evaluate: result = c0*x^n + c1*x^(n-1) + ... + cn
-    for (int i = 0, deg = coefficients.size() - 1; deg >= 0; deg--, i++) {
-        result += coefficients[i] * std::pow(value, deg);
-    }
-    return result;
-}
-
 // Creates and returns a 1-dimensional interpolator
 NDInterpolator_1_ML* create1DInterpolator(const std::vector<double>& grid, const std::vector<double>& values)
 {

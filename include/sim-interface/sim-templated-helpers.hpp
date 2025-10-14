@@ -133,6 +133,181 @@ using rk4_vector = boost::numeric::ublas::vector<T>;
 namespace _shared_
 {
 
+namespace _compute_
+{
+
+/**
+ * @brief Evaluates a polynomial at a given input value.
+ *
+ * @tparam VectorType Type of vector containing polynomial coefficients (e.g., Eigen::VectorXd).
+ * @tparam ScalarType Type of input/output scalar (e.g., double, float).
+ *
+ * @param coefficients Vector of polynomial coefficients, ordered [highest degree ... lowest degree].
+ * @param value Value at which to evaluate the polynomial.
+ *
+ * @return ScalarType The result of the polynomial evaluated at the input value.
+ *
+ * @details
+ *   Evaluates the polynomial defined by the given coefficients at the specified value.
+ *   The coefficient vector should be ordered from highest degree term to lowest.
+ *   For example, for coefficients [a, b, c], the polynomial is \( a x^2 + b x + c \).
+ *
+ *   Uses Horner's rule, summing each term: result = c0 * x^n + c1 * x^{n-1} + ... + cn.
+ *
+ * @note Example usage:
+ *   Eigen::VectorXd coeffs(3); coeffs << 1, -2, 1; // x^2 - 2x + 1
+ *   double y = evaluatePolynomial(coeffs, 3.0);   // Evaluates to 4.0
+ */
+template <typename VectorType, typename ScalarType>
+inline ScalarType evaluatePolynomial(const VectorType coefficients, ScalarType value) {
+    ScalarType result = 0;
+    for (int i = 0, deg = coefficients.size() - 1; deg >= 0; deg--, i++)
+    {
+        result += coefficients[i] * std::pow(value, deg);
+    }
+    return result;
+}
+
+/**
+ * @brief Computes the 2D Euclidean norm of polynomial trajectories in the x and y dimensions.
+ *
+ * @tparam VectorType Type of vector containing polynomial coefficients (e.g., Eigen::VectorXd).
+ * @tparam ScalarType Type of the scalar value (e.g., double, float).
+ *
+ * @param poly_coef_x Vector of coefficients for the x-dimension polynomial.
+ * @param poly_coef_y Vector of coefficients for the y-dimension polynomial.
+ * @param value Scalar value at which to evaluate the norm (typically a normalized or time-scaled parameter).
+ *
+ * @return ScalarType The computed Euclidean norm at the given evaluation point.
+ *
+ * @details
+ *   This function evaluates two polynomials, one representing the x-dimension and one for the y-dimension,
+ *   at a common input value, then computes their 2D Euclidean norm:
+ *   @f[
+ *       \text{norm}(t) = \sqrt{ (x(t))^2 + (y(t))^2 }
+ *   @f]
+ *
+ *   The polynomials are evaluated using the `evaluatePolynomial()` helper, which assumes coefficient order
+ *   from highest to lowest degree. For a coefficient vector
+ *   `[a, b, c]`, the polynomial is \( a x^2 + b x + c \).
+ *
+ * @note Example usage:
+ *   @code
+ *   Eigen::VectorXd poly_coef_x(3), poly_coef_y(3);
+ *   poly_coef_x << 1, -2, 1;  // Example: x(t) = t^2 - 2t + 1
+ *   poly_coef_y << 2, 0, -1;  // Example: y(t) = 2t^2 - 1
+ *   double t = 1.0;
+ *   double result = norm2D<Eigen::VectorXd, double>(poly_coef_x, poly_coef_y, t);
+ *   // result = sqrt( (x(t))^2 + (y(t))^2 )
+ *   @endcode
+ *
+ * @see evaluatePolynomial
+ */
+template<typename VectorType, typename ScalarType>
+inline ScalarType norm2D(const VectorType& poly_coef_x, const VectorType& poly_coef_y, ScalarType value)
+{
+    ScalarType norm_value = std::sqrt(
+        std::pow(evaluatePolynomial(poly_coef_x, value), 2) +
+        std::pow(evaluatePolynomial(poly_coef_y, value), 2)
+    );
+    return norm_value;
+}
+
+/**
+ * @brief Computes the time-derivative of the 2D Euclidean norm of polynomial trajectories.
+ *
+ * @tparam VectorType Type of vector containing polynomial coefficients (e.g., Eigen::VectorXd).
+ * @tparam ScalarType Type for the evaluation variable and resulting value (e.g., double).
+ *
+ * @param poly_coef_x Vector of coefficients for the x-dimension polynomial.
+ * @param poly_coef_y Vector of coefficients for the y-dimension polynomial.
+ * @param poly_coef_x_prime Vector of coefficients for the derivative of the x polynomial.
+ * @param poly_coef_y_prime Vector of coefficients for the derivative of the y polynomial.
+ * @param value Scalar value at which to evaluate the norm and its derivative.
+ *
+ * @return ScalarType Derivative of the 2D norm evaluated at the given value.
+ *
+ * @details
+ *   This function computes the time-derivative of the 2D norm at a point, for polynomials
+ *   representing x and y as functions of a scalar variable (e.g., time). It uses the closed-form:
+ *   @f[
+ *     \frac{d}{dt} \left( \sqrt{x(t)^2 + y(t)^2} \right)
+ *     = \frac{x(t)x'(t) + y(t)y'(t)}{\sqrt{x(t)^2 + y(t)^2}}
+ *   @f]
+ *   Both the polynomials and their derivatives are evaluated at the specified value using
+ *   `evaluatePolynomial()`. The result is the norm's instantaneous rate of change at that point.
+ *
+ * @note Example usage:
+ *   @code
+ *   Eigen::VectorXd poly_coef_x(3), poly_coef_y(3), poly_coef_x_prime(3), poly_coef_y_prime(3);
+ *   poly_coef_x << 1, -2, 1;         // x(t) = t^2 - 2t + 1
+ *   poly_coef_y << 2, 0, -1;         // y(t) = 2t^2 - 1
+ *   poly_coef_x_prime << 2, -2, 0;   // x'(t) = 2t - 2
+ *   poly_coef_y_prime << 4, 0, 0;    // y'(t) = 4t
+ *   double t = 1.0;
+ *   double d_norm = norm2Dderivative<Eigen::VectorXd, double>(
+ *       poly_coef_x, poly_coef_y, poly_coef_x_prime, poly_coef_y_prime, t);
+ *   @endcode
+ *
+ * @see norm2D, evaluatePolynomial
+ */
+template<typename VectorType, typename ScalarType>
+inline ScalarType norm2Dderivative(const VectorType& poly_coef_x,
+                                   const VectorType& poly_coef_y,
+                                   const VectorType& poly_coef_x_prime,
+                                   const VectorType& poly_coef_y_prime,
+                                   ScalarType value)
+{
+    ScalarType norm_value = norm2D<VectorType, ScalarType>(poly_coef_x, poly_coef_y, value);
+    ScalarType derivative_value = (
+        evaluatePolynomial<VectorType, ScalarType>(poly_coef_x, value) *
+        evaluatePolynomial<VectorType, ScalarType>(poly_coef_x_prime, value) +
+        evaluatePolynomial<VectorType, ScalarType>(poly_coef_y, value) *
+        evaluatePolynomial<VectorType, ScalarType>(poly_coef_y_prime, value)
+    ) / norm_value;
+    return derivative_value;
+}
+
+/**
+ * @brief Compute the derivative of a piecewise polynomial coefficient matrix row-wise.
+ *
+ * Given a matrix whose rows represent polynomial coefficients for each piece of a trajectory,
+ * returns a matrix whose rows are the coefficients of the derivatives of those polynomials.
+ *
+ * @tparam MatrixType Eigen-like matrix type (e.g., Eigen::MatrixXd)
+ * @param poly_coeff_matrix_in Input matrix; each row is polynomial coefficients in descending exponent order.
+ * @return MatrixType Output matrix; each row contains the derivative polynomial coefficients (one order lower).
+ *
+ * @details
+ *   The input matrix is assumed to have each row as a set of polynomial coefficients (highest degree first).
+ *   For a row like [a b c d] representing \( a x^3 + b x^2 + c x + d \), the result will be
+ *   [3a 2b c], representing the derivative \( 3a x^2 + 2b x + c \).
+ *
+ * @see For example usage and mathematical background, see Eigen documentation.
+ */
+template<typename MatrixType>
+inline MatrixType polyDerMatrix(const MatrixType& poly_coeff_matrix_in)
+{
+    // Get the size of the input matrix
+    int rows = poly_coeff_matrix_in.rows();
+    int cols = poly_coeff_matrix_in.cols();
+
+    // Initialize the output matrix for the derivative
+    MatrixType poly_coeff_matrix_out(rows, cols - 1);
+
+    // Compute the derivative for each row of the input matrix
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols - 1; ++j) {
+            poly_coeff_matrix_out(i, j) = (cols - 1 - j) * poly_coeff_matrix_in(i, j);
+        }
+    }
+
+    return poly_coeff_matrix_out;
+}
+
+
+}   // namespace _compute_
+
 namespace _serialize_
 {
 

@@ -90,7 +90,7 @@ void simuav<nop>::SetupInertialNEDFrame()
     //   - Use conversion utility to get the appropriate quaternion orientation.
     //   - Ensures NED axes map correctly to Chrono frame (usually ENU by default)
     // ------------------------------------------------------------------------
-    InertialFrameNED->SetRot(_shared_::_transformations_::GetChronoOrientaitonFromNED());
+    InertialFrameNED->SetRot(::_shared_::_transformations_::GetChronoOrientaitonFromNED());
 
     // ------------------------------------------------------------------------
     // STEP 5 – Register this reference frame with the physics system
@@ -293,7 +293,7 @@ template <int nop>
 void simuav<nop>::ConfigureUAVPropInitPos(size_t idx, chrono::ChVector3d pos)
 {
     this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
-    props[idx - 1].init_pos = _shared_::_transformations_::GetChronoPosFromNED(pos);         // Assign if within range
+    props[idx - 1].init_pos = ::_shared_::_transformations_::GetChronoPosFromNED(pos);         // Assign if within range
 }
 
 
@@ -314,7 +314,7 @@ template <int nop>
 void simuav<nop>::ConfigureUAVPropInitRot(size_t idx, chrono::ChQuaternion<> rot)
 {
     this->CheckUAVPropRequest(idx);                                         // Check the id of the propeller
-    props[idx - 1].init_rot = _shared_::_transformations_::GetChronoOrientaitonFromNED(rot); // Assign if within range
+    props[idx - 1].init_rot = ::_shared_::_transformations_::GetChronoOrientaitonFromNED(rot); // Assign if within range
 }
 
 
@@ -796,8 +796,8 @@ void simuav<nop>::InitiateUAVMotors()
         // STEP 2 – Prepare transformed position and orientation for the motor frame
         // ------------------------------------------------------------------------
         // Convert NED frame to Chrono frame for both position and orientation
-        chrono::ChVector3<> motor_pos = _shared_::_transformations_::GetChronoPosFromNED(motors[idx].frame.GetPos());
-        chrono::ChQuaternion<> base_rot = _shared_::_transformations_::GetChronoOrientaitonFromNED(motors[idx].frame.GetRot());
+        chrono::ChVector3<> motor_pos = ::_shared_::_transformations_::GetChronoPosFromNED(motors[idx].frame.GetPos());
+        chrono::ChQuaternion<> base_rot = ::_shared_::_transformations_::GetChronoOrientaitonFromNED(motors[idx].frame.GetRot());
 
         // 180-degree rotation about the X axis for CCW case
         chrono::ChQuaternion<> rot_180_x;
@@ -845,7 +845,7 @@ void simuav<nop>::InitiateUAVMotors()
         motors[idx].thrust->SetRelDir(chrono::ChVector3d(0,0,-1));              // It is applied in the -ve z (NED)
         
         // Iteratively compute where this thrust is applied wrt to the chassis and rotor hub.
-        auto rel_coord = _shared_::_transformations_::GetNEDPosFromChrono( this->GetUAVProp(idx + 1).body->GetPos() 
+        auto rel_coord = ::_shared_::_transformations_::GetNEDPosFromChrono( this->GetUAVProp(idx + 1).body->GetPos() 
                                                                  - this->GetUAVChassis().body->GetPos() );
         // Point out the location in the chassis body frame (NED)
         motors[idx].thrust->SetVrelpoint(rel_coord);
@@ -1018,7 +1018,7 @@ m_states simuav<nop>::GetUAVStateData()
     m_state.oacc = GetUAVChassis().body->GetAngAccLocal();
 
     // --- Forces acting on the body in the Inertial frame (NED) ---
-    m_state.muI = _shared_::_transformations_::GetNEDPosFromChrono(GetUAVChassis().body->GetAppliedForce());
+    m_state.muI = ::_shared_::_transformations_::GetNEDPosFromChrono(GetUAVChassis().body->GetAppliedForce());
 
     // --- Forces acting on the body in the Body frame (NED) ---
     m_state.muJ =  R_uav.transpose() * m_state.muI;
@@ -1114,7 +1114,7 @@ m_states simuav<nop>::GetUAVPropStateData(size_t idx)
     m_state.oacc = GetUAVProp(idx).body->GetAngAccLocal();
 
     // --- Forces acting on the body in the Inertial frame (NED) ---
-    m_state.muI = _shared_::_transformations_::GetNEDPosFromChrono(GetUAVProp(idx).body->GetAppliedForce());
+    m_state.muI = ::_shared_::_transformations_::GetNEDPosFromChrono(GetUAVProp(idx).body->GetAppliedForce());
 
     // --- Forces acting on the body in the Body frame (NED) ---
     m_state.muJ =  R_prop.transpose() * m_state.muI;
@@ -1181,7 +1181,7 @@ void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
 
     // If it passes the checks then >>
     // Cache the values
-    auto thrust = _shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2newt, thrustSP);
+    auto thrust = ::_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2newt, thrustSP);
     auto torque = 0.15 * motors[idx - 1].ct * thrust;       // Cq = 0.15 * ct -> Cq is the backtorque constant
 
     // ##################################################################################
@@ -1189,7 +1189,7 @@ void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
     // ##################################################################################
     
     // IRRLICHT SYSTEM IS FINNICKY. HENCE THE 0.01 MODIFIER. - ONLY AFFECTS VISUALIZATON
-    auto rps = 0.01*(_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP));
+    auto rps = 0.01*(::_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP));
 
     // ##################################################################################
     // FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX

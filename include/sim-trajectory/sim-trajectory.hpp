@@ -39,6 +39,8 @@
 
 #include "Eigen/Dense"
 #include "sim-helpers.hpp"
+#include "sim-messages.hpp"
+#include "sim-templated-helpers.hpp"
 
 namespace _acsl_
 {

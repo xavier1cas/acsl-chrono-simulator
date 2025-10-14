@@ -48,115 +48,117 @@ namespace _trajectory_
 void interpolation::InitiateModule()
 {
     // Check if the file exists
-    _shared_::_deserialize_::FileExists(this->GetFileName());
+    ::_shared_::_deserialize_::FileExists(this->GetFileName());
 
     // Read in the data file
     rapidcsv::Document doc(this->GetFileName());
 
     // Process the csv datafile
-    this->m_data.time = _shared_::_deserialize_::GetCSVColumn(doc, "time");
+    this->m_data.time = ::_shared_::_deserialize_::GetCSVColumn(doc, "time");
 
-    this->m_data.pos_x = _shared_::_deserialize_::GetCSVColumn(doc, "pos_x");
-    this->m_data.pos_y = _shared_::_deserialize_::GetCSVColumn(doc, "pos_y");
-    this->m_data.pos_z = _shared_::_deserialize_::GetCSVColumn(doc, "pos_z");
+    this->m_data.pos_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "pos_x");
+    this->m_data.pos_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "pos_y");
+    this->m_data.pos_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "pos_z");
 
-    this->m_data.vel_x = _shared_::_deserialize_::GetCSVColumn(doc, "vel_x");
-    this->m_data.vel_y = _shared_::_deserialize_::GetCSVColumn(doc, "vel_y");
-    this->m_data.vel_z = _shared_::_deserialize_::GetCSVColumn(doc, "vel_z");
+    this->m_data.vel_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "vel_x");
+    this->m_data.vel_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "vel_y");
+    this->m_data.vel_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "vel_z");
 
-    this->m_data.acc_x = _shared_::_deserialize_::GetCSVColumn(doc, "acc_x");
-    this->m_data.acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "acc_y");
-    this->m_data.acc_z = _shared_::_deserialize_::GetCSVColumn(doc, "acc_z");
+    this->m_data.acc_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "acc_x");
+    this->m_data.acc_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "acc_y");
+    this->m_data.acc_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "acc_z");
 
-    this->m_data.euler_roll = _shared_::_deserialize_::GetCSVColumn(doc, "euler_roll");
-    this->m_data.euler_pitch = _shared_::_deserialize_::GetCSVColumn(doc, "euler_pitch");
-    this->m_data.euler_yaw = _shared_::_deserialize_::GetCSVColumn(doc, "euler_yaw");
+    this->m_data.euler_roll = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_roll");
+    this->m_data.euler_pitch = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_pitch");
+    this->m_data.euler_yaw = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_yaw");
 
-    this->m_data.euler_rate_r = _shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_r");
-    this->m_data.euler_rate_p = _shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_p");
-    this->m_data.euler_rate_y = _shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_y");
+    this->m_data.euler_rate_r = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_r");
+    this->m_data.euler_rate_p = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_p");
+    this->m_data.euler_rate_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_rate_y");
 
-    this->m_data.euler_acc_r = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_r");
-    this->m_data.euler_acc_p = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_p");
-    this->m_data.euler_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_y");
+    this->m_data.euler_acc_r = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_r");
+    this->m_data.euler_acc_p = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_p");
+    this->m_data.euler_acc_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "euler_acc_y");
 
-    this->m_data.quat_w = _shared_::_deserialize_::GetCSVColumn(doc, "quat_w");
-    this->m_data.quat_x = _shared_::_deserialize_::GetCSVColumn(doc, "quat_x");
-    this->m_data.quat_y = _shared_::_deserialize_::GetCSVColumn(doc, "quat_y");
-    this->m_data.quat_z = _shared_::_deserialize_::GetCSVColumn(doc, "quat_z");
+    this->m_data.quat_w = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_w");
+    this->m_data.quat_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_x");
+    this->m_data.quat_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_y");
+    this->m_data.quat_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_z");
 
-    this->m_data.quat_rate_w = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_w");
-    this->m_data.quat_rate_x = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_x");
-    this->m_data.quat_rate_y = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_y");
-    this->m_data.quat_rate_z = _shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_z");
+    this->m_data.quat_rate_w = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_w");
+    this->m_data.quat_rate_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_x");
+    this->m_data.quat_rate_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_y");
+    this->m_data.quat_rate_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_rate_z");
 
-    this->m_data.quat_acc_w = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_w");
-    this->m_data.quat_acc_x = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_x");
-    this->m_data.quat_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_y");
-    this->m_data.quat_acc_z = _shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_z");
+    this->m_data.quat_acc_w = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_w");
+    this->m_data.quat_acc_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_x");
+    this->m_data.quat_acc_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_y");
+    this->m_data.quat_acc_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "quat_acc_z");
 
-    this->m_data.ang_vel_x = _shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_x");
-    this->m_data.ang_vel_y = _shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_y");
-    this->m_data.ang_vel_z = _shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_z");
+    this->m_data.ang_vel_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_x");
+    this->m_data.ang_vel_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_y");
+    this->m_data.ang_vel_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "ang_vel_z");
     
-    this->m_data.ang_acc_x = _shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_x");
-    this->m_data.ang_acc_y = _shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_y");
-    this->m_data.ang_acc_z = _shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_z");
+    this->m_data.ang_acc_x = ::_shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_x");
+    this->m_data.ang_acc_y = ::_shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_y");
+    this->m_data.ang_acc_z = ::_shared_::_deserialize_::GetCSVColumn(doc, "ang_acc_z");
 
     // Create and assign to interpolators
-    this->interp_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_x);
-    this->interp_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_y);
-    this->interp_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_z);
+    this->interp_x = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_x);
+    this->interp_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_y);
+    this->interp_z = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.pos_z);
 
-    this->interp_vx = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_x);
-    this->interp_vy = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_y);
-    this->interp_vz = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_z);
+    this->interp_vx = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_x);
+    this->interp_vy = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_y);
+    this->interp_vz = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.vel_z);
 
-    this->interp_ax = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_x);
-    this->interp_ay = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_y);
-    this->interp_az = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_z);
+    this->interp_ax = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_x);
+    this->interp_ay = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_y);
+    this->interp_az = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.acc_z);
     
-    this->interp_eul_roll = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_roll);
-    this->interp_eul_pitch = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_pitch);
-    this->interp_eul_yaw = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_yaw);
+    this->interp_eul_roll = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_roll);
+    this->interp_eul_pitch = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_pitch);
+    this->interp_eul_yaw = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_yaw);
 
-    this->interp_eul_rate_r = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_r);
-    this->interp_eul_rate_p = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_p);
-    this->interp_eul_rate_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_y);
+    this->interp_eul_rate_r = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_r);
+    this->interp_eul_rate_p = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_p);
+    this->interp_eul_rate_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_rate_y);
 
-    this->interp_eul_acc_r = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_r);
-    this->interp_eul_acc_p = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_p);
-    this->interp_eul_acc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_y);
+    this->interp_eul_acc_r = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_r);
+    this->interp_eul_acc_p = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_p);
+    this->interp_eul_acc_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.euler_acc_y);
 
-    this->interp_quat_w = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_w);
-    this->interp_quat_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_x);
-    this->interp_quat_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_y);
-    this->interp_quat_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_z);
+    this->interp_quat_w = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_w);
+    this->interp_quat_x = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_x);
+    this->interp_quat_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_y);
+    this->interp_quat_z = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_z);
 
-    this->interp_quat_rate_w = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_w);
-    this->interp_quat_rate_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_x);
-    this->interp_quat_rate_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_y);
-    this->interp_quat_rate_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_z);
+    this->interp_quat_rate_w = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_w);
+    this->interp_quat_rate_x = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_x);
+    this->interp_quat_rate_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_y);
+    this->interp_quat_rate_z = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_rate_z);
 
-    this->interp_quat_acc_w = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_w);
-    this->interp_quat_acc_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_y);
-    this->interp_quat_acc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_x);
-    this->interp_quat_acc_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_z);
+    this->interp_quat_acc_w = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_w);
+    this->interp_quat_acc_x = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_y);
+    this->interp_quat_acc_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_x);
+    this->interp_quat_acc_z = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.quat_acc_z);
 
-    this->interp_angvel_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_x);
-    this->interp_angvel_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_y);
-    this->interp_angvel_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_z);
+    this->interp_angvel_x = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_x);
+    this->interp_angvel_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_y);
+    this->interp_angvel_z = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_vel_z);
 
-    this->interp_angacc_x = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_x);
-    this->interp_angacc_y = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_y);
-    this->interp_angacc_z = _shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_z);
+    this->interp_angacc_x = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_x);
+    this->interp_angacc_y = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_y);
+    this->interp_angacc_z = ::_shared_::_compute_::create1DInterpolator(m_data.time, m_data.ang_acc_z);
 
     // Assign the maximum time
-    this->SetTmax(_shared_::_compute_::vecmax(m_data.time));
+    this->SetTmax(::_shared_::_compute_::vecmax(m_data.time));
 
     // Create and assign to nurbsasset
-    auto controlpts = _shared_::_serialize_::serialize2ChVector3d(m_data.pos_x, m_data.pos_y, m_data.pos_z);
-    this->visualshape = _shared_::_visualize_::createNurbsVisual(controlpts);
+    auto controlpts = ::_shared_::_serialize_::serialize2ChVector3d(m_data.pos_x,
+                                                                    m_data.pos_y,
+                                                                    m_data.pos_z);
+    this->visualshape = ::_shared_::_visualize_::createNurbsVisual(controlpts);
     
 }
 

@@ -98,6 +98,91 @@ protected:
     void SetQuatAcc(const Eigen::Quaterniond& quat_accel) override { this->c_state.quaternion_acceleration = quat_accel; }
     void SetAngVel(const Eigen::Vector3d& ang_vel) override { this->c_state.angular_velocity = ang_vel; }
     void SetAngAcc(const Eigen::Vector3d& ang_accel) override { this->c_state.angular_acceleration = ang_accel; }
+
+private:
+    // Class objects unique to piecewise-polynomial-trajectory
+    std::vector<std::vector<double>> waypoints_;                         // The waypoints we actually want to hit
+    std::vector<double> waypoint_times_;                                 // Times at which I want to reach the waypoints
+    std::vector<std::vector<double>> piecewise_polynomial_coefficients_; // Matrix for piecewise polynomial coeffs
+    int num_waypts;                                                      // Number of waypoints
+    double hover_time_;                                                  // Hovering time after trajectory is done
+    double landing_start_time;                                           // Time at which landing should start
+    double landing_end_time;                                             // Time at which we have finally landed
+    double LANDING_TRAJECTORY_EXECUTION_TIME = 4.0;                      // Time taken to land [hardcoded to 4.0s]
+    double DISARM_AFTER_LANDING_BUFFER_TIME = 2.0;                       // Time taken to quit the simualtion after run
+    double internal_time_adjusted;                                       // Current time adjusted w.r.t the segment
+    int segment_;                                                        // Segment of the trajectory in which I am
+    Eigen::Vector3d user_defined_position_previous_;                     // previous user_defined_position_
+    double user_defined_yaw_previous_;                                   // previous user_defined_yaw_ 
+    double norm_velocity_XY_;                                            // norm of the X and Y components of velocity
+    
+    // Polynomial coefficients
+    Eigen::MatrixXd position_coef_x_;
+    Eigen::MatrixXd position_coef_y_;
+    Eigen::MatrixXd position_coef_z_;
+    Eigen::MatrixXd velocity_coef_x_;
+    Eigen::MatrixXd velocity_coef_y_;
+    Eigen::MatrixXd velocity_coef_z_;
+    Eigen::MatrixXd acceleration_coef_x_;
+    Eigen::MatrixXd acceleration_coef_y_;
+    Eigen::MatrixXd acceleration_coef_z_;
+    Eigen::MatrixXd jerk_coef_x_;
+    Eigen::MatrixXd jerk_coef_y_;
+    Eigen::MatrixXd jerk_coef_z_;
+
+    // Position polynomial coefficients for LANDING from (X, Y, -1) to (X, Y, 0) in 4 seconds
+    const Eigen::VectorXd landing_position_coef_z_ = (Eigen::VectorXd(8) << 
+        -0.001220703125,
+        0.01708984375,
+        -0.0820312499999999,
+        0.13671875,
+        0.0,
+        0.0,
+        0.0,
+        -1.0
+    ).finished();
+
+    // Velocity polynomial coefficients for LANDING from (X, Y, -1) to (X, Y, 0) in 4 seconds
+    const Eigen::VectorXd landing_velocity_coef_z_ = (Eigen::VectorXd(7) << 
+        -0.00854492187499999,
+        0.1025390625,
+        -0.41015625,
+        0.546874999999999,
+        0.0,
+        0.0,
+        0.0
+    ).finished();
+
+    // Acceleration polynomial coefficients for LANDING from (X, Y, -1) to (X, Y, 0) in 4 seconds
+    const Eigen::VectorXd landing_acceleration_coef_z_ = (Eigen::VectorXd(6) << 
+        -0.0512695312499999,
+        0.5126953125,
+        -1.640625,
+        1.640625,
+        0.0,
+        0.0
+    ).finished();
+
+    // Class functions for compute
+    // Function to extract the polynomial coeffiecients
+    std::vector<Eigen::MatrixXd> polyCoefAssigning(const std::vector<std::vector<double>>& poly_coeff_matrix_in);
+    // Function to edtract and set the polynomial cofficient matrices
+    void setPolynomialCoefficientMatrices();
+    // Function to adjust the time to be fed to the various polynomials and identify the segment of the trajectory
+    std::pair<double, int> polynomialTimeAdjusted(double time);
+    // Compute the user-defined yaw from the trajectory velocity in the XY plane
+    double yawComputation(const Eigen::VectorXd& Vx_coef, const Eigen::VectorXd& Vy_coef, double t);
+    // Compute the user-defined yaw_dot from the trajectory velocity in the XY plane
+    double yawDotComputation(const Eigen::VectorXd& Vx_coef, const Eigen::VectorXd& Vy_coef,
+                             const Eigen::VectorXd& Ax_coef, const Eigen::VectorXd& Ay_coef, 
+                             double t);
+    // Compute the user-defined yaw_dot_dot from the trajectory velocity in the XY plane
+    double yawDotDotComputation(const Eigen::VectorXd& Vx_coef, const Eigen::VectorXd& Vy_coef,
+                                const Eigen::VectorXd& Ax_coef, const Eigen::VectorXd& Ay_coef,
+                                const Eigen::VectorXd& Jx_coef, const Eigen::VectorXd& Jy_coef,
+                                double t);
+    // Updates yaw, yaw_dot, and yaw_dot_dot based on the requested time
+    void updateUserDefinedYaw(double t);
 };
 
 

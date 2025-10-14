@@ -222,15 +222,6 @@ namespace _compute_
 {
 
 /**
- * @brief Evaluate a polynomial for a given value.
- *        Coefficients should be ordered from highest to lowest degree.
- * @param coefficients Eigen vector of polynomial coefficients
- * @param value Scalar at which to evaluate the polynomial
- * @return Result of polynomial evaluation (double)
- */
-double evaluatePolynomial(const Eigen::VectorXd& coefficients, double value);
-
-/**
  * @brief Factory function for 1D linear interpolators. Given a grid (e.g., time) and its value
  *        vector (e.g., position), returns a fully constructed NDInterpolator_1_ML object ready
  *        for queries.
