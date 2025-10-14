@@ -1,0 +1,28 @@
+name: fw_trajectory
+codebase: cpp
+alpha_factor: 1.0
+numsamples: 200
+tstep: 0.01
+hover_time: 2.0
+waypoints:
+  - x: 0.0
+    y: 0.0
+    z: 0.0
+    time: 0.0
+  - x: 1.0
+    y: 0.0
+    z: -2.5
+    time: 3.5
+  - x: 3.0
+    y: 0.0
+    z: -4.0
+    time: 3.5
+  - x: 12.5
+    y: 0.0
+    z: -3.3
+    time: 1.8
+  - x: 22.5
+    y: 0.0
+    z: -2.6
+    time: 1.8
+  
