@@ -171,6 +171,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-traje
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/piecewise-polynomial)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/vector-interpolation)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/pid-omega)
 
 #-----------------------------------------------------------------------------
