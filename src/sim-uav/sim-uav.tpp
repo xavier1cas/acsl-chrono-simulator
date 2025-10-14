@@ -1185,13 +1185,14 @@ void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
     auto torque = 0.15 * motors[idx - 1].ct * thrust;       // Cq = 0.15 * ct -> Cq is the backtorque constant
 
     // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX
     // ##################################################################################
-
+    
+    // IRRLICHT SYSTEM IS FINNICKY. HENCE THE 0.01 MODIFIER. - ONLY AFFECTS VISUALIZATON
     auto rps = 0.01*(_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP));
 
     // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
+    // FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX
     // ##################################################################################
 
     // Set the values

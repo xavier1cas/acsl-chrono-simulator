@@ -290,24 +290,12 @@ void pid_omega::compute_normalized_thrusts()
     // Saturate each element of the Thrust vector between MIN_THRUST and MAX_THRUST
     cim.Sat_Thrust = (cim.Thrust.cwiseMin(MAX_THRUST).cwiseMax(MIN_THRUST));
 
-    // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-    // ##################################################################################
-
     // Compute the final control inputs
     control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(0));
     control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(1));
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(2));
     control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(3));
 
-    // control_input(0) = cim.Sat_Thrust(0);
-    // control_input(1) = cim.Sat_Thrust(1);
-    // control_input(2) = cim.Sat_Thrust(2);
-    // control_input(3) = cim.Sat_Thrust(3);
-
-    // ##################################################################################
-    // PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER - PLACEHOLDER
-    // ##################################################################################
 }
 
 // Function that is called in control.cpp
