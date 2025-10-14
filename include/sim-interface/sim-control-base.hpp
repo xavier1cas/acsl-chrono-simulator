@@ -42,10 +42,14 @@
 // ====================================================================================
 //  ACSL Physics Sim includes
 // ====================================================================================
-#include "sim-helpers.hpp"               // Import for the helper functions
-#include "sim-templated-helpers.hpp"     // Import the header for the templated headers
-#include "sim-logger.hpp"                // Import the header file for the Logger API
-#include "sim-trajectory.hpp"            // Import for the trajectory API
+#include "sim-helpers.hpp"                  // Import for the helper functions
+#include "sim-templated-helpers.hpp"        // Import for the templated headers
+#include "sim-logger.hpp"                   // Import the header for the Logger API
+#include "sim-trajectory.hpp"               // Import for the trajectory API
+#include "continuous-lyapunov-equation.hpp" // Import API for solving Lyapunov eqns
+#include "deadzone-operator.hpp"            // Import API for dead zone operator
+#include "projection-operator.hpp"          // Import API for projection operator
+#include "adaptive-laws.hpp"                // Import API for adaptive laws
 
 // ====================================================================================
 // Boost includes

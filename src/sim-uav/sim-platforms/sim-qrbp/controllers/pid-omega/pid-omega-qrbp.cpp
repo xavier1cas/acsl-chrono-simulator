@@ -298,11 +298,12 @@ void pid_omega::compute_normalized_thrusts()
 
 }
 
-// Function that is called in control.cpp
+// Function that is called in sim-bridge.cpp
 void pid_omega::run(const double time_step_rk4_) {
 
     // Process the dynamics --------------------------------------------------------
-    
+    // 1. Compute the aerodynamics
+
     // 2. Compute the translational control input
     compute_translational_control_in_I();
 

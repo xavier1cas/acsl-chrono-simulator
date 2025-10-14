@@ -159,12 +159,31 @@ inline void assignElementsToDxdt(Eigen::Matrix<T, Rows, Cols>& entity, boost::ar
     current_index += elements_to_copy;
 }
 
+// Inline template definition for logging Eigen vector or matrix
+template <typename Derived>
+inline void appendEigenData(std::ostringstream& oss, const Eigen::MatrixBase<Derived>& data) {
+    for (int i = 0; i < data.size(); ++i) {
+        oss << data(i) << ", ";
+    }
+}
+
+// Inline template definition for logging the headers for Eigen vector or matrix
+template <typename Derived>
+inline void generateMatrixHeaders(std::ostringstream& oss, const std::string& matrixName, 
+                                            const Eigen::MatrixBase<Derived>& matrix, const std::string& unit) {
+    for (int col = 0; col < matrix.cols(); ++col) {             // Iterate over columns first
+        for (int row = 0; row < matrix.rows(); ++row) {         // Then iterate over rows
+            oss << matrixName << " index-(" << row  << "|" << col << ") " << unit << ", ";
+        }
+    }
+}
 
 } // namespace _serialize_
 
 
 namespace _deserialize_
 {
+
 /**
  * @brief Assigns elements from a boost array segment to an Eigen matrix or vector.
  *
@@ -192,6 +211,22 @@ inline void assignElementsToMembers(Eigen::Matrix<T, Rows, Cols>& entity, boost:
 }
 
 } // namespace _deserialize_
+
+namespace _initiate_
+{
+
+/**
+ * @brief Zero-initializes a fixed-size Eigen matrix.
+ *
+ * @tparam MatrixType  Matrix type supporting setZero() (e.g., Eigen::Matrix).
+ * @param[in,out] matrix Reference to matrix to be set to zero.
+ */
+template <typename MatrixType>
+void initMat(MatrixType& matrix) {
+    matrix.setZero();
+}
+
+} // namespace _initiate_
 
 } // namespace _shared_
 

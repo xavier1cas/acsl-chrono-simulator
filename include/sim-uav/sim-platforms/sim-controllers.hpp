@@ -72,7 +72,7 @@
 // Includes for the different UAV platforms' controllers (add more as needed)
 // -----------------------------------------------------------------------------
 #include "pid-omega-qrbp.hpp"
-// #include "mrac-omega-qrbp.hpp"
+#include "mrac-omega-qrbp.hpp"
 // #include "pid-x8copter.hpp"
 // #include "mrac-x8copter.hpp"
 // #include "pid-acslquad.hpp"
@@ -212,7 +212,7 @@ struct controllers
         }
         else if (active.first == "qrbp" && active.second == "mrac_omega") {
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC OMEGA CONTROLLER TO QRBP");
-            // return std::make_unique< ::_acsl_::_qrbp_::_mrac_omega_::mrac_oemga >(logger, trajectory); // Implement when available
+            return std::make_unique< ::_acsl_::_qrbp_::_mrac_omega_::mrac_omega >(logger, trajectory);
         }
         // [Add more else if branches for other controllers as needed]
         // e.g., x8copter and acslquad controllers
