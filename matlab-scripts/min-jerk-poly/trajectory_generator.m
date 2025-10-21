@@ -165,7 +165,7 @@ if strcmp(traj.codebase, 'cpp')
     json_struct.hover_time.seconds = traj.hover_time;
     json_struct.waypoints = traj.wpts;
     json_struct.waypoint_times = traj.tpts;
-    json_struct.piecewise_polynomial_coefficeints = traj.pp.coefs;
+    json_struct.piecewise_polynomial_coefficients = traj.pp.coefs;
 
     structToJSONcpp(json_struct, traj);
 
