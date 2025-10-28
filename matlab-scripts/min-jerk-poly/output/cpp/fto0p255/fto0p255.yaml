@@ -19,7 +19,7 @@ waypoints:
     time: 0.8
   - x: 1.0
     y: 0.0
-    z: -1.05
+    z: -1.1
     time: 1.75
   - x: 10.0
     y: 0.0
@@ -27,5 +27,5 @@ waypoints:
     time: 6.2
   - x: 10.5
     y: 0.0
-    z: -1.0
+    z: -0.9
     time: 2.2

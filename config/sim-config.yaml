@@ -110,7 +110,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: fto0p255
+  filename: fto0p314
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 
