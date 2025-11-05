@@ -1,2 +1,22 @@
 # ignore all the .vscode files
 .vscode/
+
+# macOS system files
+.DS_Store
+._*
+*.icloud
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# MATLAB/system caches
+.matlab/
