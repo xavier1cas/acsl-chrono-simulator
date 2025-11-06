@@ -47,10 +47,11 @@ namespace _flat_
 void simflat::ConfigureFlatGround()
 {
     // Convert the dimensions into the Chrono frame
-    auto floorPlacementAbs = _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(::_acsl_::_flat_::FLOOR_PLACEMENT_X, 
-                                                                                       ::_acsl_::_flat_::FLOOR_PLACEMENT_Y, 
-                                                                                       ::_acsl_::_flat_::FLOOR_PLACEMENT_Z));
-    
+    auto floorPlacementAbs = _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(
+                                                                              ::_acsl_::_flat_::FLOOR_PLACEMENT_X, 
+                                                                              ::_acsl_::_flat_::FLOOR_PLACEMENT_Y, 
+                                                                              ::_acsl_::_flat_::FLOOR_PLACEMENT_Z));
+
     // Create a contact material for the floor
     auto contact_material = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
     contact_material->SetFriction(::_acsl_::_flat_::FLOOR_FRICTION_COEFF);
@@ -63,7 +64,7 @@ void simflat::ConfigureFlatGround()
                         ::_acsl_::_flat_::FLOOR_VISIBILITY,                // Visual Asset Creation
                         ::_acsl_::_flat_::FLOOR_COLLIDABLE,                // Collision model
                         contact_material);                                 // Surface contact material
-    
+
     // Set the properties of the floorBody
     floorBody->SetPos(floorPlacementAbs);
     floorBody->SetRot(_shared_::_transformations_::GetChronoOrientaitonFromNED());

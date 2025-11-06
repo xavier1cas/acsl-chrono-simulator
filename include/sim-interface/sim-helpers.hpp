@@ -55,6 +55,8 @@
 #include "chrono/geometry/ChLineNurbs.h"
 #include "chrono/geometry/ChSurfaceNurbs.h"
 #include "chrono/assets/ChVisualShapeLine.h"
+#include "chrono/physics/ChMarker.h"
+#include "chrono/physics/ChBodyAuxRef.h"
 
 // ===============================
 // Boost includes
@@ -350,6 +352,18 @@ std::shared_ptr<chrono::ChVisualShapeLine> createNurbsVisual(
     int order = 3,
     const chrono::ChColor& color = chrono::ChColor(0.0f, 0.0f, 0.0f));
     
+/**
+ * @brief Creates a visual frame representation for a ChMarker using line segments.
+ * 
+ * Generates three perpendicular line segments (X, Y, Z axes) in red, green, and blue
+ * respectively to visualize the marker's coordinate frame in Irrlicht.
+ * 
+ * @param marker The ChMarker object to visualize. Must have an associated body.
+ * @param len    Length of each axis line segment (default: 0.5).
+ * @param thk    Thickness of the frame lines (default: 3.0).  
+ */
+void createMarkerFrameVisual(chrono::ChMarker& marker, double len = 0.5, double thk = 3.0);
+
 } // namespace _visualize_
 
 } // namespace _shared_

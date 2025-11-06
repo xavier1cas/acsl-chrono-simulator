@@ -362,6 +362,57 @@ std::shared_ptr<chrono::ChVisualShapeLine> createNurbsVisual(
     return nurbsasset;
 }
 
+// Creates a frame using lines for visualization of the markers.
+void createMarkerFrameVisual(chrono::ChMarker& marker, double len, double thk) {
+    // Get marker position and rotation in absolute coordinates
+    chrono::ChVector3d marker_pos = marker.GetPos();
+    chrono::ChQuaterniond marker_rot = marker.GetRot();
+
+    // Get the body the marker is attaced to 
+    chrono::ChBody* body = marker.GetBody();
+
+    // x-axis (red) ------------------------------------------------
+    auto x_line_geom = chrono_types::make_shared<chrono::ChLineSegment>();
+    chrono::ChVector3d x_start = marker_pos;
+    chrono::ChVector3d x_end = marker_pos + marker_rot.Rotate(
+                                            chrono::ChVector3d(len, 0, 0));
+    x_line_geom->pA = x_start; x_line_geom->pB = x_end;
+    
+    auto x_line = chrono_types::make_shared<chrono::ChVisualShapeLine>();
+    x_line->SetLineGeometry(x_line_geom);
+    x_line->SetColor(chrono::ChColor(1.0f, 0.0f, 0.0f));
+    x_line->SetThickness(thk);
+    
+    // y-axis (green) ----------------------------------------------
+    auto y_line_geom = chrono_types::make_shared<chrono::ChLineSegment>();
+    chrono::ChVector3d y_start = marker_pos;
+    chrono::ChVector3d y_end = marker_pos + marker_rot.Rotate(
+                                            chrono::ChVector3d(0, len, 0));
+    y_line_geom->pA = y_start; y_line_geom->pB = y_end;
+    
+    auto y_line = chrono_types::make_shared<chrono::ChVisualShapeLine>();
+    y_line->SetLineGeometry(y_line_geom);
+    y_line->SetColor(chrono::ChColor(0.0f, 1.0f, 0.0f));
+    y_line->SetThickness(thk);
+    
+    // z-axis (blue) -----------------------------------------------
+    auto z_line_geom = chrono_types::make_shared<chrono::ChLineSegment>();
+    chrono::ChVector3d z_start = marker_pos;
+    chrono::ChVector3d z_end = marker_pos + marker_rot.Rotate(
+                                            chrono::ChVector3d(0, 0, len));
+    z_line_geom->pA = z_start; z_line_geom->pB = z_end;
+    
+    auto z_line = chrono_types::make_shared<chrono::ChVisualShapeLine>();
+    z_line->SetLineGeometry(z_line_geom);
+    z_line->SetColor(chrono::ChColor(0.0f, 0.0f, 1.0f));
+    z_line->SetThickness(thk);
+
+    // Add all the shapes to the parent body of the marker
+    body->AddVisualShape(x_line);
+    body->AddVisualShape(y_line);
+    body->AddVisualShape(z_line);
+}
+
 } // namespace _visualize_
 
 } // namespace _shared_
