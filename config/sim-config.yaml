@@ -77,7 +77,8 @@ platform:
 controller:
   qrbp:
     pid_omega: false
-    mrac_omega: true
+    mrac_omega: false
+    mrac_observer: true
   x8copter: 
     pid: false
     mrac: false
@@ -110,7 +111,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: fto0p314
+  filename: bean_trajectory0p3
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

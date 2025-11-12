@@ -23,19 +23,20 @@
  **********************************************************************************************************************/
 
  /***********************************************************************************************************************
- * File:        mrac-omega-qrbp.cpp
+ * File:        mrac-observer-qrbp.cpp
  * Author:      Giri Mugundan Kumar
  * Date:        July 23, 2025
  * For info:    Andrea L'Afflitto 
  *              a.lafflitto@vt.edu
  * 
  * Description: MRAC with angular velocities for the QRBP. Inherts the class controller_base for the basic 
- *              functionality that is to be used for all control algorithms.
+ *              functionality that is to be used for all control algorithms. Also contains the code for 
+ *              the adaptive observer.
  * 
  * GitHub:    https://github.com/girimugundankumar/acsl-physics-sim.git
  **********************************************************************************************************************/
 
-#include "mrac-omega-qrbp.hpp"
+#include "mrac-observer-qrbp.hpp"
 
 namespace _acsl_
 {
@@ -43,7 +44,7 @@ namespace _acsl_
 namespace _qrbp_
 {
 
-namespace _mrac_omega_
+namespace _mrac_observer_
 {
 
 // -------------------------------------------------------------------------
@@ -51,8 +52,8 @@ namespace _mrac_omega_
 //   - Calls the base (controller_base) constructor and passes 
 //     both logger and trajectory.
 // -------------------------------------------------------------------------
-mrac_omega::mrac_omega(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
-                    : ::_acsl_::_control_::controller_base(logger, trajectory)
+mrac_observer::mrac_observer(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
+                            : ::_acsl_::_control_::controller_base(logger, trajectory)
 {
     // Initial Conditions
     init();   
@@ -62,7 +63,7 @@ mrac_omega::mrac_omega(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_:
 // read_params Implementation:
 // - Takes the hardcoded path for the gains and parameters and reads it in
 // -------------------------------------------------------------------------
-void mrac_omega::read_params(const std::string& jsonFile)
+void mrac_observer::read_params(const std::string& jsonFile)
 {
 	// Implementation here
 	std::ifstream file(jsonFile);
@@ -126,9 +127,9 @@ void mrac_omega::read_params(const std::string& jsonFile)
 }
 
 // Implementing virtual functios from controller_base
-void mrac_omega::init(){
+void mrac_observer::init(){
 	// Reading in the parameters
-	read_params("../chrono-assets/parameters/qrbp/MRAC_OMEGA/gains_MRAC_OMEGA.json");
+	read_params("../chrono-assets/parameters/qrbp/MRAC_OBSERVER/gains_MRAC_OBSERVER.json");
 
 	// Set the inital conditions
     y.fill(0.0);
@@ -179,26 +180,29 @@ void mrac_omega::init(){
 	// Solve the continuous Lyapunov eequation to compute P_rotational
 	cip.P_rot = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_rot, cip.Q_rot);
 
+    // DISPLAY A DEBUG MESSAGE
+    _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
+
 }
 
 // Update function for the controller
-void mrac_omega::update(double time, 
-                        double x,
-                        double y,
-												double z,
-												double vx,
-												double vy,
-												double vz,
-												double q0,
-												double q1,
-												double q2,
-												double q3,
-												double roll,
-												double pitch,
-												double yaw,
-												double w_x,
-												double w_y,
-												double w_z)     
+void mrac_observer::update( double time, 
+                            double x,
+                            double y,
+						    double z,
+						    double vx,
+                            double vy,
+                            double vz,
+                            double q0,
+                            double q1,
+                            double q2,
+                            double q3,
+                            double roll,
+                            double pitch,
+                            double yaw,
+                            double w_x,
+                            double w_y,
+                            double w_z)     
 {
     // 1. Assign all the states ----------------------------------------------------
     cim.t = time;
@@ -244,7 +248,7 @@ void mrac_omega::update(double time,
 }
 
 // Function to assign elements from the rk4 integrator
-void mrac_omega::assign_from_rk4()
+void mrac_observer::assign_from_rk4()
 {
     //------------ assign after integration  ------------//
     int index = 0;
@@ -268,7 +272,7 @@ void mrac_omega::assign_from_rk4()
 }
 
 // Model function for integration
-void mrac_omega::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
+void mrac_observer::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
 {
     //------------ Fill up the dy for integration  ------------//
     int index = 0;
@@ -292,7 +296,7 @@ void mrac_omega::model(const _control_::rk4_array<double, NSI> &y, _control_::rk
 }
 
 // Function to compute the outerloop regressor vector
-void mrac_omega::compute_outer_loop_regressor()
+void mrac_observer::compute_outer_loop_regressor()
 {
 	// cache the variables
     double sph = sin(cim.eta_rot(0));
@@ -343,7 +347,7 @@ void mrac_omega::compute_outer_loop_regressor()
 }
 
 // Function to compute the inner loop regressor vector
-void mrac_omega::compute_inner_loop_regressor()
+void mrac_observer::compute_inner_loop_regressor()
 {
 	// cache the variables
 	// ####################################################################
@@ -373,7 +377,7 @@ void mrac_omega::compute_inner_loop_regressor()
 }
 
 // Function to compute the outerloop control in I
-void mrac_omega::compute_translational_control_in_I()
+void mrac_observer::compute_translational_control_in_I()
 {
 	// Compute the error in the states
 	cim.e_tran << cim.x_tran - csm.x_tran_ref;
@@ -480,7 +484,7 @@ void mrac_omega::compute_translational_control_in_I()
 }
 
 // Compute the orientation commands and the desired total thrust
-void mrac_omega::compute_u1_eta_d()
+void mrac_observer::compute_u1_eta_d()
 {
 	// Compute the virtual forces in J
 	cim.mu_tran_J << cim.R_I_J * cim.mu_tran_I;
@@ -532,7 +536,7 @@ void mrac_omega::compute_u1_eta_d()
 }
 
 // Compute the rotational control
-void mrac_omega::compute_rotational_control()
+void mrac_observer::compute_rotational_control()
 {
 	// Compute the error in the orientation [actual - desired]
 	cim.e_rot_eta(0) = cim.eta_rot(0) - cim.eta_rot_d(0);
@@ -642,7 +646,7 @@ void mrac_omega::compute_rotational_control()
 
 
 // Function to compute the normalized thrusts
-void mrac_omega::compute_normalized_thrusts()
+void mrac_observer::compute_normalized_thrusts()
 {
     // Compute the individual thrusts in Newtons
     cim.Thrust << mixer_matrix_qrbp * cim.u;
@@ -659,7 +663,7 @@ void mrac_omega::compute_normalized_thrusts()
 }
 
 // Function that is called in sim-bridge.cpp
-void mrac_omega::run(const double time_step_rk4_) {
+void mrac_observer::run(const double time_step_rk4_) {
 
     // Process the dynamics --------------------------------------------------------
     // 1. Compute the aerodynamics
@@ -683,7 +687,7 @@ void mrac_omega::run(const double time_step_rk4_) {
     compute_normalized_thrusts();
 
     // 8. Do the integration
-    rk4.do_step(boost::bind(&mrac_omega::model, this, bph::_1, bph::_2, bph::_3),
+    rk4.do_step(boost::bind(&mrac_observer::model, this, bph::_1, bph::_2, bph::_3),
                 y, cim.t, time_step_rk4_);
     
     // Capture the time after the execution of the controller
@@ -699,14 +703,14 @@ void mrac_omega::run(const double time_step_rk4_) {
 }
 
 // Function that is called during the constructor. 
-bool mrac_omega::InitiateLogging()
+bool mrac_observer::InitiateLogging()
 {
-    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "qrbp" ,"MRAC_OMEGA");
+    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "qrbp" ,"MRAC_OBSERVER");
     return status;
 }
 
 // Funciton that setups up the headers for the log file
-void mrac_omega::ConfigureHeaders()
+void mrac_observer::ConfigureHeaders()
 {
 
     // Create the oss object
@@ -877,15 +881,15 @@ void mrac_omega::ConfigureHeaders()
 
         BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
 
-        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE MRAC OMEGA LOG HEADER DATA");
+        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE MRAC OBSERVER LOG HEADER DATA");
     }
     catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC OMEGA LOG HEADER DATA", e.what());
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC OBSERVER LOG HEADER DATA", e.what());
     }
 
 }
 
-void mrac_omega::LogData()
+void mrac_observer::LogData()
 {
     // Log the data
     std::ostringstream oss;
@@ -1064,12 +1068,12 @@ void mrac_omega::LogData()
         BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
     }
     catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC OMEGA LOG HEADER DATA", e.what());
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC OBSERVER LOG HEADER DATA", e.what());
     }
 }
 
 
-} // namespace _mrac_omega_
+} // namespace _mrac_observer_
 
 } // namespace _qrbp_
 

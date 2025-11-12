@@ -73,6 +73,7 @@
 // -----------------------------------------------------------------------------
 #include "pid-omega-qrbp.hpp"
 #include "mrac-omega-qrbp.hpp"
+#include "mrac-observer-qrbp.hpp"
 // #include "pid-x8copter.hpp"
 // #include "mrac-x8copter.hpp"
 // #include "pid-acslquad.hpp"
@@ -125,8 +126,9 @@ struct controllers
     // -------------------------------------------------------------------------
     struct qrbp
     {
-        bool pid_omega{};   // PID omega controller for QRBP
-        bool mrac_omega{};  // MRAC omega controller for QRBP
+        bool pid_omega{};       // PID omega controller for QRBP
+        bool mrac_omega{};      // MRAC omega controller for QRBP
+        bool mrac_observer{};   // MRAC omega controller with adaptive observer
     } qrbp;
 
     // -------------------------------------------------------------------------
@@ -162,6 +164,7 @@ struct controllers
         return {
             {"qrbp", "pid_omega", qrbp.pid_omega},
             {"qrbp", "mrac_omega", qrbp.mrac_omega},
+            {"qrbp", "mrac_observer", qrbp.mrac_observer},
             {"x8copter", "pid", x8copter.pid},
             {"x8copter", "mrac", x8copter.mrac},
             {"x8copter", "tlmrac", x8copter.tlmrac},
@@ -213,6 +216,10 @@ struct controllers
         else if (active.first == "qrbp" && active.second == "mrac_omega") {
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC OMEGA CONTROLLER TO QRBP");
             return std::make_unique< ::_acsl_::_qrbp_::_mrac_omega_::mrac_omega >(logger, trajectory);
+        }
+        else if (active.first == "qrbp" && active.second == "mrac_observer") {
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC OMEGA W/ ADAPTIVE OBSERVER TO QRBP");
+            return std::make_unique< ::_acsl_::_qrbp_::_mrac_observer_::mrac_observer >(logger, trajectory);
         }
         // [Add more else if branches for other controllers as needed]
         // e.g., x8copter and acslquad controllers
