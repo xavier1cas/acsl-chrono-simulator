@@ -233,7 +233,7 @@ void simsystem::SetupPhysicsSystem()
     // ------------------------------------------------------------------------
     if (phyconfig.gravity) {
         m_physics.SetGravitationalAcceleration(
-            _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 9.8))
+            _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 9.80665)) 
         );
     } else {
         m_physics.SetGravitationalAcceleration(

@@ -108,6 +108,22 @@ struct controller_internal_parameters {
     bool use_projection_operator;                   // Boolean for switching on/off the projection operator
 };
 
+// Structure for holding all parameter members of the observer
+struct observer_internal_parameters {
+    Eigen::Matrix<double, 3, 6> C_tran_observer;            // Observer C Matrix
+    Eigen::Matrix<double, 6, 6> A_tran_observer_ref;        // A_{ref,y} matrix for the observer's plant
+    Eigen::Matrix<double, 6, 3> B_tran_observer;            // B matrix for the observer's plant
+    Eigen::Matrix<double, 6, 3> L_tran_observer;            // L Matrix for the observer's plant
+    Eigen::Matrix<double, 3, 3> Gamma_tran_observer_y;      // Adaptive rate for the plant
+    Eigen::Matrix<double, 4, 4> Gamma_tran_observer_Theta;  // Adaptive rate for the observer's regressor
+    double projection_x_max_Gamma_tran_observer_y;          // Projection limit for Gamma_y
+    double projection_epsilon_Gamma_tran_observer_y;        // Projection tolerance for Gamma_y
+    double projection_x_max_Gamma_tran_observer_Theta;      // Projection limit for Gamma_Theta_y
+    double projection_epsilon_Gamma_tran_observer_Theta;    // Projection tolerance for Gamma_Theta_y
+    double dead_zone_e0_Gamma_tran_observer_y;              // Dead-zone tolerance for Gamma_y
+    double dead_zone_e0_Gamma_tran_observer_Theta;          // Dead-zone tolerance for Gamma_Theta_y
+};
+
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
 struct controller_integrated_state_members {
     Eigen::Matrix<double, 3, 1> e_tran_pos_I;           // Translational integral error
@@ -308,6 +324,9 @@ private:
 
     // Define the internal parameter members of the controller 
     ::_acsl_::_qrbp_::_mrac_observer_::controller_internal_parameters cip;
+
+    // Define the internal parameter members of the observer
+    ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_parameters oip;
 
     // Define the internal members of the controller
     ::_acsl_::_qrbp_::_mrac_observer_::controller_internal_members cim;   

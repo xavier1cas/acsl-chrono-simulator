@@ -124,6 +124,22 @@ void mrac_observer::read_params(const std::string& jsonFile)
 
 	cip.projection_x_max_Theta_rotational = j["ROBUSTIFICATION"]["projection_x_max_Theta_rotational"];
 	cip.projection_epsilon_Theta_rotational = j["ROBUSTIFICATION"]["projection_epsilon_Theta_rotational"];
+
+    // Adaptive Observer gains and parameter matrices
+    oip.C_tran_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["C_tran_observer"], 3, 6);
+    oip.A_tran_observer_ref = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["A_tran_observer_ref"], 6, 6);
+    oip.B_tran_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["B_tran_observer"], 6, 3);
+    oip.L_tran_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["L_tran_observer"], 6, 3);
+    oip.Gamma_tran_observer_y = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_tran_observer_y"], 3, 3);
+    oip.Gamma_tran_observer_Theta = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_tran_observer_Theta"], 4, 4);
+
+    oip.projection_x_max_Gamma_tran_observer_y      = j["OBSERVER"]["projection_x_max_Gamma_tran_observer_y"];
+    oip.projection_epsilon_Gamma_tran_observer_y    = j["OBSERVER"]["projection_epsilon_Gamma_tran_observer_y"];
+    oip.projection_x_max_Gamma_tran_observer_Theta  = j["OBSERVER"]["projection_x_max_Gamma_tran_observer_Theta"];
+    oip.projection_epsilon_Gamma_tran_observer_Theta = j["OBSERVER"]["projection_epsilon_Gamma_tran_observer_Theta"];
+    oip.dead_zone_e0_Gamma_tran_observer_y          = j["OBSERVER"]["dead_zone_e0_Gamma_tran_observer_y"];
+    oip.dead_zone_e0_Gamma_tran_observer_Theta      = j["OBSERVER"]["dead_zone_e0_Gamma_tran_observer_Theta"];
+
 }
 
 // Implementing virtual functios from controller_base
