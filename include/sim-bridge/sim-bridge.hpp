@@ -111,7 +111,7 @@ public:
         if (this->log2file) { InitiateLogging(); ConfigureHeaders(); }
 
         // Say you are going to start the simulation
-        _message_::SIMULATOR_INFO("[SIMBRG]:\033[5;97;41m RUNNING SIMULATION! \033[0m");
+        _message_::SIMULATOR_INFO("[SIMBRG]: \033[5;97;41m RUNNING SIMULATION! \033[0m");
     }
 
     // ------------------------------------------------------------------------

@@ -75,7 +75,23 @@ inline auto AdaptiveLawDeadZoneEMod(const Der1& Gamma,
   // Return the derivative of the adaptive gain
   return K_hat_dot;
 }
-                        
+
+// Robust MRAC - Adaptive law formula equipped with only the dead-zone modification (no e-modification)
+// For reference: E. Lavretsky, K. Wise, "Robust and Adaptive Control", Springer 2013, Sec. 11.2.1
+template <typename Der1, typename Der2, typename Der3>
+inline auto AdaptiveLawDeadZone(const Der1& Gamma,
+                                const double dead_zone_value,
+                                const Der2& pi_vec,
+                                const Der3& eTPB) 
+{
+
+  // Compute the adaptive law update with deadzone
+  auto K_hat_dot = Gamma * dead_zone_value * (pi_vec * eTPB);
+
+  // Return the derivative of the adaptive gain
+  return K_hat_dot;
+}
+
 
 } // namespace _adaptive_laws_
 

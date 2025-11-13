@@ -50,7 +50,7 @@ namespace _mrac_observer_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 202;
+constexpr int NSI = 241;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -145,6 +145,13 @@ struct controller_integrated_state_members {
 	Eigen::Matrix<double, 12, 3> Theta_hat_rot;			// Rotational Adaptive gains for Theta
 };
 
+// Structure for all the members that are mapped to the rk4 vector AFTER integration
+struct observer_integrated_state_members {
+    Eigen::Matrix<double, 6, 1> x_hat_tran_observer;       // Observer estimated states
+    Eigen::Matrix<double, 3, 3> K_hat_tran_observer_y;     // Observer Gain
+    Eigen::Matrix<double, 4, 3> Theta_hat_tran_observer_y; // Observer Gain
+};
+
 // Structure for all the internal members of the controller
 struct controller_internal_members {
     double t;                                                      // Time
@@ -213,6 +220,22 @@ struct controller_internal_members {
 	bool proj_op_activated_K_hat_x_rotational;					   // Projection activation boolean - IL - K_hat_x
 	bool proj_op_activated_K_hat_r_rotational;					   // Projection activation boolean - IL - K_hat_r
 	bool proj_op_activated_Theta_hat_rotational;				   // Projection activation boolean - IL - Theta_hat
+};
+
+// Structure for all the internal members of the observer
+struct observer_internal_members {
+    Eigen::Matrix<double, 3, 1> y_tran_observer_output;            // y_{output} = C x (true measured value)
+    Eigen::Matrix<double, 3, 1> y_tran_observer_est;               // y_{estimate} = C \hat{x} (estimate)
+    Eigen::Matrix<double, 4, 1> Phi_tran_observer_y;               // Regressor for the observer plant
+    Eigen::Matrix<double, 3, 3> K_hat_tran_observer_y_dot;         // Derivative of observer Gain
+    Eigen::Matrix<double, 4, 3> Theta_hat_tran_observer_y_dot;     // Derivative of observer Gain
+    Eigen::Matrix<double, 6, 1> x_hat_tran_observer_dot;                         // Observer model
+    Eigen::Matrix<double, 3, 1> u_tran_observer;                   // The virtual control of the observer
+    Eigen::Matrix<double, 3, 1> e_tran_observer;                   // Y_output - Y_est
+    double dead_zone_value_K_hat_y;                                // dead zone value for the gains
+    double dead_zone_value_Theta_hat_y;                            // dead zone value for the gains
+    bool proj_op_activated_K_hat_tran_observer_y;				   // Projection activation boolean - K_hat_tran_observer_y
+    bool proj_op_activated_Theta_hat_tran_observer_y;			   // Projection activation boolean - Theta_hat_tran_observer_y
 };
 
 
@@ -331,8 +354,14 @@ private:
     // Define the internal members of the controller
     ::_acsl_::_qrbp_::_mrac_observer_::controller_internal_members cim;   
 
+    // Define the internal members of the observer
+    ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_members oim;
+
     // Define the internal integrated state members of the controller
     ::_acsl_::_qrbp_::_mrac_observer_::controller_integrated_state_members csm; 
+
+    // Define the internal integrated state members of the observer
+    ::_acsl_::_qrbp_::_mrac_observer_::observer_integrated_state_members osm;
 
 private:
     // -------------------------------------------------------------------------
@@ -359,8 +388,8 @@ private:
     // Assign the values from rk4 to controller internal members
     void assign_from_rk4();		
 
-    // Function to compute the parameters for the adaptive observer
-    // void observer_sufficient_conditions();
+    // Function to compute the dynamics of the observer
+    void compute_observer_dynamics();
 
 };
 

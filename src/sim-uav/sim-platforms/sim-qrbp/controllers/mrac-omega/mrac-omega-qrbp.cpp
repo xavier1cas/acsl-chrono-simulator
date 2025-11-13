@@ -206,7 +206,7 @@ void mrac_omega::update(double time,
     // Assign the Translational States
     cim.x_tran_pos << x,y,z;
     cim.x_tran_vel << vx, vy, vz;
-		cim.x_tran << cim.x_tran_pos, cim.x_tran_vel;
+    cim.x_tran << cim.x_tran_pos, cim.x_tran_vel;
 
     // Assign the Rotational States
     cim.eta_rot << roll, pitch, yaw;
