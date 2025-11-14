@@ -122,6 +122,7 @@ struct observer_internal_parameters {
     double projection_epsilon_Gamma_tran_observer_Theta;    // Projection tolerance for Gamma_Theta_y
     double dead_zone_e0_Gamma_tran_observer_y;              // Dead-zone tolerance for Gamma_y
     double dead_zone_e0_Gamma_tran_observer_Theta;          // Dead-zone tolerance for Gamma_Theta_y
+    Eigen::Matrix<double, 3, 3> K_tran_observer_ye;         // Inital gains for the K_hat_y matrix
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration

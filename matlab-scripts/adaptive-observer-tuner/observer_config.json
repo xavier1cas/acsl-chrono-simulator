@@ -33,12 +33,12 @@
     "L_tran_observer": {
       "scaling_coef": 1,
       "matrix": [
-        [-1.1053, 0, 0],
-        [0, -1.1053, 0],
-        [0, 0, -2.1219],
-        [-0.705, 0, 0],
-        [0, -0.705, 0],
-        [0, 0, 0.4043]
+        [-0.4853, 0, 0],
+        [0, -0.4853, 0],
+        [0, 0, -0.3057],
+        [0.334, 0, 0],
+        [0, 0.334, 0],
+        [0, 0, -0.0859]
       ]
     },
     "Gamma_tran_observer_y": {
@@ -58,10 +58,18 @@
         [0, 0, 0, 0]
       ]
     },
-    "projection_x_max_Gamma_tran_observer_y": 1000,
-    "projection_epsilon_Gamma_tran_observer_y": 200,
-    "projection_x_max_Gamma_tran_observer_Theta": 1000,
-    "projection_epsilon_Gamma_tran_observer_Theta": 200,
+    "K_tran_observer_ye": {
+      "scaling_coef": 1,
+      "matrix": [
+        [-5.0645, 0, 0],
+        [0, -5.0645, 0],
+        [0, 0, -35.4517]
+      ]
+    },
+    "projection_x_max_Gamma_tran_observer_y": 100,
+    "projection_epsilon_Gamma_tran_observer_y": 20,
+    "projection_x_max_Gamma_tran_observer_Theta": 100,
+    "projection_epsilon_Gamma_tran_observer_Theta": 20,
     "dead_zone_e0_Gamma_tran_observer_y": 0.001,
     "dead_zone_e0_Gamma_tran_observer_Theta": 0.001
   }

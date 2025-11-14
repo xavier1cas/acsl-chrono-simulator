@@ -67,11 +67,11 @@ param.Gamma_y = blkdiag(7e5, 7e5, 7e5);
 param.Gamma_Theta_y = blkdiag(0.01, 0.01, 0.00001, 0.00001); 
 
 % OBSERVER GAINS PROJECTION OPERTAOR PARAMETERS
-param.projection_x_max_Gamma_tran_observer_y = 1000;
-param.projection_epsilon_Gamma_tran_observer_y = 200;
+param.projection_x_max_Gamma_tran_observer_y = 100;
+param.projection_epsilon_Gamma_tran_observer_y = 20;
 
-param.projection_x_max_Gamma_tran_observer_Theta = 1000;
-param.projection_epsilon_Gamma_tran_observer_Theta = 200;
+param.projection_x_max_Gamma_tran_observer_Theta = 100;
+param.projection_epsilon_Gamma_tran_observer_Theta = 20;
 
 % OBSERVER GAINS DEADZONE SWITCH TOLERANCE
 param.dead_zone_e0_Gamma_tran_observer_y = 1e-3;
@@ -135,7 +135,7 @@ param.N = size(param.Theta, 2);
 % solve for the other parameters
 eps_grid = [1e-8 1e-7 1e-6 1e-5 1e-4 1e-3 1e-2 ...
             0.02 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 ...
-            1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9
+            % 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9
             ];
 
 best_gap = -Inf;   % Define the best gap
@@ -226,6 +226,7 @@ param.B = arrayfun(@(x) clean_val(x), param.B);
 param.L = arrayfun(@(x) clean_val(x), param.L);
 param.Gamma_y = arrayfun(@(x) clean_val(x), param.Gamma_y);
 param.Gamma_Theta_y = arrayfun(@(x) clean_val(x), param.Gamma_Theta_y);
+param.K_ye = arrayfun(@(x) clean_val(x), param.K_ye);
 
 % --- Open JSON file ---
 fid = fopen(outfile, 'w');
@@ -245,7 +246,8 @@ try
         'B_tran_observer', param.B; ...
         'L_tran_observer', param.L; ...
         'Gamma_tran_observer_y', param.Gamma_y; ...
-        'Gamma_tran_observer_Theta', param.Gamma_Theta_y ...
+        'Gamma_tran_observer_Theta', param.Gamma_Theta_y; ...
+        'K_tran_observer_ye', param.K_ye ...
     };
 
     nEntries = size(entries, 1);

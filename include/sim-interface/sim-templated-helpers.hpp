@@ -403,6 +403,47 @@ void initMat(MatrixType& matrix) {
 
 } // namespace _initiate_
 
+namespace _validate_
+{
+    
+/**
+ * @brief Checks if a scalar value is NaN.
+ *
+ * Throws a runtime error with the provided message if the input value is NaN.
+ *
+ * @tparam T        Scalar type (e.g., float, double).
+ * @param value     The value to check for NaN.
+ * @param message   The error message to include in the exception if value is NaN.
+ * @throws std::runtime_error if value is NaN.
+ */
+template <typename T>
+inline void VariableCheckNaN(T value, const char* message) {
+    if (std::isnan(value)) {
+        throw std::runtime_error(message);
+    }
+}
+
+
+/**
+ * @brief Checks if all elements in an Eigen matrix are finite (not NaN or inf).
+ *
+ * Throws a runtime error with the provided message if the matrix contains non-finite entries.
+ *
+ * @tparam Derived  Eigen matrix or vector type (supports allFinite()).
+ * @param matrix    The Eigen matrix or vector to check.
+ * @param message   The error message to include in the exception if check fails.
+ * @throws std::runtime_error if matrix contains any NaN or Inf elements.
+ */
+template <typename Derived>
+inline void MatrixCheckNaN(const Eigen::MatrixBase<Derived>& matrix, const char* message) {
+    if (!matrix.allFinite()) {
+        throw std::runtime_error(message);
+    }
+}
+
+
+} // namespace _validate_
+
 } // namespace _shared_
 
 #endif // SIM_TEMPLATED_HELPERS_HPP_
