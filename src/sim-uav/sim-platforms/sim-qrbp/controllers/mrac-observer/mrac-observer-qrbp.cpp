@@ -199,7 +199,21 @@ void mrac_observer::init(){
 
     // Initiate the K_hat Matrix
     osm.K_hat_tran_observer_y << oip.K_tran_observer_ye;
-
+    // std::cout << "K_hat_tran_observer_y:\n" << osm.K_hat_tran_observer_y << std::endl;
+    // Initate the corresponding rk4 vector
+    int index = 208;
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_tran_observer_ye, this->y, index);
+    // std::cout << "\n" 
+    //           << y[208] << ", " 
+    //           << y[209] << ", " 
+    //           << y[210] << ", " 
+    //           << y[211] << ", " 
+    //           << y[212] << ", " 
+    //           << y[213] << ", " 
+    //           << y[214] << ", " 
+    //           << y[215] << ", " 
+    //           << y[216] << ", " 
+    //           << "\n" << std::endl;
     // DISPLAY A DEBUG MESSAGE
     _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
 
@@ -673,155 +687,155 @@ void mrac_observer::compute_rotational_control()
 // Function to compute the dynamics of the adaptive observer
 void mrac_observer::compute_observer_dynamics()
 {
-    // // Assign the measured ouptut (use the actual state here)
-    // oim.y_tran_observer_output << oip.C_tran_observer * cim.x_tran;
+    // Assign the measured ouptut (use the actual state here)
+    oim.y_tran_observer_output << oip.C_tran_observer * cim.x_tran;
 
-    // // // Assign the estimated value (use the estimated state here)
-    // oim.y_tran_observer_est << oip.C_tran_observer * osm.x_hat_tran_observer;
+    // Assign the estimated value (use the estimated state here)
+    oim.y_tran_observer_est << oip.C_tran_observer * osm.x_hat_tran_observer;
 
-    // // // Compute the estimation error
-    // oim.e_tran_observer << oim.y_tran_observer_output - oim.y_tran_observer_est;
+    // Compute the estimation error
+    oim.e_tran_observer << oim.y_tran_observer_output - oim.y_tran_observer_est;
 
-    // // // Compute the regressor vector for the observer
-    // oim.Phi_tran_observer_y << cim.mu_tran_I(0), 
-    //                            cim.mu_tran_I(1), 
-    //                            cim.mu_tran_I(2), 
-    //                            static_cast<double>(G);
+    // Compute the regressor vector for the observer
+    oim.Phi_tran_observer_y << cim.mu_tran_I(0), 
+                               cim.mu_tran_I(1), 
+                               cim.mu_tran_I(2), 
+                               static_cast<double>(G);
+    
+    // Compute the virtual control input for the observer
+    oim.u_tran_observer << cim.mu_tran_I + MASS * G * e3_basis 
+                            - osm.K_hat_tran_observer_y.transpose() * oim.y_tran_observer_output
+                            + osm.Theta_hat_tran_observer_y.transpose() * oim.Phi_tran_observer_y;
 
-    // // // Compute the virtual control input for the observer
-    // oim.u_tran_observer << cim.mu_tran_I + MASS * G * e3_basis 
-    //                         - osm.K_hat_tran_observer_y.transpose() * oim.y_tran_observer_output
-    //                         + osm.Theta_hat_tran_observer_y.transpose() * oim.Phi_tran_observer_y;
+    // Compute x_hat_tran_observer_dot
+    oim.x_hat_tran_observer_dot << oip.A_tran_observer_ref * osm.x_hat_tran_observer 
+                                    + oip.B_tran_observer * oim.u_tran_observer 
+                                    + oip.L_tran_observer * oim.e_tran_observer;
 
-    // // Compute x_hat_tran_observer_dot
-    // oim.x_hat_tran_observer_dot << oip.A_tran_observer_ref * osm.x_hat_tran_observer 
-    //                                 + oip.B_tran_observer * oim.u_tran_observer 
-    //                                 + oip.L_tran_observer * oim.e_tran_observer;
+    // Compute the \dot{K_hat_y} ---------------------------------------------------------------------------------------------------------
+    // Computing the scalar value output from the dead-zone modification modulation function
+    oim.dead_zone_value_K_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
+                                                                                          oip.dead_zone_e0_Gamma_tran_observer_y);
 
-    // // Compute the \dot{K_hat_y} ---------------------------------------------------------------------------------------------------------
-    // // Computing the scalar value output from the dead-zone modification modulation function
-    // oim.dead_zone_value_K_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
-    //                                                                                       oip.dead_zone_e0_Gamma_tran_observer_y);
+    // Adaptive law
+    oim.K_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_y,
+                                                                                     oim.dead_zone_value_K_hat_y,
+                                                                                     oim.y_tran_observer_output,
+                                                                                     oim.e_tran_observer.transpose());
 
-    // // Adaptive law
-    // oim.K_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_y,
-    //                                                                                  oim.dead_zone_value_K_hat_y,
-    //                                                                                  oim.y_tran_observer_output,
-    //                                                                                  oim.e_tran_observer.transpose());
+    // We want to use the projection operator by default
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_tran_observer_y)> proj_op_output_K_hat_tran_observer_y = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_tran_observer_y,
+                                                                    oim.K_hat_tran_observer_y_dot,
+                                                                    oip.projection_x_max_Gamma_tran_observer_y,
+                                                                    oip.projection_epsilon_Gamma_tran_observer_y);
 
-    // // // We want to use the projection operator by default
-    // ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_tran_observer_y)> proj_op_output_K_hat_tran_observer_y = 
-    //     ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_tran_observer_y,
-    //                                                                 oim.K_hat_tran_observer_y_dot,
-    //                                                                 oip.projection_x_max_Gamma_tran_observer_y,
-    //                                                                 oip.projection_epsilon_Gamma_tran_observer_y);
+    oim.K_hat_tran_observer_y_dot = proj_op_output_K_hat_tran_observer_y.projected_matrix;
+    oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_K_hat_tran_observer_y.projection_operator_activated;
 
-    // oim.K_hat_tran_observer_y_dot = proj_op_output_K_hat_tran_observer_y.projected_matrix;
-    // oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_K_hat_tran_observer_y.projection_operator_activated;
+    // Compute the \dot{Theta_hat_y} -----------------------------------------------------------------------------------------------------
+    // Computing the scalar value output from the dead-zone modification modulation function
+    oim.dead_zone_value_Theta_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
+                                                                                              oip.dead_zone_e0_Gamma_tran_observer_Theta);
 
-    // // Compute the \dot{Theta_hat_y} -----------------------------------------------------------------------------------------------------
-    // // Computing the scalar value output from the dead-zone modification modulation function
-    // oim.dead_zone_value_Theta_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
-    //                                                                                           oip.dead_zone_e0_Gamma_tran_observer_Theta);
+    // Adaptive law
+    oim.Theta_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_Theta,
+                                                                                        oim.dead_zone_value_Theta_hat_y,
+                                                                                        oim.Phi_tran_observer_y,
+                                                                                        oim.e_tran_observer.transpose());                                                                                              
 
-    // // Adaptive law
-    // oim.Theta_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_Theta,
-    //                                                                                     oim.dead_zone_value_Theta_hat_y,
-    //                                                                                     oim.Phi_tran_observer_y,
-    //                                                                                     oim.e_tran_observer.transpose());                                                                                              
+    // We want to use the projection operator by default
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_tran_observer_y)> proj_op_output_Theta_hat_tran_observer_y = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_tran_observer_y,
+                                                                    oim.Theta_hat_tran_observer_y_dot,
+                                                                    oip.projection_x_max_Gamma_tran_observer_Theta,
+                                                                    oip.projection_epsilon_Gamma_tran_observer_Theta);
 
-    // // We want to use the projection operator by default
-    // ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_tran_observer_y)> proj_op_output_Theta_hat_tran_observer_y = 
-    //     ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_tran_observer_y,
-    //                                                                 oim.Theta_hat_tran_observer_y_dot,
-    //                                                                 oip.projection_x_max_Gamma_tran_observer_Theta,
-    //                                                                 oip.projection_epsilon_Gamma_tran_observer_Theta);
-
-    // oim.Theta_hat_tran_observer_y_dot = proj_op_output_Theta_hat_tran_observer_y.projected_matrix;
-    // oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_Theta_hat_tran_observer_y.projection_operator_activated;
+    oim.Theta_hat_tran_observer_y_dot = proj_op_output_Theta_hat_tran_observer_y.projected_matrix;
+    oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_Theta_hat_tran_observer_y.projection_operator_activated;
 
     // #############################################
     // ## PLACEHOLDER - PLACEHOLDER - PLACEHOLDER ##
     // #############################################
     
-    // Assign the measured output (use the actual state here)
-    oim.y_tran_observer_output << oip.C_tran_observer * cim.x_tran;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.y_tran_observer_output, "y_tran_observer_output is NaN!");
+    // // Assign the measured output (use the actual state here)
+    // oim.y_tran_observer_output << oip.C_tran_observer * cim.x_tran;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.y_tran_observer_output, "y_tran_observer_output is NaN!");
 
-    // Assign the estimated value (use the estimated state here)
-    oim.y_tran_observer_est << oip.C_tran_observer * osm.x_hat_tran_observer;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.y_tran_observer_est, "y_tran_observer_est is NaN!");
+    // // Assign the estimated value (use the estimated state here)
+    // oim.y_tran_observer_est << oip.C_tran_observer * osm.x_hat_tran_observer;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.y_tran_observer_est, "y_tran_observer_est is NaN!");
 
-    // Compute the estimation error
-    oim.e_tran_observer << oim.y_tran_observer_output - oim.y_tran_observer_est;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.e_tran_observer, "e_tran_observer is NaN!");
+    // // Compute the estimation error
+    // oim.e_tran_observer << oim.y_tran_observer_output - oim.y_tran_observer_est;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.e_tran_observer, "e_tran_observer is NaN!");
 
-    std::cout << "e_tran_observer: " << oim.e_tran_observer.transpose() << std::endl;
+    // std::cout << "e_tran_observer: " << oim.e_tran_observer.transpose() << std::endl;
 
-    // Compute the regressor vector for the observer
-    oim.Phi_tran_observer_y << cim.mu_tran_I(0),
-                            cim.mu_tran_I(1),
-                            cim.mu_tran_I(2),
-                            static_cast<double>(G);
-    ::_shared_::_validate_::MatrixCheckNaN(oim.Phi_tran_observer_y, "Phi_tran_observer_y is NaN!");
+    // // Compute the regressor vector for the observer
+    // oim.Phi_tran_observer_y << cim.mu_tran_I(0),
+    //                         cim.mu_tran_I(1),
+    //                         cim.mu_tran_I(2),
+    //                         static_cast<double>(G);
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.Phi_tran_observer_y, "Phi_tran_observer_y is NaN!");
 
-    // Compute the virtual control input for the observer
-    oim.u_tran_observer << cim.mu_tran_I + MASS * G * e3_basis
-                        - osm.K_hat_tran_observer_y.transpose() * oim.y_tran_observer_output
-                        + osm.Theta_hat_tran_observer_y.transpose() * oim.Phi_tran_observer_y;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.u_tran_observer, "u_tran_observer is NaN!");
+    // // Compute the virtual control input for the observer
+    // oim.u_tran_observer << cim.mu_tran_I + MASS * G * e3_basis
+    //                     - osm.K_hat_tran_observer_y.transpose() * oim.y_tran_observer_output
+    //                     + osm.Theta_hat_tran_observer_y.transpose() * oim.Phi_tran_observer_y;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.u_tran_observer, "u_tran_observer is NaN!");
 
-    // Compute x_hat_tran_observer_dot
-    oim.x_hat_tran_observer_dot << oip.A_tran_observer_ref * osm.x_hat_tran_observer
-                                + oip.B_tran_observer * oim.u_tran_observer
-                                + oip.L_tran_observer * oim.e_tran_observer;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.x_hat_tran_observer_dot, "x_hat_tran_observer_dot is NaN!");
+    // // Compute x_hat_tran_observer_dot
+    // oim.x_hat_tran_observer_dot << oip.A_tran_observer_ref * osm.x_hat_tran_observer
+    //                             + oip.B_tran_observer * oim.u_tran_observer
+    //                             + oip.L_tran_observer * oim.e_tran_observer;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.x_hat_tran_observer_dot, "x_hat_tran_observer_dot is NaN!");
 
-    // Compute the scalar value output from the dead-zone modification modulation function
-    oim.dead_zone_value_K_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
-                                                                                        oip.dead_zone_e0_Gamma_tran_observer_y);
-    ::_shared_::_validate_::VariableCheckNaN(oim.dead_zone_value_K_hat_y, "dead_zone_value_K_hat_y is NaN!");
+    // // Compute the scalar value output from the dead-zone modification modulation function
+    // oim.dead_zone_value_K_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
+    //                                                                                     oip.dead_zone_e0_Gamma_tran_observer_y);
+    // ::_shared_::_validate_::VariableCheckNaN(oim.dead_zone_value_K_hat_y, "dead_zone_value_K_hat_y is NaN!");
 
-    // Adaptive law
-    oim.K_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_y,
-                                                                                    oim.dead_zone_value_K_hat_y,
-                                                                                    oim.y_tran_observer_output,
-                                                                                    oim.e_tran_observer.transpose());
-    ::_shared_::_validate_::MatrixCheckNaN(oim.K_hat_tran_observer_y_dot, "K_hat_tran_observer_y_dot is NaN!");
+    // // Adaptive law
+    // oim.K_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_y,
+    //                                                                                 oim.dead_zone_value_K_hat_y,
+    //                                                                                 oim.y_tran_observer_output,
+    //                                                                                 oim.e_tran_observer.transpose());
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.K_hat_tran_observer_y_dot, "K_hat_tran_observer_y_dot is NaN!");
 
-    // Projection operator
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_tran_observer_y)> proj_op_output_K_hat_tran_observer_y =
-        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_tran_observer_y,
-                                                                    oim.K_hat_tran_observer_y_dot,
-                                                                    oip.projection_x_max_Gamma_tran_observer_y,
-                                                                    oip.projection_epsilon_Gamma_tran_observer_y);
-    oim.K_hat_tran_observer_y_dot = proj_op_output_K_hat_tran_observer_y.projected_matrix;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.K_hat_tran_observer_y_dot, "K_hat_tran_observer_y_dot (projected) is NaN!");
+    // // Projection operator
+    // ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_tran_observer_y)> proj_op_output_K_hat_tran_observer_y =
+    //     ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_tran_observer_y,
+    //                                                                 oim.K_hat_tran_observer_y_dot,
+    //                                                                 oip.projection_x_max_Gamma_tran_observer_y,
+    //                                                                 oip.projection_epsilon_Gamma_tran_observer_y);
+    // oim.K_hat_tran_observer_y_dot = proj_op_output_K_hat_tran_observer_y.projected_matrix;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.K_hat_tran_observer_y_dot, "K_hat_tran_observer_y_dot (projected) is NaN!");
 
-    oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_K_hat_tran_observer_y.projection_operator_activated;
+    // oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_K_hat_tran_observer_y.projection_operator_activated;
 
-    // Compute the scalar value output from the dead-zone modification modulation function (Theta)
-    oim.dead_zone_value_Theta_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
-                                                                                            oip.dead_zone_e0_Gamma_tran_observer_Theta);
-    ::_shared_::_validate_::VariableCheckNaN(oim.dead_zone_value_Theta_hat_y, "dead_zone_value_Theta_hat_y is NaN!");
+    // // Compute the scalar value output from the dead-zone modification modulation function (Theta)
+    // oim.dead_zone_value_Theta_hat_y = ::_shared_::_deadzone_operator_::deadZoneSwitchFunction(oim.e_tran_observer,
+    //                                                                                         oip.dead_zone_e0_Gamma_tran_observer_Theta);
+    // ::_shared_::_validate_::VariableCheckNaN(oim.dead_zone_value_Theta_hat_y, "dead_zone_value_Theta_hat_y is NaN!");
 
-    // Adaptive law (Theta)
-    oim.Theta_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_Theta,
-                                                                                        oim.dead_zone_value_Theta_hat_y,
-                                                                                        oim.Phi_tran_observer_y,
-                                                                                        oim.e_tran_observer.transpose());
-    ::_shared_::_validate_::MatrixCheckNaN(oim.Theta_hat_tran_observer_y_dot, "Theta_hat_tran_observer_y_dot is NaN!");
+    // // Adaptive law (Theta)
+    // oim.Theta_hat_tran_observer_y_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZone(-oip.Gamma_tran_observer_Theta,
+    //                                                                                     oim.dead_zone_value_Theta_hat_y,
+    //                                                                                     oim.Phi_tran_observer_y,
+    //                                                                                     oim.e_tran_observer.transpose());
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.Theta_hat_tran_observer_y_dot, "Theta_hat_tran_observer_y_dot is NaN!");
 
-    // Projection operator (Theta)
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_tran_observer_y)> proj_op_output_Theta_hat_tran_observer_y =
-        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_tran_observer_y,
-                                                                    oim.Theta_hat_tran_observer_y_dot,
-                                                                    oip.projection_x_max_Gamma_tran_observer_Theta,
-                                                                    oip.projection_epsilon_Gamma_tran_observer_Theta);
-    oim.Theta_hat_tran_observer_y_dot = proj_op_output_Theta_hat_tran_observer_y.projected_matrix;
-    ::_shared_::_validate_::MatrixCheckNaN(oim.Theta_hat_tran_observer_y_dot, "Theta_hat_tran_observer_y_dot (projected) is NaN!");
+    // // Projection operator (Theta)
+    // ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_tran_observer_y)> proj_op_output_Theta_hat_tran_observer_y =
+    //     ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_tran_observer_y,
+    //                                                                 oim.Theta_hat_tran_observer_y_dot,
+    //                                                                 oip.projection_x_max_Gamma_tran_observer_Theta,
+    //                                                                 oip.projection_epsilon_Gamma_tran_observer_Theta);
+    // oim.Theta_hat_tran_observer_y_dot = proj_op_output_Theta_hat_tran_observer_y.projected_matrix;
+    // ::_shared_::_validate_::MatrixCheckNaN(oim.Theta_hat_tran_observer_y_dot, "Theta_hat_tran_observer_y_dot (projected) is NaN!");
 
-    oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_Theta_hat_tran_observer_y.projection_operator_activated;
+    // oim.proj_op_activated_K_hat_tran_observer_y = proj_op_output_Theta_hat_tran_observer_y.projection_operator_activated;
 
     // #############################################
     // ## PLACEHOLDER - PLACEHOLDER - PLACEHOLDER ##

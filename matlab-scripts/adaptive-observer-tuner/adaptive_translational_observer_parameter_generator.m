@@ -55,27 +55,27 @@ addpath("functions/");
 %%%%%%%%%%%%%%%%%% ADAPTIVE OBSERVER TUNABLE PARAMETERS %%%%%%%%%%%%%%%%%%
 
 % GAINS FOR THE A_ref_y MATRIX
-K_P_ref_y = [0.1,  0.0,  0.0;
-             0.0,  0.1,  0.0;
-             0.0,  0.0,  0.4];
-K_D_ref_y = [0.3, 0.0,  0.0;
-             0.0, 0.3,  0.0;
-             0.0, 0.0,  2.1];
+K_P_ref_y = [6.2,  0.0,  0.0;
+             0.0,  6.2,  0.0;
+             0.0,  0.0,  22];
+K_D_ref_y = [8.6, 0.0,  0.0;
+             0.0, 8.6,  0.0;
+             0.0, 0.0,  23.0];
 
 % OBSERVER ADAPTIVE RATES
-param.Gamma_y = blkdiag(7e-2, 7e-2, 7e-2);
-param.Gamma_Theta_y = blkdiag(0.01, 0.01, 0.00001, 0.00001); 
+param.Gamma_y = blkdiag(165, 165, 152);
+param.Gamma_Theta_y = blkdiag(1e-5, 1e-5, 1e-5, 1e-5); 
 
 % OBSERVER GAINS PROJECTION OPERTAOR PARAMETERS
-param.projection_x_max_Gamma_tran_observer_y = 1;
-param.projection_epsilon_Gamma_tran_observer_y = 0.2;
+param.projection_x_max_Gamma_tran_observer_y = 1600;
+param.projection_epsilon_Gamma_tran_observer_y = 400;
 
 param.projection_x_max_Gamma_tran_observer_Theta = 1;
 param.projection_epsilon_Gamma_tran_observer_Theta = 0.2;
 
 % OBSERVER GAINS DEADZONE SWITCH TOLERANCE
-param.dead_zone_e0_Gamma_tran_observer_y = 1e-4;
-param.dead_zone_e0_Gamma_tran_observer_Theta = 1e-4;
+param.dead_zone_e0_Gamma_tran_observer_y = 0;
+param.dead_zone_e0_Gamma_tran_observer_Theta = 0;
 
 %% -----------------------------------------------------------------------
 %%%%%%%%%%%%%%%%%%%% DO NOT MODIFY BEYOND THIS COMMENT %%%%%%%%%%%%%%%%%%%

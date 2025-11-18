@@ -481,7 +481,7 @@ void simbridge::UpdatePhysicsSystem()
             << m_state.vel.x() << ", "
             << m_state.vel.y() << ", "
             << m_state.vel.z() << "\n" << color_reset
-            << color_label << "UAV rotation in NED frame: " << color_value
+            << color_label << "UAV rotation IN NED frame: " << color_value
             << _shared_::_conversions_::rad2deg(m_state.eul.x()) << ", "
             << _shared_::_conversions_::rad2deg(m_state.eul.y()) << ", "
             << _shared_::_conversions_::rad2deg(m_state.eul.z()) << "\n" << color_reset

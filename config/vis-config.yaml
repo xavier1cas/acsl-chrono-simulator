@@ -37,7 +37,7 @@
 main:
   # Enable the interactive visualization window --------------------
   # Set to false for headless/speed mode
-  enable_vis: true
+  enable_vis: false
 
   # Camera options -------------------------------------------------
   # true: fixed viewpoint; false: dynamic/follow

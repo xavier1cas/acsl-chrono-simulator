@@ -43,10 +43,10 @@
 
 % Helper: clean small values and round.
 function v = clean_val(x)
-    if abs(x) < 0.0004
+    if abs(x) < 0.00004
         v = 0;
         return
     end
     % round to 4 decimals for readability
-    v = round(x, 4);
+    v = round(x, 6);
 end
