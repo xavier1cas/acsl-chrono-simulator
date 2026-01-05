@@ -14,9 +14,9 @@
         [0, 0, 0, 1, 0, 0],
         [0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 1],
-        [-6.2, 0, 0, -8.6, 0, 0],
-        [0, -6.2, 0, 0, -8.6, 0],
-        [0, 0, -22, 0, 0, -23]
+        [-14, 0, 0, -88, 0, 0],
+        [0, -14, 0, 0, -88, 0],
+        [0, 0, -4, 0, 0, -33]
       ]
     },
     "B_tran_observer": {
@@ -33,43 +33,43 @@
     "L_tran_observer": {
       "scaling_coef": 1,
       "matrix": [
-        [-0.4972, 0, 0],
-        [0, -0.4972, 0],
-        [0, 0, -0.5035],
-        [0.4171, 0, 0],
-        [0, 0.4171, 0],
-        [0, 0, 0.3533]
+        [-0.3733, 0, 0],
+        [0, -0.3733, 0],
+        [0, 0, -0.3222],
+        [0.038, 0, 0],
+        [0, 0.038, 0],
+        [0, 0, 0.0473]
       ]
     },
     "Gamma_tran_observer_y": {
       "scaling_coef": 1,
       "matrix": [
-        [165, 0, 0],
-        [0, 165, 0],
-        [0, 0, 152]
+        [6100, 0, 0],
+        [0, 6100, 0],
+        [0, 0, 300]
       ]
     },
     "Gamma_tran_observer_Theta": {
       "scaling_coef": 1,
       "matrix": [
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0]
+        [0.018, 0, 0, 0],
+        [0, 0.018, 0, 0],
+        [0, 0, 0.095, 0],
+        [0, 0, 0, 0.01]
       ]
     },
     "K_tran_observer_ye": {
       "scaling_coef": 1,
       "matrix": [
-        [-14.5183, 0, 0],
-        [0, -14.5183, 0],
-        [0, 0, -38.8281]
+        [-148.5596, 0, 0],
+        [0, -148.5596, 0],
+        [0, 0, -55.7099]
       ]
     },
-    "projection_x_max_Gamma_tran_observer_y": 1600,
-    "projection_epsilon_Gamma_tran_observer_y": 400,
-    "projection_x_max_Gamma_tran_observer_Theta": 1,
-    "projection_epsilon_Gamma_tran_observer_Theta": 0.2,
+    "projection_x_max_Gamma_tran_observer_y": 24025,
+    "projection_epsilon_Gamma_tran_observer_y": 20,
+    "projection_x_max_Gamma_tran_observer_Theta": 0.0056,
+    "projection_epsilon_Gamma_tran_observer_Theta": 0.0001,
     "dead_zone_e0_Gamma_tran_observer_y": 0,
     "dead_zone_e0_Gamma_tran_observer_Theta": 0
   }

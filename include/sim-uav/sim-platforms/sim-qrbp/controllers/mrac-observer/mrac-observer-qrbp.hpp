@@ -230,13 +230,14 @@ struct observer_internal_members {
     Eigen::Matrix<double, 4, 1> Phi_tran_observer_y;               // Regressor for the observer plant
     Eigen::Matrix<double, 3, 3> K_hat_tran_observer_y_dot;         // Derivative of observer Gain
     Eigen::Matrix<double, 4, 3> Theta_hat_tran_observer_y_dot;     // Derivative of observer Gain
-    Eigen::Matrix<double, 6, 1> x_hat_tran_observer_dot;                         // Observer model
+    Eigen::Matrix<double, 6, 1> x_hat_tran_observer_dot;           // Observer model
     Eigen::Matrix<double, 3, 1> u_tran_observer;                   // The virtual control of the observer
     Eigen::Matrix<double, 3, 1> e_tran_observer;                   // Y_output - Y_est
     double dead_zone_value_K_hat_y;                                // dead zone value for the gains
     double dead_zone_value_Theta_hat_y;                            // dead zone value for the gains
     bool proj_op_activated_K_hat_tran_observer_y;				   // Projection activation boolean - K_hat_tran_observer_y
     bool proj_op_activated_Theta_hat_tran_observer_y;			   // Projection activation boolean - Theta_hat_tran_observer_y
+    bool observer_init_done = false;                               // Boolean for initiation of the observer
 };
 
 

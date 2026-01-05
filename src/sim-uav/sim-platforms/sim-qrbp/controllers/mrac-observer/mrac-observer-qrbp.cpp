@@ -199,7 +199,7 @@ void mrac_observer::init(){
 
     // Initiate the K_hat Matrix
     osm.K_hat_tran_observer_y << oip.K_tran_observer_ye;
-    // std::cout << "K_hat_tran_observer_y:\n" << osm.K_hat_tran_observer_y << std::endl;
+    
     // Initate the corresponding rk4 vector
     int index = 208;
     ::_shared_::_serialize_::assignElementsToDxdt(oip.K_tran_observer_ye, this->y, index);
@@ -279,6 +279,20 @@ void mrac_observer::update( double time,
 
     // 6. Assign the values from the integrator ------------------------------------
     assign_from_rk4();
+
+    // 7. Finally, Initialize the controller's estimated state vector --------------
+    if(!oim.observer_init_done) {
+        // Initiate the x_hat_vector
+        osm.x_hat_tran_observer << cim.x_tran;
+        
+        // Initate the corresponding rk4 vector
+        int index = 202;
+        ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
+        _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL X HAT VECTOR SET FOR MRAC OBSERVER");
+        
+        // Set the initialization condition to true
+        oim.observer_init_done = true;
+    }
 }
 
 // Function to assign elements from the rk4 integrator
@@ -700,12 +714,11 @@ void mrac_observer::compute_observer_dynamics()
     oim.Phi_tran_observer_y << cim.mu_tran_I(0), 
                                cim.mu_tran_I(1), 
                                cim.mu_tran_I(2), 
-                               static_cast<double>(G);
+                               -static_cast<double>(G);
     
     // Compute the virtual control input for the observer
-    oim.u_tran_observer << cim.mu_tran_I + MASS * G * e3_basis 
-                            - osm.K_hat_tran_observer_y.transpose() * oim.y_tran_observer_output
-                            + osm.Theta_hat_tran_observer_y.transpose() * oim.Phi_tran_observer_y;
+    oim.u_tran_observer << cim.mu_tran_I - osm.K_hat_tran_observer_y.transpose() * oim.y_tran_observer_output
+                                         + osm.Theta_hat_tran_observer_y.transpose() * oim.Phi_tran_observer_y;
 
     // Compute x_hat_tran_observer_dot
     oim.x_hat_tran_observer_dot << oip.A_tran_observer_ref * osm.x_hat_tran_observer 
