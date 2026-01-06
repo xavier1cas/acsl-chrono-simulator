@@ -14,9 +14,9 @@
         [0, 0, 0, 1, 0, 0],
         [0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 1],
-        [-14, 0, 0, -88, 0, 0],
-        [0, -14, 0, 0, -88, 0],
-        [0, 0, -4, 0, 0, -33]
+        [-17, 0, 0, -90, 0, 0],
+        [0, -17, 0, 0, -90, 0],
+        [0, 0, -16, 0, 0, -57]
       ]
     },
     "B_tran_observer": {
@@ -33,42 +33,42 @@
     "L_tran_observer": {
       "scaling_coef": 1,
       "matrix": [
-        [-0.3733, 0, 0],
-        [0, -0.3733, 0],
-        [0, 0, -0.3222],
-        [0.038, 0, 0],
-        [0, 0.038, 0],
-        [0, 0, 0.0473]
+        [-0.3811, 0, 0],
+        [0, -0.3811, 0],
+        [0, 0, -0.4705],
+        [0.0601, 0, 0],
+        [0, 0.0601, 0],
+        [0, 0, 0.1391]
       ]
     },
     "Gamma_tran_observer_y": {
       "scaling_coef": 1,
       "matrix": [
-        [6100, 0, 0],
-        [0, 6100, 0],
-        [0, 0, 300]
+        [7000, 0, 0],
+        [0, 7000, 0],
+        [0, 0, 7000]
       ]
     },
     "Gamma_tran_observer_Theta": {
       "scaling_coef": 1,
       "matrix": [
-        [0.018, 0, 0, 0],
-        [0, 0.018, 0, 0],
-        [0, 0, 0.095, 0],
-        [0, 0, 0, 0.01]
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0.0001, 0],
+        [0, 0, 0, 0]
       ]
     },
     "K_tran_observer_ye": {
       "scaling_coef": 1,
       "matrix": [
-        [-148.5596, 0, 0],
-        [0, -148.5596, 0],
-        [0, 0, -55.7099]
+        [-151.936, 0, 0],
+        [0, -151.936, 0],
+        [0, 0, -96.2261]
       ]
     },
-    "projection_x_max_Gamma_tran_observer_y": 24025,
+    "projection_x_max_Gamma_tran_observer_y": 27225,
     "projection_epsilon_Gamma_tran_observer_y": 20,
-    "projection_x_max_Gamma_tran_observer_Theta": 0.0056,
+    "projection_x_max_Gamma_tran_observer_Theta": 0.009,
     "projection_epsilon_Gamma_tran_observer_Theta": 0.0001,
     "dead_zone_e0_Gamma_tran_observer_y": 0,
     "dead_zone_e0_Gamma_tran_observer_Theta": 0

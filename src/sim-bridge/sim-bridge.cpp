@@ -104,6 +104,8 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
     this->log2file = config_file["debug"]["log_physics"].as_bool();
     this->log2terminal = config_file["debug"]["terminal"].as_bool();
+    this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
+    this->sim_stop_time = static_cast<double>(config_file["debug"]["sim_stop_time"].as_float()); 
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -778,14 +780,28 @@ void simbridge::LogData()
 // Prototype ever run function -  will house the logic for all the modes.
 void simbridge::EverRun()
 {
-    // Make sure the current time is lesser than Tmax
-    while (this->m_sys.GetPhysicsSystem().GetChTime() < this->m_trj->GetTmax())
+    // If the debug stop is used, then you stop at the specified time, else you stop when the drone lands
+    if (this->sim_debug_stop)
     {
-        // Update the vision system
+        while (this->m_sys.GetPhysicsSystem().GetChTime() < this->sim_stop_time)
+        {
+            // Update the vision system
         this->UpdateVisualizationSystem();
 
         // Update the physics system
-        this->UpdatePhysicsSystem();
+        this->UpdatePhysicsSystem();    
+        }
+    }
+    else
+    {
+        while (this->m_sys.GetPhysicsSystem().GetChTime() < this->m_trj->GetTmax())
+        {
+            // Update the vision system
+            this->UpdateVisualizationSystem();
+
+            // Update the physics system
+            this->UpdatePhysicsSystem();
+        }
     }
     
 }

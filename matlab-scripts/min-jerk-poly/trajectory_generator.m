@@ -133,7 +133,7 @@ if t_adjusted(ii) == 0
     yaw_dot(ii) = 0;
     yaw_dot_dot(ii) = 0;
 
-elseif t_adjusted(ii) > 0 & velocity.norm2D(ii) < 1e-5
+elseif t_adjusted(ii) > 0 & velocity.norm2D(ii) < 1e-2
     yaw(ii) = yaw(ii-1);
     yaw_dot(ii) = 0;
     yaw_dot_dot(ii) = 0;

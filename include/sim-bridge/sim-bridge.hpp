@@ -204,6 +204,8 @@ private:
     // ------------------------------------------------------------------------
     bool log2file;
     bool log2terminal;
+    bool sim_debug_stop;
+    double sim_stop_time;
 
     // ------------------------------------------------------------------------
     // Chrono Physics and Visual system object.

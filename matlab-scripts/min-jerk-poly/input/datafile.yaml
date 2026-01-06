@@ -3,7 +3,7 @@ codebase: cpp
 alpha_factor: 0.8
 numsamples: 200
 tstep: 0.01
-hover_time: 2.0
+hover_time: 5.0
 waypoints:
   - x: 0.0
     y: 0.0
@@ -45,3 +45,4 @@ waypoints:
     y: 0
     z: -1
     time: 4.0
+
