@@ -108,23 +108,6 @@ struct controller_internal_parameters {
     bool use_projection_operator;                   // Boolean for switching on/off the projection operator
 };
 
-// Structure for holding all parameter members of the observer
-struct observer_internal_parameters {
-    Eigen::Matrix<double, 3, 6> C_tran_observer;            // Observer C Matrix
-    Eigen::Matrix<double, 6, 6> A_tran_observer_ref;        // A_{ref,y} matrix for the observer's plant
-    Eigen::Matrix<double, 6, 3> B_tran_observer;            // B matrix for the observer's plant
-    Eigen::Matrix<double, 6, 3> L_tran_observer;            // L Matrix for the observer's plant
-    Eigen::Matrix<double, 3, 3> Gamma_tran_observer_y;      // Adaptive rate for the plant
-    Eigen::Matrix<double, 4, 4> Gamma_tran_observer_Theta;  // Adaptive rate for the observer's regressor
-    double projection_x_max_Gamma_tran_observer_y;          // Projection limit for Gamma_y
-    double projection_epsilon_Gamma_tran_observer_y;        // Projection tolerance for Gamma_y
-    double projection_x_max_Gamma_tran_observer_Theta;      // Projection limit for Gamma_Theta_y
-    double projection_epsilon_Gamma_tran_observer_Theta;    // Projection tolerance for Gamma_Theta_y
-    double dead_zone_e0_Gamma_tran_observer_y;              // Dead-zone tolerance for Gamma_y
-    double dead_zone_e0_Gamma_tran_observer_Theta;          // Dead-zone tolerance for Gamma_Theta_y
-    Eigen::Matrix<double, 3, 3> K_tran_observer_ye;         // Inital gains for the K_hat_y matrix
-};
-
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
 struct controller_integrated_state_members {
     Eigen::Matrix<double, 3, 1> e_tran_pos_I;           // Translational integral error
@@ -144,13 +127,6 @@ struct controller_integrated_state_members {
 	Eigen::Matrix<double, 3, 3> K_hat_x_rot;			// Rotational Adaptive gains for x
 	Eigen::Matrix<double, 3, 3> K_hat_r_rot;			// Rotational Adaptive gains for r
 	Eigen::Matrix<double, 12, 3> Theta_hat_rot;			// Rotational Adaptive gains for Theta
-};
-
-// Structure for all the members that are mapped to the rk4 vector AFTER integration
-struct observer_integrated_state_members {
-    Eigen::Matrix<double, 6, 1> x_hat_tran_observer;       // Observer estimated states
-    Eigen::Matrix<double, 3, 3> K_hat_tran_observer_y;     // Observer Gain
-    Eigen::Matrix<double, 4, 3> Theta_hat_tran_observer_y; // Observer Gain
 };
 
 // Structure for all the internal members of the controller
@@ -223,21 +199,67 @@ struct controller_internal_members {
 	bool proj_op_activated_Theta_hat_rotational;				   // Projection activation boolean - IL - Theta_hat
 };
 
-// Structure for all the internal members of the observer
-struct observer_internal_members {
-    Eigen::Matrix<double, 3, 1> y_tran_observer_output;            // y_{output} = C x (true measured value)
-    Eigen::Matrix<double, 3, 1> y_tran_observer_est;               // y_{estimate} = C \hat{x} (estimate)
-    Eigen::Matrix<double, 4, 1> Phi_tran_observer_y;               // Regressor for the observer plant
-    Eigen::Matrix<double, 3, 3> K_hat_tran_observer_y_dot;         // Derivative of observer Gain
-    Eigen::Matrix<double, 4, 3> Theta_hat_tran_observer_y_dot;     // Derivative of observer Gain
-    Eigen::Matrix<double, 6, 1> x_hat_tran_observer_dot;           // Observer model
-    Eigen::Matrix<double, 3, 1> u_tran_observer;                   // The virtual control of the observer
-    Eigen::Matrix<double, 3, 1> e_tran_observer;                   // Y_output - Y_est
-    double dead_zone_value_K_hat_y;                                // dead zone value for the gains
-    double dead_zone_value_Theta_hat_y;                            // dead zone value for the gains
-    bool proj_op_activated_K_hat_tran_observer_y;				   // Projection activation boolean - K_hat_tran_observer_y
-    bool proj_op_activated_Theta_hat_tran_observer_y;			   // Projection activation boolean - Theta_hat_tran_observer_y
-    bool observer_init_done = false;                               // Boolean for initiation of the observer
+// Structure for all parameter members of the observers
+struct observer_internal_paramters
+{
+    Eigen::Matrix<double, 3, 6> C_observer;             // C matrix for the observer plants - Both 2L and MRAO
+    Eigen::Matrix<double, 6, 3> B_observer;             // B matrix for the observer plants - Both 2L and MRAO  
+    Eigen::Matrix<double, 6, 3> L_observer;             // L matrix for the observer plants - Both 2L and MRAO  
+    Eigen::Matrix<double, 6, 6> A_ref_y_observer;       // A matrix for the observer reference models - Both 2L and MRAO
+    Eigen::Matrix<double, 6, 6> A_tran_y_observer;      // A matrix for the transient error plant - Both 2L and MRAO
+    Eigen::Matrix<double, 3, 3> Gamma_y_observer;       // Adaptive gain matrix for the observers - Both 2L and MRAO
+    Eigen::Matrix<double, 4, 4> Gamma_Theta_observer;   // Adaptive gain matrix for the observers - Both 2L and MRAO
+    Eigen::Matrix<double, 3, 3> Gamma_g_y_observer;     // Adaptive gain matrix for the observer - Only 2L MRAO
+    bool use_mrao;                                      // Boolean to use the mrao observed position
+    bool use_2lmrao;                                    // Boolean to use the 2L mrao observed position
+    bool use_mrad;                                      // Boolean to use the mrad for the commanded angular rates
+    bool use_2lmrad;                                    // Boolean to use the 2L mrad for the commanded angular rates
+    
+    double projection_x_max_Gamma_y_observer;           // Projection params
+    double projection_epsilon_Gamma_y_observer;         // Projection params
+    double projection_x_max_Gamma_Theta_observer;       // Projection params
+    double projection_epsilon_Gamma_Theta_observer;     // Projection params
+    double projection_x_max_Gamma_g_y_observer;         // Projection params
+    double projection_epsilon_Gamma_y_y_observer;       // Projection params
+    double dead_zone_e0_Gamma_y_observer;               // Deadzone params
+    double dead_zone_e0_Gamma_Theta_observer;           // Deadzone params
+    double dead_zone_e0_Gamma_g_y_observer;             // Deadzone params
+
+    Eigen::Matrix<double, 3, 3> K_ye_observer;          // Initial gains for the observer
+    Eigen::Matrix<double, 4, 3> Theta_e_observer;       // Initial gains for the observer
+    Eigen::Matrix<double, 3, 3> K_gye_observer;         // Intial gains for the observer                  
+};
+
+// Structure for the members that are mapped to the rk4 vector after integration
+struct observer_integrated_state_members
+{   
+    Eigen::Matrix<double, 6, 1> x_hat_mrao;                // Estimated translational states for the MRAO
+    Eigen::Matrix<double, 6, 1> x_hat_2l_mrao;             // Estimated translational states for the 2L MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_mrao;              // Adaptive gain matrix for the MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrao;           // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_mrao;            // Adaptive gain matrix for the MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_2l_mrao;         // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrao;         // Adaptive gain matrix for the 2L MRAO transient term
+    Eigen::Matrix<double, 6, 1> eta_2l_mrao;               // Transient error model for the 2L MRAO
+};
+
+// Structure for the internal members of the observers
+struct observer_internal_members
+{
+    Eigen::Matrix<double, 6, 1> x_hat_mrao_dot;           // Estimated translational states for the MRAO
+    Eigen::Matrix<double, 6, 1> x_hat_2l_mrao_dot;        // Estimated translational states for the 2L MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_mrao_dot;         // Adaptive gain matrix for the MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrao_dot;      // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_mrao_dot;       // Adaptive gain matrix for the MRAO
+    Eigen::Matrix<double, 6, 1> Theta_hat_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO transient term
+    Eigen::Matrix<double, 6, 1> eta_2l_mrao_dot;          // Transient error model for the 2L MRAO
+
+    Eigen::Matrix<double, 3, 1> y_measured_mrao;          // Measured outputs for the MRAO 
+    Eigen::Matrix<double, 3, 1> y_measured_2l_mrao;       // Measured outputs for the 2L MRAO  
+    Eigen::Matrix<double, 4, 1> Phi_y_mrao;               // Regressor vector for the MRAO
+    Eigen::Matrix<double, 4, 1> Phi_y_2l_mrao;            // Regressor vector for the 2L MRAO
+    Eigen::Matrix<double, 6, 1> nu_2l_mrao;               // Transient error for the 2L MRAO
 };
 
 
@@ -350,19 +372,19 @@ private:
     // Define the internal parameter members of the controller 
     ::_acsl_::_qrbp_::_mrac_observer_::controller_internal_parameters cip;
 
-    // Define the internal parameter members of the observer
-    ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_parameters oip;
-
     // Define the internal members of the controller
     ::_acsl_::_qrbp_::_mrac_observer_::controller_internal_members cim;   
-
-    // Define the internal members of the observer
-    ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_members oim;
 
     // Define the internal integrated state members of the controller
     ::_acsl_::_qrbp_::_mrac_observer_::controller_integrated_state_members csm; 
 
-    // Define the internal integrated state members of the observer
+    // Define the internal parameter members of the observer
+    ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_paramters oip;
+
+    // Define the internal members of the observer
+    ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_members oim;
+
+    // Definet the internal integrated state members of the observer
     ::_acsl_::_qrbp_::_mrac_observer_::observer_integrated_state_members osm;
 
 private:
@@ -390,8 +412,11 @@ private:
     // Assign the values from rk4 to controller internal members
     void assign_from_rk4();		
 
-    // Function to compute the dynamics of the observer
-    void compute_observer_dynamics();
+    // Function to observe the outerloop of dynamics
+    void observe_outerloop();
+
+    // Function to differentiate the innerloop desired orientation commands
+    void differentiate_innerloop_cmd();
 
 };
 
