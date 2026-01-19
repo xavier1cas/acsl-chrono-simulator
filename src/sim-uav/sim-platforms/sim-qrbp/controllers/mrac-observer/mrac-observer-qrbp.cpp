@@ -126,6 +126,32 @@ void mrac_observer::read_params(const std::string& jsonFile)
 	cip.projection_epsilon_Theta_rotational = j["ROBUSTIFICATION"]["projection_epsilon_Theta_rotational"];
 
     // Adaptive Observer gains and parameter matrices
+    oip.C_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["C_observer"], 3, 6);
+    oip.B_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["B_observer"], 6, 3);
+    oip.L_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["L_observer"], 6, 3);
+    
+    oip.A_ref_y_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["A_ref_y_observer"], 6, 6);
+    oip.A_tran_y_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["A_tran_y_observer"], 6, 6);
+    
+    oip.Gamma_y_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_y_observer"], 3, 3);
+    oip.Gamma_Theta_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_Theta_observer"], 4, 4);
+    oip.Gamma_g_y_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_g_y_observer"], 3, 3);
+    
+    oip.use_mrao = j["OBSERVER"]["use_mrao"];
+    oip.use_2lmrao = j["OBSERVER"]["use_2lmrao"];
+    
+    oip.projection_x_max_K_hat_y_observer = j["OBSERVER"]["projection_x_max_K_hat_y_observer"];
+    oip.projection_epsilon_K_hat_y_observer = j["OBSERVER"]["projection_epsilon_K_hat_y_observer"];
+    
+    oip.projection_x_max_Theta_hat_observer = j["OBSERVER"]["projection_x_max_Theta_hat_observer"];
+    oip.projection_epsilon_Theta_hat_observer = j["OBSERVER"]["projection_epsilon_Theta_hat_observer"];
+    
+    oip.projection_x_max_K_hat_g_y_observer = j["OBSERVER"]["projection_x_max_K_hat_g_y_observer"];
+    oip.projection_epsilon_K_hat_g_y_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
+
+    oip.K_ye_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["K_ye_observer"], 3, 3);
+    oip.Theta_e_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Theta_e_observer"], 4, 3);
+    oip.K_gye_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["K_gye_observer"], 3, 3);
     
 }
 
@@ -184,8 +210,21 @@ void mrac_observer::init(){
 	cip.P_rot = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_rot, cip.Q_rot);
 
     // Initiate the gain matrices
-    
+    osm.K_hat_y_mrao << oip.K_ye_observer;
+    osm.K_hat_y_2l_mrao << oip.K_ye_observer;
+    osm.Theta_hat_mrao << oip.Theta_e_observer;
+    osm.Theta_hat_2l_mrao << oip.Theta_e_observer;
+    osm.K_hat_g_y_2l_mrao << oip.K_gye_observer;
 
+    // Initiate the rk4 vector for the corresponding gain matrices for the observer
+    int index = ?;
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_gye_observer, this->y, index);
+    // DISPLAY A DEBUG MESSAGE
+    _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
 }
 
 // Update function for the controller
@@ -250,13 +289,25 @@ void mrac_observer::update( double time,
     assign_from_rk4();
 
     // 7. Finally, Initialize the controller's estimated state vector --------------
-   
+    if(!oim.first_run_observer) {
+        // Initiate the x_hat vector 
+        osm.x_hat_mrao << cim.x_tran;
+        osm.x_hat_2l_mrao << cim.x_tran;
+
+        // Initiate teh corresponding rk4 vector 
+        int index = ?;
+        ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
+        _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL X HAT VECTOR SET FOR OBSERVER");
+        
+        // Set the initialization condition to true
+        oim.first_run_observer = true;
+    }
 }
 
 // Function to assign elements from the rk4 integrator
 void mrac_observer::assign_from_rk4()
 {
-    //------------ assign after integration  ------------//
+    //------------ assign elements of the controller after integration ------------//
     int index = 0;
 	::_shared_::_deserialize_::assignElementsToMembers(csm.state_roll_d_filter, y, index);
 	::_shared_::_deserialize_::assignElementsToMembers(csm.state_pitch_d_filter, y, index);
@@ -276,12 +327,22 @@ void mrac_observer::assign_from_rk4()
 	::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_rot, y, index);
 	::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_rot, y, index);
     
+    //------------ assign elements of the observer after integration  ------------//
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.x_hat_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.x_hat_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.eta_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_y_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_y_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_mrao, y, index);    
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_g_y_2l_mrao, y, index);
+    
 }
 
 // Model function for integration
 void mrac_observer::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
 {
-    //------------ Fill up the dy for integration  ------------//
+    //------------ Fill up the dy for integration for the controller ------------//
     int index = 0;
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_roll_d_filter, dy, index);
 	::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_pitch_d_filter, dy, index);
@@ -300,6 +361,16 @@ void mrac_observer::model(const _control_::rk4_array<double, NSI> &y, _control_:
 	::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_rot_dot, dy, index);
 	::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_rot_dot, dy, index);
 	::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_rot_dot, dy, index);
+
+    //------------ Fill up the dy for integration for the observer ------------//
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.x_hat_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.x_hat_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.eta_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_y_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_y_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.Theta_hat_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.Theta_hat_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_g_y_2l_mrao_dot, dy, index);
     
 }
 
@@ -669,6 +740,108 @@ void mrac_observer::compute_normalized_thrusts()
 
 }
 
+// Function to compute the observer 
+void mrac_observer::observe_outerloop() {
+
+    // ----------------------------------------------------------------------------- MRAO
+    // Assign the measured output (use actual state vector)
+    oim.y_measured_mrao << oip.C_observer * cim.x_tran;
+
+    // Compute the observation error
+    oim.obs_error_mrao << oim.y_measured_mrao - oip.C_observer * osm.x_hat_mrao;
+
+    // Regressor vector for the observer
+    oim.Phi_y_mrao << cim.mu_tran_I(0),            // Virtual OL control in I for x
+                      cim.mu_tran_I(1),            // Virtual OL control in I for y 
+                      cim.mu_tran_I(2),            // Virtual OL control in I for z 
+                      -static_cast<double>(G);     // Gravitational Constant
+
+    // Compute the virtual control input for the observer
+    oim.u_mrao << cim.mu_tran_I - osm.K_hat_y_mrao.transpose() * oim.y_measured_mrao
+                  + osm.Theta_hat_mrao.transpose() * oim.Phi_y_mrao;
+
+    // Compute the estimated state to be integrated
+    oim.x_hat_mrao_dot << oip.A_ref_y_observer * osm.x_hat_mrao + oip.B_observer * oim.u_mrao
+                          + oip.L_observer * oim.obs_error_mrao;
+
+    // Compute the derivative of the observer gains to be integrated
+    oim.K_hat_y_mrao_dot << -oip.Gamma_y_observer * oim.y_measured_mrao * oim.obs_error_mrao.transpose();
+    oim.Theta_hat_mrao_dot << -oip.Gamma_Theta_observer * oim.Phi_y_mrao * oim.obs_error_mrao.transpose();
+
+    // Projection operator - Ball - NO boolean to switch off projection. It is always on.
+	
+    // Projection operator K_hat_y_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_y_mrao)> proj_op_output_K_hat_y_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_y_mrao,
+                                                                    oim.K_hat_y_mrao_dot,
+                                                                    oip.projection_x_max_K_hat_y_observer,
+                                                                    oip.projection_epsilon_K_hat_y_observer);
+
+    oim.K_hat_y_mrao_dot = proj_op_output_K_hat_y_mrao.projected_matrix;
+    oim.proj_op_activated_K_hat_y_mrao = proj_op_output_K_hat_y_mrao.projection_operator_activated;
+
+    // Projection operator Theta_hat_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_mrao)> proj_op_output_Theta_hat_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_mrao,
+                                                                    oim.Theta_hat_mrao_dot,
+                                                                    oip.projection_x_max_Theta_hat_observer,
+                                                                    oip.projection_epsilon_Theta_hat_observer);
+
+    oim.Theta_hat_mrao_dot = proj_op_output_Theta_hat_mrao.projected_matrix;
+    oim.proj_op_activated_Theta_hat_mrao = proj_op_output_Theta_hat_mrao.projection_operator_activated;
+
+    // ----------------------------------------------------------------------------- 2L MRAO
+    // Assign the measured output (use actual state vector)
+    oim.y_measured_2l_mrao << oip.C_observer * cim.x_tran;
+
+    // Compute the observation error
+    oim.obs_error_2l_mrao << oim.y_measured_2l_mrao - oip.C_observer * osm.x_hat_2l_mrao;
+
+    // Compute the transient error 
+    oim.nu_2l_mrao << cim.x_tran - osm.x_hat_2l_mrao - osm.eta_2l_mrao;
+
+    // Regressor vector for the observer - It is the same as the non 2l version
+    oim.Phi_y_2l_mrao << oim.Phi_y_mrao;
+
+    // Compute the virtual control input for the observer
+    oim.u_2l_mrao << cim.mu_tran_I - osm.K_hat_y_2l_mrao.transpose() * oim.y_measured_2l_mrao
+                     + osm.Theta_hat_2l_mrao.transpose() * oim.Phi_y_2l_mrao
+                     - osm.K_hat_g_y_2l_mrao.transpose() * oim.obs_error_2l_mrao;
+    
+    // Compute the estimated state to be integrated
+    oim.x_hat_2l_mrao_dot << oip.A_ref_y_observer * osm.x_hat_2l_mrao + oip.B_observer * oim.u_2l_mrao
+                             + oip.L_observer * oip.C_observer * oim.nu_2l_mrao;
+
+    // Compute the transient error model 
+    oim.eta_2l_mrao_dot << oip.A_tran_y_observer * osm.eta_2l_mrao;                             
+
+    // Compute the derivative of the observer gains to be integrated
+    oim.K_hat_y_2l_mrao_dot << -oip.Gamma_y_observer * oim.y_measured_2l_mrao * oim.nu_2l_mrao.transpose() * oip.C_observer.transpose();
+    oim.Theta_hat_2l_mrao_dot << -oip.Gamma_Theta_observer * oim.Phi_y_2l_mrao * oim.nu_2l_mrao.transpose() * oip.C_observer.transpose();
+    oim.K_hat_g_y_2l_mrao_dot << -oip.Gamma_g_y_observer * oim.obs_error_2l_mrao * oim.nu_2l_mrao.transpose() * oip.C_observer.transpose();
+
+    // Projection operator K_hat_y_2l_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_y_2l_mrao)> proj_op_output_K_hat_y_2l_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_y_2l_mrao,
+                                                                    oim.K_hat_y_2l_mrao_dot,
+                                                                    oip.projection_x_max_K_hat_y_observer,
+                                                                    oip.projection_epsilon_K_hat_y_observer);
+
+    oim.K_hat_y_2l_mrao_dot = proj_op_output_K_hat_y_2l_mrao.projected_matrix;
+    oim.proj_op_activated_K_hat_y_2l_mrao = proj_op_output_K_hat_y_2l_mrao.projection_operator_activated;
+
+    // Projection operator Theta_hat_2l_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_2l_mrao)> proj_op_output_Theta_hat_2l_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_2l_mrao,
+                                                                    oim.Theta_hat_2l_mrao_dot,
+                                                                    oip.projection_x_max_Theta_hat_observer,
+                                                                    oip.projection_epsilon_Theta_hat_observer);
+
+    oim.Theta_hat_2l_mrao_dot = proj_op_output_Theta_hat_2l_mrao.projected_matrix;
+    oim.proj_op_activated_Theta_hat_2l_mrao = proj_op_output_Theta_hat_2l_mrao.projection_operator_activated;
+
+}
+
 // Function that is called in sim-bridge.cpp
 void mrac_observer::run(const double time_step_rk4_) {
 
@@ -682,7 +855,7 @@ void mrac_observer::run(const double time_step_rk4_) {
     compute_translational_control_in_I();
 
     // 4. Compute the observer dynamics
-    
+    observe_outerloop();
 
     // 5. Compute the thrust needed and the desired angles
     compute_u1_eta_d();

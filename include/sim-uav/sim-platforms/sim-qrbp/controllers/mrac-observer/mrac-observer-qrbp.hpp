@@ -212,22 +212,19 @@ struct observer_internal_paramters
     Eigen::Matrix<double, 3, 3> Gamma_g_y_observer;     // Adaptive gain matrix for the observer - Only 2L MRAO
     bool use_mrao;                                      // Boolean to use the mrao observed position
     bool use_2lmrao;                                    // Boolean to use the 2L mrao observed position
-    bool use_mrad;                                      // Boolean to use the mrad for the commanded angular rates
-    bool use_2lmrad;                                    // Boolean to use the 2L mrad for the commanded angular rates
     
-    double projection_x_max_Gamma_y_observer;           // Projection params
-    double projection_epsilon_Gamma_y_observer;         // Projection params
-    double projection_x_max_Gamma_Theta_observer;       // Projection params
-    double projection_epsilon_Gamma_Theta_observer;     // Projection params
-    double projection_x_max_Gamma_g_y_observer;         // Projection params
-    double projection_epsilon_Gamma_y_y_observer;       // Projection params
-    double dead_zone_e0_Gamma_y_observer;               // Deadzone params
-    double dead_zone_e0_Gamma_Theta_observer;           // Deadzone params
-    double dead_zone_e0_Gamma_g_y_observer;             // Deadzone params
+    double projection_x_max_K_hat_y_observer;           // Projection params
+    double projection_epsilon_K_hat_y_observer;         // Projection params
+    
+    double projection_x_max_Theta_hat_observer;         // Projection params
+    double projection_epsilon_Theta_hat_observer;       // Projection params
+    
+    double projection_x_max_K_hat_g_y_observer;         // Projection params
+    double projection_epsilon_K_hat_g_y_observer;       // Projection params
 
     Eigen::Matrix<double, 3, 3> K_ye_observer;          // Initial gains for the observer
     Eigen::Matrix<double, 4, 3> Theta_e_observer;       // Initial gains for the observer
-    Eigen::Matrix<double, 3, 3> K_gye_observer;         // Intial gains for the observer                  
+    Eigen::Matrix<double, 3, 3> K_gye_observer;         // Intial gains for the observer
 };
 
 // Structure for the members that are mapped to the rk4 vector after integration
@@ -260,6 +257,19 @@ struct observer_internal_members
     Eigen::Matrix<double, 4, 1> Phi_y_mrao;               // Regressor vector for the MRAO
     Eigen::Matrix<double, 4, 1> Phi_y_2l_mrao;            // Regressor vector for the 2L MRAO
     Eigen::Matrix<double, 6, 1> nu_2l_mrao;               // Transient error for the 2L MRAO
+
+    Eigen::Matrix<double, 3, 1> u_mrao;                   // Virtual control input of the MRAO
+    Eigen::Matrix<double, 3, 1> u_2l_mrao;                // Virtual control input of the 2L MRAO    
+    Eigen::Matrix<double, 3, 1> obs_error_mrao;           // (y_measured - y_estimated) for MRAO
+    Eigen::Matrix<double, 3, 1> obs_error_2l_mrao;        // (y_measured - y_estimated) for 2L MRAO
+
+    bool proj_op_activated_K_hat_y_mrao;                  // Boolean to record projection operator activation - MRAO
+    bool proj_op_activated_Theta_hat_mrao;                // Boolean to record projection operator activation - MRAO
+    bool proj_op_activated_K_hat_y_2l_mrao;               // Boolean to record projection operator activation - 2L MRAO
+    bool proj_op_activated_Theta_hat_2l_mrao;             // Boolean to record projection operator activation - 2L MRAO
+    bool proj_op_activated_K_hat_g_y_2l_mrao;             // Boolean to record projection operator activation - 2L MRAO
+
+    bool first_run_observer = false;                      // First run boolean to initialize the observer state
 };
 
 
