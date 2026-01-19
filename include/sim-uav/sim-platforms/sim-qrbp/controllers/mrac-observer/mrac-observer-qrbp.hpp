@@ -50,7 +50,7 @@ namespace _mrac_observer_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 241;
+constexpr int NSI = 271;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -248,7 +248,7 @@ struct observer_internal_members
     Eigen::Matrix<double, 3, 3> K_hat_y_mrao_dot;         // Adaptive gain matrix for the MRAO
     Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrao_dot;      // Adaptive gain matrix for the 2L MRAO
     Eigen::Matrix<double, 4, 3> Theta_hat_mrao_dot;       // Adaptive gain matrix for the MRAO
-    Eigen::Matrix<double, 6, 1> Theta_hat_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO
     Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO transient term
     Eigen::Matrix<double, 6, 1> eta_2l_mrao_dot;          // Transient error model for the 2L MRAO
 

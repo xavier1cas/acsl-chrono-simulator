@@ -217,12 +217,12 @@ void mrac_observer::init(){
     osm.K_hat_g_y_2l_mrao << oip.K_gye_observer;
 
     // Initiate the rk4 vector for the corresponding gain matrices for the observer
-    int index = ?;
-    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);
-    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);
-    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);
-    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);
-    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_gye_observer, this->y, index);
+    int index = 220;
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);       // For MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);       // For 2L MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);    // For MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);    // For 2L MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_gye_observer, this->y, index);      // For 2L MRAO
     // DISPLAY A DEBUG MESSAGE
     _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
 }
@@ -294,8 +294,10 @@ void mrac_observer::update( double time,
         osm.x_hat_mrao << cim.x_tran;
         osm.x_hat_2l_mrao << cim.x_tran;
 
-        // Initiate teh corresponding rk4 vector 
-        int index = ?;
+        // Initiate the corresponding rk4 vector 
+        int index = 202; // For MRAO states
+        ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
+        index = 208;     // For 2L MRAO states
         ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
         _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL X HAT VECTOR SET FOR OBSERVER");
         
@@ -336,7 +338,6 @@ void mrac_observer::assign_from_rk4()
     ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_mrao, y, index);    
     ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_2l_mrao, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_g_y_2l_mrao, y, index);
-    
 }
 
 // Model function for integration
@@ -1060,7 +1061,31 @@ void mrac_observer::ConfigureHeaders()
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_rotational", csm.Theta_hat_rot, "[-]");    
 
         //  Observer part
-        
+        oss << "Estimated Position MRAO x [m], "
+            << "Estimated Position MRAO y [m], "
+            << "Estimated Position MRAO z [m], "
+            << "Estimated Position MRAO vx [m], "
+            << "Estimated Position MRAO vy [m], "
+            << "Estimated Position MRAO vz [m], "
+            << "Estimated Position 2L MRAO x [m], "
+            << "Estimated Position 2L MRAO y [m], "
+            << "Estimated Position 2L MRAO z [m], "
+            << "Estimated Position 2L MRAO vx [m], "
+            << "Estimated Position 2L MRAO vy [m], "
+            << "Estimated Position 2L MRAO vz [m], "
+            << "proj_op_activated_K_hat_y_mrao, "
+            << "proj_op_activated_Theta_hat_mrao, "
+            << "proj_op_activated_K_hat_y_2l_mrao, "
+            << "proj_op_activated_Theta_hat_2l_mrao, "
+            << "proj_op_activated_K_hat_g_y_2l_mrao, "
+            ;
+
+        // Use the deader function to create the header for the matrix data
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_mrao", osm.K_hat_y_mrao, "[-]"); 
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_mrao", osm.Theta_hat_mrao, "[-]");
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_2l_mrao", osm.K_hat_y_2l_mrao, "[-]"); 
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_2l_mrao", osm.Theta_hat_2l_mrao, "[-]");
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_2l_mrao", osm.K_hat_g_y_2l_mrao, "[-]"); 
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
@@ -1249,7 +1274,30 @@ void mrac_observer::LogData()
         ::_shared_::_serialize_::appendEigenData(oss, csm.Theta_hat_rot);
 
         // Observer part
-        
+        oss << osm.x_hat_mrao(0) << ", "
+            << osm.x_hat_mrao(1) << ", "
+            << osm.x_hat_mrao(2) << ", "
+            << osm.x_hat_mrao(3) << ", "
+            << osm.x_hat_mrao(4) << ", "
+            << osm.x_hat_mrao(5) << ", "
+            << osm.x_hat_2l_mrao(0) << ", "
+            << osm.x_hat_2l_mrao(1) << ", "
+            << osm.x_hat_2l_mrao(2) << ", "
+            << osm.x_hat_2l_mrao(3) << ", "
+            << osm.x_hat_2l_mrao(4) << ", "
+            << osm.x_hat_2l_mrao(5) << ", "
+            << oim.proj_op_activated_K_hat_y_mrao << ", "
+            << oim.proj_op_activated_Theta_hat_mrao << ", "
+            << oim.proj_op_activated_K_hat_y_2l_mrao << ", "
+            << oim.proj_op_activated_Theta_hat_2l_mrao << ", "
+            << oim.proj_op_activated_K_hat_g_y_2l_mrao << ", "
+            ;
+
+        ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_y_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.Theta_hat_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_y_2l_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.Theta_hat_2l_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_g_y_2l_mrao);
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
