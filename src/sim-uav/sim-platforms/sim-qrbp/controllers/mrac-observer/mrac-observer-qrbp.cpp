@@ -137,9 +137,6 @@ void mrac_observer::read_params(const std::string& jsonFile)
     oip.Gamma_Theta_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_Theta_observer"], 4, 4);
     oip.Gamma_g_y_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_g_y_observer"], 3, 3);
     
-    // oip.use_mrao = j["OBSERVER"]["use_mrao"];
-    // oip.use_2lmrao = j["OBSERVER"]["use_2lmrao"];
-    
     oip.projection_x_max_K_hat_y_observer = j["OBSERVER"]["projection_x_max_K_hat_y_observer"];
     oip.projection_epsilon_K_hat_y_observer = j["OBSERVER"]["projection_epsilon_K_hat_y_observer"];
     
@@ -155,7 +152,35 @@ void mrac_observer::read_params(const std::string& jsonFile)
     oip.K_ye_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["K_ye_observer"], 3, 3);
     oip.Theta_e_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Theta_e_observer"], 4, 3);
     oip.K_gye_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["K_gye_observer"], 3, 3);
+
+    // Adaptive differentiator gains and parameter matrices
+    dip.C_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["C_differentiator"], 3, 6);
+    dip.B_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["B_differentiator"], 6, 3);
+    dip.L_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["L_differentiator"], 6, 3);
+
+    dip.A_ref_y_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["A_ref_y_differentiator"], 6, 6);
+    dip.A_tran_y_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["A_tran_y_differentiator"], 6, 6);
+
+    dip.Gamma_y_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["Gamma_y_differentiator"], 3, 3);
+    dip.Gamma_Theta_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["Gamma_Theta_differentiator"], 3, 3);
+    dip.Gamma_g_y_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["Gamma_g_y_differentiator"], 3, 3);
+
+    dip.projection_x_max_K_hat_y_diff = j["DIFFERENTIATOR"]["projection_x_max_K_hat_y_differentiator"];
+    dip.projection_epsilon_K_hat_y_diff = j["DIFFERENTIATOR"]["projection_epsilon_K_hat_y_differentiator"];
     
+    dip.projection_x_max_Theta_hat_diff = j["DIFFERENTIATOR"]["projection_x_max_Theta_hat_differentiator"];
+    dip.projection_epsilon_Theta_hat_diff = j["DIFFERENTIATOR"]["projection_epsilon_Theta_hat_differentiator"];
+    
+    dip.projection_x_max_K_hat_g_y_diff = j["DIFFERENTIATOR"]["projection_x_max_K_hat_g_y_differentiator"];
+    dip.projection_epsilon_K_hat_g_y_diff = j["DIFFERENTIATOR"]["projection_epsilon_K_hat_g_y_differentiator"];
+
+    dip.lambda_bar_diff = j["DIFFERENTIATOR"]["lambda_bar_differentiator"];
+    dip.theta_bar_diff = j["DIFFERENTIATOR"]["theta_bar_differentiator"];
+
+    dip.K_ye_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["K_ye_differentiator"], 3, 3);
+    dip.Theta_e_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["Theta_e_differentiator"], 3, 3);
+    dip.K_gye_diff = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["DIFFERENTIATOR"]["K_gye_differentiator"], 3, 3);
+
 }
 
 // Implementing virtual functios from controller_base

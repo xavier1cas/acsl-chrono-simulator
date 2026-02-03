@@ -30,7 +30,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% File:       adaptive_translational_observer_parameter_generator.m
+% File:       adaptive_rotational_differentiator_parameter_generator
 % Author:     Giri Mugundan Kumar                                             
 % Date:       November 1, 2025 (first draft)                                                 
 %             January 20, 2026 (added 2L params)
@@ -38,7 +38,7 @@
 %             a.lafflitto@vt.edu                                              
 %                                                                             
 % Description: Main function to compute the params for the adaptive 
-%              observer for the simulator and flight.
+%              differentiator for the simulator and flight.
 % 
 % Github: https://github.com/girimugundankumar/acsl-physics-sim.git
 %
@@ -81,7 +81,6 @@ param.Gamma_y = blkdiag(10000, ...
 
 param.Gamma_Theta_y = blkdiag(1e-5, ...
                               1e-5, ...
-                              1e-5, ...
                               1e-5); 
 
 param.Gamma_g_y = blkdiag(9000, ...
@@ -89,15 +88,15 @@ param.Gamma_g_y = blkdiag(9000, ...
                           9000);
 
 % OBSERVER GAINS PROJECTION OPERTAOR PARAMETERS
-param.projection_x_max_K_hat_y_observer = 200^2;
-param.projection_epsilon_K_hat_y_observer = 50;
+param.projection_x_max_K_hat_y_differentiator = 200^2;
+param.projection_epsilon_K_hat_y_differentiator = 50;
 
-param.projection_x_max_Theta_hat_observer = 0.095^2;
-param.projection_epsilon_Theta_hat_observer = 0.0001;
+param.projection_x_max_Theta_hat_differentiator = 0.095^2;
+param.projection_epsilon_Theta_hat_differentiator = 0.0001;
 
 % OBSERVER GAINS DEADZONE SWITCH TOLERANCE
-param.projection_x_max_K_hat_g_y_observer = 450^2;
-param.projection_epsilon_K_hat_g_y_observer = 50;
+param.projection_x_max_K_hat_g_y_differentiator = 450^2;
+param.projection_epsilon_K_hat_g_y_differentiator = 50;
 
 %% -----------------------------------------------------------------------
 %%%%%%%%%%%%%%%%%%%% DO NOT MODIFY BEYOND THIS COMMENT %%%%%%%%%%%%%%%%%%%
@@ -119,13 +118,13 @@ param.B = [zeros(3,3);
 % Build C = [0_{3x3}, I_3]
 param.C = [zeros(3,3), eye(3)];
 
-% System parameters for adaptive observer
+% System parameters for adaptive differentiator
 % Build the Lambda
-param.Lambda = (1/param.mass)*eye(3);
+param.Lambda = 1;
 param.lambda_bar = norm(param.Lambda);
 
 % Specify the Theta (parametric uncertainties)
-param.Theta = [zeros(3,4); eye(3), [0;0;-1]];
+param.Theta = eye(3);
 param.theta_bar = norm(param.Theta);
 
 % Reference plant dynamics (closed-loop)
@@ -179,7 +178,7 @@ param.P = lyap(param.A_tran_y', param.Q_tran);
 
 % Build the optimal gains
 param.K_ye = pinv(param.B * param.Lambda) * (param.A_ref_y - param.A) * pinv(param.C);
-param.Theta_e_observer = zeros(4,3);
+param.Theta_e_differentiator = zeros(3,3);
 param.K_gye = pinv(param.B * param.Lambda) * (param.A_tran_y - param.A_ref_y) * pinv(param.C);
 
 %% -----------------------------------------------------------------------
@@ -266,7 +265,7 @@ if ~have_best
     error('No feasible (eps,L) found.');
 end
 
-L = BEST.L;   % final observer gain for GA
+L = BEST.L;   % final differentiator gain for GA
 param.L = L;  % Assign it to the params
 fprintf('Selected eps=%.6g with ||L||=%.4g (gap=%.4g)\n', BEST.eps, norm(L,2), best_gap);
 
@@ -277,7 +276,7 @@ fprintf('Selected eps=%.6g with ||L||=%.4g (gap=%.4g)\n', BEST.eps, norm(L,2), b
 %   write_matrix.m
 % and assumes variables exist in `param` struct and projection scalars exist in workspace.
 
-outfile = 'observer_config.json';
+outfile = 'differentiator_config.json';
 
 % --- Clean matrices in param (in-place) ---
 param.C = arrayfun(@(x) clean_val(x), param.C);
@@ -289,7 +288,7 @@ param.Gamma_y = arrayfun(@(x) clean_val(x), param.Gamma_y);
 param.Gamma_Theta_y = arrayfun(@(x) clean_val(x), param.Gamma_Theta_y);
 param.Gamma_g_y = arrayfun(@(x) clean_val(x), param.Gamma_g_y);
 param.K_ye = arrayfun(@(x) clean_val(x), param.K_ye);
-param.Theta_e_observer = arrayfun(@(x) clean_val(x), param.Theta_e_observer);
+param.Theta_e_differentiator = arrayfun(@(x) clean_val(x), param.Theta_e_differentiator);
 param.K_gye = arrayfun(@(x) clean_val(x), param.K_gye);
 
 % --- Open JSON file ---
@@ -301,21 +300,21 @@ end
 % ---- Write JSON manually for perfect control ----
 try
     fprintf(fid, '{\n');
-    fprintf(fid, '  "OBSERVER": {\n');
+    fprintf(fid, '  "DIFFERENTIATOR": {\n');
 
     % List of matrix entries
     entries = { ...
-        'C_observer', param.C; ...
-        'B_observer', param.B; ...
-        'L_observer', param.L; ...
-        'A_ref_y_observer', param.A_ref_y; ...
-        'A_tran_y_observer', param.A_tran_y; ...
-        'Gamma_y_observer', param.Gamma_y; ...
-        'Gamma_Theta_observer', param.Gamma_Theta_y; ...
-        'Gamma_g_y_observer', param.Gamma_g_y;
-        'K_ye_observer', param.K_ye; ...
-        'Theta_e_observer', param.Theta_e_observer; ...
-        'K_gye_observer', param.K_gye ...
+        'C_differentiator', param.C; ...
+        'B_differentiator', param.B; ...
+        'L_differentiator', param.L; ...
+        'A_ref_y_differentiator', param.A_ref_y; ...
+        'A_tran_y_differentiator', param.A_tran_y; ...
+        'Gamma_y_differentiator', param.Gamma_y; ...
+        'Gamma_Theta_differentiator', param.Gamma_Theta_y; ...
+        'Gamma_g_y_differentiator', param.Gamma_g_y;
+        'K_ye_differentiator', param.K_ye; ...
+        'Theta_e_differentiator', param.Theta_e_differentiator; ...
+        'K_gye_differentiator', param.K_gye ...
     };
 
     nEntries = size(entries, 1);
@@ -341,28 +340,28 @@ try
 
     % --- Projection Parameters ---
     % Clean and format values before writing
-    fprintf(fid, '    "projection_x_max_K_hat_y_observer": %s,\n', ...
-        fmtnum(param.projection_x_max_K_hat_y_observer));
-    fprintf(fid, '    "projection_epsilon_K_hat_y_observer": %s,\n', ...
-        fmtnum(param.projection_epsilon_K_hat_y_observer));
+    fprintf(fid, '    "projection_x_max_K_hat_y_differentiator": %s,\n', ...
+        fmtnum(param.projection_x_max_K_hat_y_differentiator));
+    fprintf(fid, '    "projection_epsilon_K_hat_y_differentiator": %s,\n', ...
+        fmtnum(param.projection_epsilon_K_hat_y_differentiator));
 
-    fprintf(fid, '    "projection_x_max_Theta_hat_observer": %s,\n', ...
-        fmtnum(param.projection_x_max_Theta_hat_observer));
-    fprintf(fid, '    "projection_epsilon_Theta_hat_observer": %s,\n', ...
-        fmtnum(param.projection_epsilon_Theta_hat_observer));
+    fprintf(fid, '    "projection_x_max_Theta_hat_differentiator": %s,\n', ...
+        fmtnum(param.projection_x_max_Theta_hat_differentiator));
+    fprintf(fid, '    "projection_epsilon_Theta_hat_differentiator": %s,\n', ...
+        fmtnum(param.projection_epsilon_Theta_hat_differentiator));
 
-    fprintf(fid, '    "projection_x_max_K_hat_g_y_observer": %s,\n', ...
-        fmtnum(param.projection_x_max_K_hat_g_y_observer));
-    fprintf(fid, '    "projection_epsilon_K_hat_g_y_observer": %s,\n', ...
-        fmtnum(param.projection_epsilon_K_hat_g_y_observer));
+    fprintf(fid, '    "projection_x_max_K_hat_g_y_differentiator": %s,\n', ...
+        fmtnum(param.projection_x_max_K_hat_g_y_differentiator));
+    fprintf(fid, '    "projection_epsilon_K_hat_g_y_differentiator": %s,\n', ...
+        fmtnum(param.projection_epsilon_K_hat_g_y_differentiator));
 
-    fprintf(fid, '    "lambda_bar_observer": %s,\n', ...
+    fprintf(fid, '    "lambda_bar_differentiator": %s,\n', ...
         fmtnum(param.lambda_bar));
-    fprintf(fid, '    "theta_bar_observer": %s\n', ...
+    fprintf(fid, '    "theta_bar_differentiator": %s\n', ...
         fmtnum(param.theta_bar));
 
 
-    % --- Close observer block ---
+    % --- Close differentiator block ---
     fprintf(fid, '  }\n');
     fprintf(fid, '}\n');
 

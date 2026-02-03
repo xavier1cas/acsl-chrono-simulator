@@ -210,8 +210,6 @@ struct observer_internal_paramters
     Eigen::Matrix<double, 3, 3> Gamma_y_observer;       // Adaptive gain matrix for the observers - Both 2L and MRAO
     Eigen::Matrix<double, 4, 4> Gamma_Theta_observer;   // Adaptive gain matrix for the observers - Both 2L and MRAO
     Eigen::Matrix<double, 3, 3> Gamma_g_y_observer;     // Adaptive gain matrix for the observer - Only 2L MRAO
-    bool use_mrao;                                      // Boolean to use the mrao observed position
-    bool use_2lmrao;                                    // Boolean to use the 2L mrao observed position
     
     double projection_x_max_K_hat_y_observer;           // Projection params
     double projection_epsilon_K_hat_y_observer;         // Projection params
@@ -321,6 +319,35 @@ struct observer_internal_members
     bool proj_op_activated_K_hat_g_y_vs_2l_mrao;          // Boolean to record projection operator activation - VS 2L MRAO
 
     bool first_run_observer = false;                      // First run boolean to initialize the observer state
+};
+
+// Structure for all parameter members of the differentiators
+struct differentiator_internal_paramters
+{
+    Eigen::Matrix<double, 3, 6> C_diff;             // C matrix for the differentiator plants - Both 2L and MRAO
+    Eigen::Matrix<double, 6, 3> B_diff;             // B matrix for the differentiator plants - Both 2L and MRAO  
+    Eigen::Matrix<double, 6, 3> L_diff;             // L matrix for the differentiator plants - Both 2L and MRAO  
+    Eigen::Matrix<double, 6, 6> A_ref_y_diff;       // A matrix for the differentiator reference models - Both 2L and MRAO
+    Eigen::Matrix<double, 6, 6> A_tran_y_diff;      // A matrix for the transient error plant - Both 2L and MRAO
+    Eigen::Matrix<double, 3, 3> Gamma_y_diff;       // Adaptive gain matrix for the differentiator - Both 2L and MRAO
+    Eigen::Matrix<double, 3, 3> Gamma_Theta_diff;   // Adaptive gain matrix for the differentiator - Both 2L and MRAO
+    Eigen::Matrix<double, 3, 3> Gamma_g_y_diff;     // Adaptive gain matrix for the differentiator - Only 2L MRAO
+    
+    double projection_x_max_K_hat_y_diff;           // Projection params
+    double projection_epsilon_K_hat_y_diff;         // Projection params
+    
+    double projection_x_max_Theta_hat_diff;         // Projection params
+    double projection_epsilon_Theta_hat_diff;       // Projection params
+    
+    double projection_x_max_K_hat_g_y_diff;         // Projection params
+    double projection_epsilon_K_hat_g_y_diff;       // Projection params
+
+    double lambda_bar_diff;                         // Norm of the Lambda matrix for the differentiator plant
+    double theta_bar_diff;                          // Norm of the Theta matrix for the differentiator plant
+
+    Eigen::Matrix<double, 3, 3> K_ye_diff;          // Initial gains for the differentiator
+    Eigen::Matrix<double, 3, 3> Theta_e_diff;       // Initial gains for the differentiator
+    Eigen::Matrix<double, 3, 3> K_gye_diff;         // Initial gains for the differentiator
 };
 
 
@@ -447,6 +474,9 @@ private:
 
     // Definet the internal integrated state members of the observer
     ::_acsl_::_qrbp_::_mrac_observer_::observer_integrated_state_members osm;
+
+    // Define the internal parameter members of the differentiator
+    ::_acsl_::_qrbp_::_mrac_observer_::differentiator_internal_paramters dip;
 
 private:
     // -------------------------------------------------------------------------
