@@ -858,7 +858,7 @@ void mrac_observer::observe_outerloop() {
     if (std::abs(error_norm_vs_mrao) <= 1e-6) {
         oim.beta_vs_mrao.setZero(oim.obs_error_vs_mrao.size());
     } else {
-        oim.beta_vs_mrao = oim.rho_vs_mrao * (oim.obs_error_vs_mrao / error_norm_vs_mrao);
+        oim.beta_vs_mrao = 0.45 * oim.rho_vs_mrao * (oim.obs_error_vs_mrao / error_norm_vs_mrao);
     }
 
     // Compute the virtual control input for the observer
@@ -977,7 +977,7 @@ void mrac_observer::observe_outerloop() {
     if (std::abs(error_norm_vs_2l_mrao) <= 1e-6) {
         oim.beta_vs_2l_mrao.setZero(oim.obs_error_vs_2l_mrao.size());
     } else {
-        oim.beta_vs_2l_mrao = oim.rho_vs_2l_mrao * (oim.obs_error_vs_2l_mrao / error_norm_vs_2l_mrao);
+        oim.beta_vs_2l_mrao = 0.45 * oim.rho_vs_2l_mrao * (oim.obs_error_vs_2l_mrao / error_norm_vs_2l_mrao);
     }
 
     // Compute the virtual control input for the observer

@@ -60,7 +60,7 @@ K_P_ref_y = [17,  0.0,  0.0;
              0.0,  0.0,  17];
 K_D_ref_y = [ 90, 0.0,  0.0;
              0.0,  110,  0.0;
-             0.0, 0.0,  140];
+             0.0, 0.0,  142];
 
 % GAINS FOR THE A_tran_y MATRIX
 K_P_tran_y = [17,  0.0,  0.0;
@@ -84,9 +84,9 @@ param.Gamma_Theta_y = blkdiag(1e-5, ...
                               1e-5, ...
                               1e-5); 
 
-param.Gamma_g_y = blkdiag(8000, ...
-                          8000, ...
-                          8000);
+param.Gamma_g_y = blkdiag(9000, ...
+                          9000, ...
+                          9000);
 
 % OBSERVER GAINS PROJECTION OPERTAOR PARAMETERS
 param.projection_x_max_K_hat_y_observer = 200^2;
@@ -96,8 +96,8 @@ param.projection_x_max_Theta_hat_observer = 0.095^2;
 param.projection_epsilon_Theta_hat_observer = 0.0001;
 
 % OBSERVER GAINS DEADZONE SWITCH TOLERANCE
-param.projection_x_max_K_hat_g_y_observer = 350^2;
-param.projection_epsilon_K_hat_g_y_observer = 200;
+param.projection_x_max_K_hat_g_y_observer = 450^2;
+param.projection_epsilon_K_hat_g_y_observer = 50;
 
 %% -----------------------------------------------------------------------
 %%%%%%%%%%%%%%%%%%%% DO NOT MODIFY BEYOND THIS COMMENT %%%%%%%%%%%%%%%%%%%
@@ -154,7 +154,7 @@ end
 
 % Reference plant dynamics (closed-loop) build A_tran_y from A_ref_y
 if (build_transient_A_from_reference_A && ~build_reference_A_from_transient_A)
-    for ii = 1:0.5:90000
+    for ii = 22000:0.5:90000
         [param.A_tran_y, param.found] = generate_A_tran_y(param.A_ref_y, ii);
         if (param.found)
             break;
