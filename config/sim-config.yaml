@@ -58,7 +58,7 @@ debug:
   # Set to true if you want to stop the simulation at a given time (in seconds)
   sim_debug_stop: true
   # Set the value at which you want the simulation to stop (in seconds)
-  sim_stop_time: 38.0
+  sim_stop_time: 39.0
 
 # ============================================================================
 # UAV Platform Selection
