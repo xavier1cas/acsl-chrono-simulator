@@ -50,7 +50,7 @@ namespace _mrac_observer_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 271;
+constexpr int NSI = 340;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -222,9 +222,12 @@ struct observer_internal_paramters
     double projection_x_max_K_hat_g_y_observer;         // Projection params
     double projection_epsilon_K_hat_g_y_observer;       // Projection params
 
+    double lambda_bar_observer;                         // Norm of the Lambda matrix for the observer plant
+    double theta_bar_observer;                          // Norm of the Theta matrix for the observer plant
+
     Eigen::Matrix<double, 3, 3> K_ye_observer;          // Initial gains for the observer
     Eigen::Matrix<double, 4, 3> Theta_e_observer;       // Initial gains for the observer
-    Eigen::Matrix<double, 3, 3> K_gye_observer;         // Intial gains for the observer
+    Eigen::Matrix<double, 3, 3> K_gye_observer;         // Initial gains for the observer
 };
 
 // Structure for the members that are mapped to the rk4 vector after integration
@@ -232,12 +235,24 @@ struct observer_integrated_state_members
 {   
     Eigen::Matrix<double, 6, 1> x_hat_mrao;                // Estimated translational states for the MRAO
     Eigen::Matrix<double, 6, 1> x_hat_2l_mrao;             // Estimated translational states for the 2L MRAO
+    Eigen::Matrix<double, 6, 1> x_hat_vs_mrao;             // Estimated translational states for the VS MRAO
+    Eigen::Matrix<double, 6, 1> x_hat_vs_2l_mrao;          // Estimated translational states for the VS 2L MRAO
+
     Eigen::Matrix<double, 3, 3> K_hat_y_mrao;              // Adaptive gain matrix for the MRAO
     Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrao;           // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_mrao;           // Adaptive gain matrix for the VS MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_2l_mrao;        // Adaptive gain matrix for the VS 2L MRAO
+
     Eigen::Matrix<double, 4, 3> Theta_hat_mrao;            // Adaptive gain matrix for the MRAO
     Eigen::Matrix<double, 4, 3> Theta_hat_2l_mrao;         // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_vs_mrao;         // Adaptive gain matrix for the VS MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_vs_2l_mrao;      // Adaptive gain matrix for the VS 2L MRAO
+
     Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrao;         // Adaptive gain matrix for the 2L MRAO transient term
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_vs_2l_mrao;      // Adaptive gain matrix for the VS 2L MRAO transient term
+
     Eigen::Matrix<double, 6, 1> eta_2l_mrao;               // Transient error model for the 2L MRAO
+    Eigen::Matrix<double, 6, 1> eta_vs_2l_mrao;             // Transient error model for the VS 2L MRAO
 };
 
 // Structure for the internal members of the observers
@@ -245,29 +260,65 @@ struct observer_internal_members
 {
     Eigen::Matrix<double, 6, 1> x_hat_mrao_dot;           // Estimated translational states for the MRAO
     Eigen::Matrix<double, 6, 1> x_hat_2l_mrao_dot;        // Estimated translational states for the 2L MRAO
+    Eigen::Matrix<double, 6, 1> x_hat_vs_mrao_dot;        // Estimated translational states for the VS MRAO
+    Eigen::Matrix<double, 6, 1> x_hat_vs_2l_mrao_dot;     // Estimated translational states for the VS 2L MRAO
+
     Eigen::Matrix<double, 3, 3> K_hat_y_mrao_dot;         // Adaptive gain matrix for the MRAO
     Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrao_dot;      // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_mrao_dot;      // Adaptive gain matrix for the VS MRAO
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_2l_mrao_dot;   // Adaptive gain matrix for the VS 2L MRAO
+
     Eigen::Matrix<double, 4, 3> Theta_hat_mrao_dot;       // Adaptive gain matrix for the MRAO
     Eigen::Matrix<double, 4, 3> Theta_hat_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_vs_mrao_dot;    // Adaptive gain matrix for the VS MRAO
+    Eigen::Matrix<double, 4, 3> Theta_hat_vs_2l_mrao_dot; // Adaptive gain matrix for the VS 2L MRAO
+
     Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrao_dot;    // Adaptive gain matrix for the 2L MRAO transient term
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_vs_2l_mrao_dot; // Adaptive gain matrix for the VS 2L MRAO transient term
+
     Eigen::Matrix<double, 6, 1> eta_2l_mrao_dot;          // Transient error model for the 2L MRAO
+    Eigen::Matrix<double, 6, 1> eta_vs_2l_mrao_dot;       // Transient error model for the VS 2L MRAO
 
     Eigen::Matrix<double, 3, 1> y_measured_mrao;          // Measured outputs for the MRAO 
-    Eigen::Matrix<double, 3, 1> y_measured_2l_mrao;       // Measured outputs for the 2L MRAO  
+    Eigen::Matrix<double, 3, 1> y_measured_2l_mrao;       // Measured outputs for the 2L MRAO 
+    Eigen::Matrix<double, 3, 1> y_measured_vs_mrao;       // Measured outputs for the VS MRAO 
+    Eigen::Matrix<double, 3, 1> y_measured_vs_2l_mrao;    // Measured outputs for the VS 2L MRAO 
+    
     Eigen::Matrix<double, 4, 1> Phi_y_mrao;               // Regressor vector for the MRAO
     Eigen::Matrix<double, 4, 1> Phi_y_2l_mrao;            // Regressor vector for the 2L MRAO
+    Eigen::Matrix<double, 4, 1> Phi_y_vs_mrao;            // Regressor vector for the VS MRAO
+    Eigen::Matrix<double, 4, 1> Phi_y_vs_2l_mrao;         // Regressor vector for the VS 2L MRAO
+
     Eigen::Matrix<double, 6, 1> nu_2l_mrao;               // Transient error for the 2L MRAO
+    Eigen::Matrix<double, 6, 1> nu_vs_2l_mrao;            // Transient error for the VS 2L MRAO
 
     Eigen::Matrix<double, 3, 1> u_mrao;                   // Virtual control input of the MRAO
     Eigen::Matrix<double, 3, 1> u_2l_mrao;                // Virtual control input of the 2L MRAO    
+    Eigen::Matrix<double, 3, 1> u_vs_mrao;                // Virtual control input of the VS MRAO
+    Eigen::Matrix<double, 3, 1> u_vs_2l_mrao;             // Virtual control input of the VS 2L MRAO
+    
+    double rho_vs_mrao;                                   // rho term for the VS MRAO
+    double rho_vs_2l_mrao;                                // rho term for the VS 2L MRAO
+
+    Eigen::Matrix<double, 3, 1> beta_vs_mrao;             // beta term for the VS MRAO
+    Eigen::Matrix<double, 3, 1> beta_vs_2l_mrao;          // beta term for the VS 2L MRAO
+    
     Eigen::Matrix<double, 3, 1> obs_error_mrao;           // (y_measured - y_estimated) for MRAO
     Eigen::Matrix<double, 3, 1> obs_error_2l_mrao;        // (y_measured - y_estimated) for 2L MRAO
+    Eigen::Matrix<double, 3, 1> obs_error_vs_mrao;        // (y_measured - y_estimated) for VS MRAO
+    Eigen::Matrix<double, 3, 1> obs_error_vs_2l_mrao;     // (y_measured - y_estimated) for VS 2L MRAO
 
     bool proj_op_activated_K_hat_y_mrao;                  // Boolean to record projection operator activation - MRAO
     bool proj_op_activated_Theta_hat_mrao;                // Boolean to record projection operator activation - MRAO
+    bool proj_op_activated_K_hat_y_vs_mrao;               // Boolean to record projection operator activation - VS MRAO
+    bool proj_op_activated_Theta_hat_vs_mrao;             // Boolean to record projection operator activation - VS MRAO
+
     bool proj_op_activated_K_hat_y_2l_mrao;               // Boolean to record projection operator activation - 2L MRAO
     bool proj_op_activated_Theta_hat_2l_mrao;             // Boolean to record projection operator activation - 2L MRAO
     bool proj_op_activated_K_hat_g_y_2l_mrao;             // Boolean to record projection operator activation - 2L MRAO
+    bool proj_op_activated_K_hat_y_vs_2l_mrao;            // Boolean to record projection operator activation - VS 2L MRAO
+    bool proj_op_activated_Theta_hat_vs_2l_mrao;          // Boolean to record projection operator activation - VS 2L MRAO
+    bool proj_op_activated_K_hat_g_y_vs_2l_mrao;          // Boolean to record projection operator activation - VS 2L MRAO
 
     bool first_run_observer = false;                      // First run boolean to initialize the observer state
 };

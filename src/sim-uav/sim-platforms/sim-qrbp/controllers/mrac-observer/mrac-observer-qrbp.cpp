@@ -137,8 +137,8 @@ void mrac_observer::read_params(const std::string& jsonFile)
     oip.Gamma_Theta_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_Theta_observer"], 4, 4);
     oip.Gamma_g_y_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Gamma_g_y_observer"], 3, 3);
     
-    oip.use_mrao = j["OBSERVER"]["use_mrao"];
-    oip.use_2lmrao = j["OBSERVER"]["use_2lmrao"];
+    // oip.use_mrao = j["OBSERVER"]["use_mrao"];
+    // oip.use_2lmrao = j["OBSERVER"]["use_2lmrao"];
     
     oip.projection_x_max_K_hat_y_observer = j["OBSERVER"]["projection_x_max_K_hat_y_observer"];
     oip.projection_epsilon_K_hat_y_observer = j["OBSERVER"]["projection_epsilon_K_hat_y_observer"];
@@ -148,6 +148,11 @@ void mrac_observer::read_params(const std::string& jsonFile)
     
     oip.projection_x_max_K_hat_g_y_observer = j["OBSERVER"]["projection_x_max_K_hat_g_y_observer"];
     oip.projection_epsilon_K_hat_g_y_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
+
+    // oip.lambda_bar_observer = j["OBSERVER"]["lambda_bar_observer"];
+    // oip.theta_bar_observer = j["OBSERVER"]["theta_bar_observer"];
+    oip.lambda_bar_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
+    oip.theta_bar_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
 
     oip.K_ye_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["K_ye_observer"], 3, 3);
     oip.Theta_e_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Theta_e_observer"], 4, 3);
@@ -212,17 +217,32 @@ void mrac_observer::init(){
     // Initiate the gain matrices
     osm.K_hat_y_mrao << oip.K_ye_observer;
     osm.K_hat_y_2l_mrao << oip.K_ye_observer;
+    osm.K_hat_y_vs_mrao << oip.K_ye_observer;
+    osm.K_hat_y_vs_2l_mrao << oip.K_ye_observer;
+
     osm.Theta_hat_mrao << oip.Theta_e_observer;
     osm.Theta_hat_2l_mrao << oip.Theta_e_observer;
+    osm.Theta_hat_vs_mrao << oip.Theta_e_observer;
+    osm.Theta_hat_vs_2l_mrao << oip.Theta_e_observer;
+
     osm.K_hat_g_y_2l_mrao << oip.K_gye_observer;
+    osm.K_hat_g_y_vs_2l_mrao << oip.K_gye_observer;
 
     // Initiate the rk4 vector for the corresponding gain matrices for the observer
-    int index = 220;
+    int index = 238;
     ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);       // For MRAO
     ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);       // For 2L MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);       // For VS MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_ye_observer, this->y, index);       // For VS 2L MRAO
+
     ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);    // For MRAO
     ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);    // For 2L MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);    // For VS MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.Theta_e_observer, this->y, index);    // For VS 2L MRAO
+
     ::_shared_::_serialize_::assignElementsToDxdt(oip.K_gye_observer, this->y, index);      // For 2L MRAO
+    ::_shared_::_serialize_::assignElementsToDxdt(oip.K_gye_observer, this->y, index);      // For VS 2L MRAO
+    
     // DISPLAY A DEBUG MESSAGE
     _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
 }
@@ -299,6 +319,10 @@ void mrac_observer::update( double time,
         ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
         index = 208;     // For 2L MRAO states
         ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
+        index = 214;     // For VS MRAO states
+        ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
+        index = 220;     // For VS 2L MRAO states
+        ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran, this->y, index);
         _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL X HAT VECTOR SET FOR OBSERVER");
         
         // Set the initialization condition to true
@@ -332,12 +356,24 @@ void mrac_observer::assign_from_rk4()
     //------------ assign elements of the observer after integration  ------------//
     ::_shared_::_deserialize_::assignElementsToMembers(osm.x_hat_mrao, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(osm.x_hat_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.x_hat_vs_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.x_hat_vs_2l_mrao, y, index);
+
     ::_shared_::_deserialize_::assignElementsToMembers(osm.eta_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.eta_vs_2l_mrao, y, index);
+    
     ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_y_mrao, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_y_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_y_vs_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_y_vs_2l_mrao, y, index);
+
     ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_mrao, y, index);    
     ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_vs_mrao, y, index);    
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.Theta_hat_vs_2l_mrao, y, index);
+
     ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_g_y_2l_mrao, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_g_y_vs_2l_mrao, y, index);
 }
 
 // Model function for integration
@@ -366,12 +402,24 @@ void mrac_observer::model(const _control_::rk4_array<double, NSI> &y, _control_:
     //------------ Fill up the dy for integration for the observer ------------//
     ::_shared_::_serialize_::assignElementsToDxdt(oim.x_hat_mrao_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(oim.x_hat_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.x_hat_vs_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.x_hat_vs_2l_mrao_dot, dy, index);
+
     ::_shared_::_serialize_::assignElementsToDxdt(oim.eta_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.eta_vs_2l_mrao_dot, dy, index);
+
     ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_y_mrao_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_y_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_y_vs_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_y_vs_2l_mrao_dot, dy, index);
+
     ::_shared_::_serialize_::assignElementsToDxdt(oim.Theta_hat_mrao_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(oim.Theta_hat_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.Theta_hat_vs_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.Theta_hat_vs_2l_mrao_dot, dy, index);
+
     ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_g_y_2l_mrao_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_g_y_vs_2l_mrao_dot, dy, index);
     
 }
 
@@ -791,6 +839,65 @@ void mrac_observer::observe_outerloop() {
     oim.Theta_hat_mrao_dot = proj_op_output_Theta_hat_mrao.projected_matrix;
     oim.proj_op_activated_Theta_hat_mrao = proj_op_output_Theta_hat_mrao.projection_operator_activated;
 
+    // ----------------------------------------------------------------------------- VARIABLE STRUCTURE MRAO
+    // Assign the measured output (use actual state vector)
+    oim.y_measured_vs_mrao << oip.C_observer * cim.x_tran;
+
+    // Compute the observation error
+    oim.obs_error_vs_mrao << oim.y_measured_vs_mrao - oip.C_observer * osm.x_hat_vs_mrao;
+
+    // Regressor vector for the observer
+    oim.Phi_y_vs_mrao << cim.mu_tran_I(0),            // Virtual OL control in I for x
+                         cim.mu_tran_I(1),            // Virtual OL control in I for y 
+                         cim.mu_tran_I(2),            // Virtual OL control in I for z 
+                         -static_cast<double>(G);     // Gravitational Constant
+
+    // Compute rho Eq. (38)
+    oim.rho_vs_mrao = oip.lambda_bar_observer * oip.theta_bar_observer * oim.Phi_y_vs_mrao.norm();
+    
+    // Compute beta Eq. (40)
+    double error_norm_vs_mrao = oim.obs_error_vs_mrao.norm();
+    if (std::abs(error_norm_vs_mrao) <= 1e-6) {
+        oim.beta_vs_mrao.setZero(oim.obs_error_vs_mrao.size());
+    } else {
+        oim.beta_vs_mrao = oim.rho_vs_mrao * (oim.obs_error_vs_mrao / error_norm_vs_mrao);
+    }
+
+    // Compute the virtual control input for the observer
+    oim.u_vs_mrao << cim.mu_tran_I - osm.K_hat_y_vs_mrao.transpose() * oim.y_measured_vs_mrao
+                  + osm.Theta_hat_vs_mrao.transpose() * oim.Phi_y_vs_mrao
+                  + oim.beta_vs_mrao;
+
+    // Compute the estimated state to be integrated
+    oim.x_hat_vs_mrao_dot << oip.A_ref_y_observer * osm.x_hat_vs_mrao + oip.B_observer * oim.u_vs_mrao
+                          + oip.L_observer * oim.obs_error_vs_mrao;
+
+    // Compute the derivative of the observer gains to be integrated
+    oim.K_hat_y_vs_mrao_dot << -oip.Gamma_y_observer * oim.y_measured_vs_mrao * oim.obs_error_vs_mrao.transpose();
+    oim.Theta_hat_vs_mrao_dot << -oip.Gamma_Theta_observer * oim.Phi_y_vs_mrao * oim.obs_error_vs_mrao.transpose();
+
+    // Projection operator - Ball - NO boolean to switch off projection. It is always on.
+	
+    // Projection operator K_hat_y_vs_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_y_vs_mrao)> proj_op_output_K_hat_y_vs_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_y_vs_mrao,
+                                                                    oim.K_hat_y_vs_mrao_dot,
+                                                                    oip.projection_x_max_K_hat_y_observer,
+                                                                    oip.projection_epsilon_K_hat_y_observer);
+
+    oim.K_hat_y_vs_mrao_dot = proj_op_output_K_hat_y_vs_mrao.projected_matrix;
+    oim.proj_op_activated_K_hat_y_vs_mrao = proj_op_output_K_hat_y_vs_mrao.projection_operator_activated;
+
+    // Projection operator Theta_hat_vs_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_vs_mrao)> proj_op_output_Theta_hat_vs_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_vs_mrao,
+                                                                    oim.Theta_hat_vs_mrao_dot,
+                                                                    oip.projection_x_max_Theta_hat_observer,
+                                                                    oip.projection_epsilon_Theta_hat_observer);
+
+    oim.Theta_hat_vs_mrao_dot = proj_op_output_Theta_hat_vs_mrao.projected_matrix;
+    oim.proj_op_activated_Theta_hat_vs_mrao = proj_op_output_Theta_hat_vs_mrao.projection_operator_activated;
+
     // ----------------------------------------------------------------------------- 2L MRAO
     // Assign the measured output (use actual state vector)
     oim.y_measured_2l_mrao << oip.C_observer * cim.x_tran;
@@ -840,6 +947,88 @@ void mrac_observer::observe_outerloop() {
 
     oim.Theta_hat_2l_mrao_dot = proj_op_output_Theta_hat_2l_mrao.projected_matrix;
     oim.proj_op_activated_Theta_hat_2l_mrao = proj_op_output_Theta_hat_2l_mrao.projection_operator_activated;
+
+    // Projection operator K_hat_g_y_2l_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_g_y_2l_mrao)> proj_op_output_K_hat_g_y_2l_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_g_y_2l_mrao,
+                                                                    oim.K_hat_g_y_2l_mrao_dot,
+                                                                    oip.projection_x_max_K_hat_g_y_observer,
+                                                                    oip.projection_epsilon_K_hat_g_y_observer);
+                                                            
+    oim.K_hat_g_y_2l_mrao_dot = proj_op_output_K_hat_g_y_2l_mrao.projected_matrix;
+    oim.proj_op_activated_K_hat_g_y_2l_mrao = proj_op_output_K_hat_g_y_2l_mrao.projection_operator_activated;
+
+    // ----------------------------------------------------------------------------- VARIABLE STRUCTURE 2L MRAO
+    // Assign the measured output (use actual state vector)
+    oim.y_measured_vs_2l_mrao << oip.C_observer * cim.x_tran;
+
+    // Compute the observation error
+    oim.obs_error_vs_2l_mrao << oim.y_measured_vs_2l_mrao - oip.C_observer * osm.x_hat_vs_2l_mrao;
+
+    // Compute the transient error 
+    oim.nu_vs_2l_mrao << cim.x_tran - osm.x_hat_vs_2l_mrao - osm.eta_vs_2l_mrao;
+
+    // Regressor vector for the observer - It is the same as the non 2l version
+    oim.Phi_y_vs_2l_mrao << oim.Phi_y_mrao;
+
+    // Compute rho Eq. (38)
+    oim.rho_vs_2l_mrao = oip.lambda_bar_observer * oip.theta_bar_observer * oim.Phi_y_vs_2l_mrao.norm();
+    
+    // Compute beta Eq. (40)
+    double error_norm_vs_2l_mrao = oim.obs_error_vs_2l_mrao.norm();
+    if (std::abs(error_norm_vs_2l_mrao) <= 1e-6) {
+        oim.beta_vs_2l_mrao.setZero(oim.obs_error_vs_2l_mrao.size());
+    } else {
+        oim.beta_vs_2l_mrao = oim.rho_vs_2l_mrao * (oim.obs_error_vs_2l_mrao / error_norm_vs_2l_mrao);
+    }
+
+    // Compute the virtual control input for the observer
+    oim.u_vs_2l_mrao << cim.mu_tran_I - osm.K_hat_y_vs_2l_mrao.transpose() * oim.y_measured_vs_2l_mrao
+                     + osm.Theta_hat_vs_2l_mrao.transpose() * oim.Phi_y_vs_2l_mrao
+                     - osm.K_hat_g_y_vs_2l_mrao.transpose() * oim.obs_error_vs_2l_mrao
+                     + oim.beta_vs_2l_mrao;
+    
+    // Compute the estimated state to be integrated
+    oim.x_hat_vs_2l_mrao_dot << oip.A_ref_y_observer * osm.x_hat_vs_2l_mrao + oip.B_observer * oim.u_vs_2l_mrao
+                             + oip.L_observer * oip.C_observer * oim.nu_vs_2l_mrao;
+
+    // Compute the transient error model 
+    oim.eta_vs_2l_mrao_dot << oip.A_tran_y_observer * osm.eta_vs_2l_mrao;                             
+
+    // Compute the derivative of the observer gains to be integrated
+    oim.K_hat_y_vs_2l_mrao_dot << -oip.Gamma_y_observer * oim.y_measured_vs_2l_mrao * oim.nu_vs_2l_mrao.transpose() * oip.C_observer.transpose();
+    oim.Theta_hat_vs_2l_mrao_dot << -oip.Gamma_Theta_observer * oim.Phi_y_vs_2l_mrao * oim.nu_vs_2l_mrao.transpose() * oip.C_observer.transpose();
+    oim.K_hat_g_y_vs_2l_mrao_dot << -oip.Gamma_g_y_observer * oim.obs_error_vs_2l_mrao * oim.nu_vs_2l_mrao.transpose() * oip.C_observer.transpose();
+
+    // Projection operator K_hat_y_vs_2l_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_y_vs_2l_mrao)> proj_op_output_K_hat_y_vs_2l_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_y_vs_2l_mrao,
+                                                                    oim.K_hat_y_vs_2l_mrao_dot,
+                                                                    oip.projection_x_max_K_hat_y_observer,
+                                                                    oip.projection_epsilon_K_hat_y_observer);
+
+    oim.K_hat_y_vs_2l_mrao_dot = proj_op_output_K_hat_y_vs_2l_mrao.projected_matrix;
+    oim.proj_op_activated_K_hat_y_vs_2l_mrao = proj_op_output_K_hat_y_vs_2l_mrao.projection_operator_activated;
+
+    // Projection operator Theta_hat_2l_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.Theta_hat_vs_2l_mrao)> proj_op_output_Theta_hat_vs_2l_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.Theta_hat_vs_2l_mrao,
+                                                                    oim.Theta_hat_vs_2l_mrao_dot,
+                                                                    oip.projection_x_max_Theta_hat_observer,
+                                                                    oip.projection_epsilon_Theta_hat_observer);
+
+    oim.Theta_hat_vs_2l_mrao_dot = proj_op_output_Theta_hat_vs_2l_mrao.projected_matrix;
+    oim.proj_op_activated_Theta_hat_vs_2l_mrao = proj_op_output_Theta_hat_vs_2l_mrao.projection_operator_activated;
+
+    // Projection operator K_hat_g_y_vs_2l_mrao
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(osm.K_hat_g_y_vs_2l_mrao)> proj_op_output_K_hat_g_y_vs_2l_mrao = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(osm.K_hat_g_y_vs_2l_mrao,
+                                                                    oim.K_hat_g_y_vs_2l_mrao_dot,
+                                                                    oip.projection_x_max_K_hat_g_y_observer,
+                                                                    oip.projection_epsilon_K_hat_g_y_observer);
+                                                            
+    oim.K_hat_g_y_vs_2l_mrao_dot = proj_op_output_K_hat_g_y_2l_mrao.projected_matrix;
+    oim.proj_op_activated_K_hat_g_y_vs_2l_mrao = proj_op_output_K_hat_g_y_2l_mrao.projection_operator_activated;
 
 }
 
@@ -1087,6 +1276,40 @@ void mrac_observer::ConfigureHeaders()
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_2l_mrao", osm.Theta_hat_2l_mrao, "[-]");
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_2l_mrao", osm.K_hat_g_y_2l_mrao, "[-]"); 
 
+        oss << "Estimated Position VS MRAO x [m], "
+            << "Estimated Position VS MRAO y [m], "
+            << "Estimated Position VS MRAO z [m], "
+            << "Estimated Position VS MRAO vx [m], "
+            << "Estimated Position VS MRAO vy [m], "
+            << "Estimated Position VS MRAO vz [m], "
+            << "Estimated Position VS 2L MRAO x [m], "
+            << "Estimated Position VS 2L MRAO y [m], "
+            << "Estimated Position VS 2L MRAO z [m], "
+            << "Estimated Position VS 2L MRAO vx [m], "
+            << "Estimated Position VS 2L MRAO vy [m], "
+            << "Estimated Position VS 2L MRAO vz [m], "
+            << "proj_op_activated_K_hat_y_vs_mrao, "
+            << "proj_op_activated_Theta_hat_vs_mrao, "
+            << "proj_op_activated_K_hat_y_vs_2l_mrao, "
+            << "proj_op_activated_Theta_hat_vs_2l_mrao, "
+            << "proj_op_activated_K_hat_g_y_vs_2l_mrao, "
+            << "rho_vs_mrao [-], "
+            << "beta_vs_mrao x [-], "
+            << "beta_vs_mrao y [-], "
+            << "beta_vs_mrao z [-], "
+            << "rho_vs_2l_mrao [-], "
+            << "beta_vs_2l_mrao x [-], "
+            << "beta_vs_2l_mrao y [-], "
+            << "beta_vs_2l_mrao z [-], "
+            ;
+
+        // Use the deader function to create the header for the matrix data
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_vs_mrao", osm.K_hat_y_vs_mrao, "[-]"); 
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_mrao", osm.Theta_hat_vs_mrao, "[-]");
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_vs_2l_mrao", osm.K_hat_y_vs_2l_mrao, "[-]"); 
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_2l_mrao", osm.Theta_hat_vs_2l_mrao, "[-]");
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_vs_2l_mrao", osm.K_hat_g_y_vs_2l_mrao, "[-]"); 
+
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
 
@@ -1298,6 +1521,39 @@ void mrac_observer::LogData()
         ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_y_2l_mrao);
         ::_shared_::_serialize_::appendEigenData(oss, osm.Theta_hat_2l_mrao);
         ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_g_y_2l_mrao);
+
+        oss << osm.x_hat_vs_mrao(0) << ", "
+            << osm.x_hat_vs_mrao(1) << ", "
+            << osm.x_hat_vs_mrao(2) << ", "
+            << osm.x_hat_vs_mrao(3) << ", "
+            << osm.x_hat_vs_mrao(4) << ", "
+            << osm.x_hat_vs_mrao(5) << ", "
+            << osm.x_hat_vs_2l_mrao(0) << ", "
+            << osm.x_hat_vs_2l_mrao(1) << ", "
+            << osm.x_hat_vs_2l_mrao(2) << ", "
+            << osm.x_hat_vs_2l_mrao(3) << ", "
+            << osm.x_hat_vs_2l_mrao(4) << ", "
+            << osm.x_hat_vs_2l_mrao(5) << ", "
+            << oim.proj_op_activated_K_hat_y_vs_mrao << ", "
+            << oim.proj_op_activated_Theta_hat_vs_mrao << ", "
+            << oim.proj_op_activated_K_hat_y_vs_2l_mrao << ", "
+            << oim.proj_op_activated_Theta_hat_vs_2l_mrao << ", "
+            << oim.proj_op_activated_K_hat_g_y_vs_2l_mrao << ", "
+            << oim.rho_vs_mrao << ", "
+            << oim.beta_vs_mrao(0) << ", "
+            << oim.beta_vs_mrao(1) << ", "
+            << oim.beta_vs_mrao(2) << ", "
+            << oim.rho_vs_2l_mrao << ", "
+            << oim.beta_vs_2l_mrao(0) << ", "
+            << oim.beta_vs_2l_mrao(1) << ", "
+            << oim.beta_vs_2l_mrao(2) << ", "
+            ;
+
+        ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_y_vs_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.Theta_hat_vs_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_y_vs_2l_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.Theta_hat_vs_2l_mrao);
+        ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_g_y_vs_2l_mrao);
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
