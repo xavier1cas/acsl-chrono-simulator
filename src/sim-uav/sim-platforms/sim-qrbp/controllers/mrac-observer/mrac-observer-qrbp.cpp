@@ -149,10 +149,8 @@ void mrac_observer::read_params(const std::string& jsonFile)
     oip.projection_x_max_K_hat_g_y_observer = j["OBSERVER"]["projection_x_max_K_hat_g_y_observer"];
     oip.projection_epsilon_K_hat_g_y_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
 
-    // oip.lambda_bar_observer = j["OBSERVER"]["lambda_bar_observer"];
-    // oip.theta_bar_observer = j["OBSERVER"]["theta_bar_observer"];
-    oip.lambda_bar_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
-    oip.theta_bar_observer = j["OBSERVER"]["projection_epsilon_K_hat_g_y_observer"];
+    oip.lambda_bar_observer = j["OBSERVER"]["lambda_bar_observer"];
+    oip.theta_bar_observer = j["OBSERVER"]["theta_bar_observer"];
 
     oip.K_ye_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["K_ye_observer"], 3, 3);
     oip.Theta_e_observer = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["OBSERVER"]["Theta_e_observer"], 4, 3);

@@ -275,9 +275,9 @@
         [-0.0683, 0, 0],
         [0, -0.0683, 0],
         [0, 0, -0.0683],
-        [4.8191, 0, 0],
-        [0, 4.8191, 0],
-        [0, 0, 4.8191]
+        [4.819, 0, 0],
+        [0, 4.819, 0],
+        [0, 0, 4.819]
       ]
     },
     "A_ref_y_observer": {
@@ -357,7 +357,9 @@
     "projection_x_max_Theta_hat_observer": 0.009,
     "projection_epsilon_Theta_hat_observer": 0.0001,
     "projection_x_max_K_hat_g_y_observer": 122500,
-    "projection_epsilon_K_hat_g_y_observer": 200
+    "projection_epsilon_K_hat_g_y_observer": 200,
+    "lambda_bar_observer": 0.5924,
+    "theta_bar_observer": 1.4142
   }
 
 }
