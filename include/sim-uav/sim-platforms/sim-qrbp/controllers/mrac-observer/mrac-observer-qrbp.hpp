@@ -350,6 +350,106 @@ struct differentiator_internal_paramters
     Eigen::Matrix<double, 3, 3> K_gye_diff;         // Initial gains for the differentiator
 };
 
+// Structure for the members that are mapped to the rk4 vector after integration
+struct differentiator_integrated_state_members
+{
+    Eigen::Matrix<double, 3, 1> int_euler_angles;          // The integral of the Euler angles
+    Eigen::Matrix<double, 6, 1> x_hat_mrad;                // Estimated rotational states for the MRAD
+    Eigen::Matrix<double, 6, 1> x_hat_2l_mrad;             // Estimated rotational states for the 2L MRAD
+    Eigen::Matrix<double, 6, 1> x_hat_vs_mrad;             // Estimated rotational states for the VS MRAD
+    Eigen::Matrix<double, 6, 1> x_hat_vs_2l_mrad;          // Estimated rotational states for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 3> K_hat_y_mrad;              // Adaptive gain matrix for the MRAD
+    Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrad;           // Adaptive gain matrix for the 2L MRAD
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_mrad;           // Adaptive gain matrix for the VS MRAD
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_2l_mrad;        // Adaptive gain matrix for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 3> Theta_hat_mrad;            // Adaptive gain matrix for the MRAD
+    Eigen::Matrix<double, 3, 3> Theta_hat_2l_mrad;         // Adaptive gain matrix for the 2L MRAD
+    Eigen::Matrix<double, 3, 3> Theta_hat_vs_mrad;         // Adaptive gain matrix for the VS MRAD
+    Eigen::Matrix<double, 3, 3> Theta_hat_vs_2l_mrad;      // Adaptive gain matrix for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrad;         // Adaptive gain matrix for the 2L MRAD transient term
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_vs_2l_mrad;      // Adaptive gain matrix for the VS 2L MRAD transient term
+
+    Eigen::Matrix<double, 6, 1> eta_2l_mrad;               // Transient error model for the 2L MRAD
+    Eigen::Matrix<double, 6, 1> eta_vs_2l_mrad;            // Transient error model for the VS 2L MRAD
+};
+
+// Structure for the internal members of the observers
+struct differentiator_internal_members
+{
+    Eigen::Matrix<double, 3, 1> eta_rot_unwrapped;        // Unwrapped psi in the Euler state.
+
+    Eigen::Matrix<double, 6, 1> x_hat_mrad_dot;           // Estimated rotational states for the MRAD
+    Eigen::Matrix<double, 6, 1> x_hat_2l_mrad_dot;        // Estimated rotational states for the 2L MRAD
+    Eigen::Matrix<double, 6, 1> x_hat_vs_mrad_dot;        // Estimated rotational states for the VS MRAD
+    Eigen::Matrix<double, 6, 1> x_hat_vs_2l_mrad_dot;     // Estimated rotational states for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 3> K_hat_y_mrad_dot;         // Adaptive gain matrix for the MRAD
+    Eigen::Matrix<double, 3, 3> K_hat_y_2l_mrad_dot;      // Adaptive gain matrix for the 2L MRAD
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_mrad_dot;      // Adaptive gain matrix for the VS MRAD
+    Eigen::Matrix<double, 3, 3> K_hat_y_vs_2l_mrad_dot;   // Adaptive gain matrix for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 3> Theta_hat_mrad_dot;       // Adaptive gain matrix for the MRAD
+    Eigen::Matrix<double, 3, 3> Theta_hat_2l_mrad_dot;    // Adaptive gain matrix for the 2L MRAD
+    Eigen::Matrix<double, 3, 3> Theta_hat_vs_mrad_dot;    // Adaptive gain matrix for the VS MRAD
+    Eigen::Matrix<double, 3, 3> Theta_hat_vs_2l_mrad_dot; // Adaptive gain matrix for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_2l_mrad_dot;    // Adaptive gain matrix for the 2L MRAD transient term
+    Eigen::Matrix<double, 3, 3> K_hat_g_y_vs_2l_mrad_dot; // Adaptive gain matrix for the VS 2L MRAD transient term
+
+    Eigen::Matrix<double, 6, 1> eta_2l_mrad_dot;          // Transient error model for the 2L MRAD
+    Eigen::Matrix<double, 6, 1> eta_vs_2l_mrad_dot;       // Transient error model for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 1> y_measured_mrad;          // Measured outputs for the MRAD
+    Eigen::Matrix<double, 3, 1> y_measured_2l_mrad;       // Measured outputs for the 2L MRAD
+    Eigen::Matrix<double, 3, 1> y_measured_vs_mrad;       // Measured outputs for the VS MRAD 
+    Eigen::Matrix<double, 3, 1> y_measured_vs_2l_mrad;    // Measured outputs for the VS 2L MRAD
+
+    Eigen::Matrix<double, 6, 1> z_measured_mrad;          // Measured full outputs for the MRAD
+    Eigen::Matrix<double, 6, 1> z_measured_2l_mrad;       // Measured full outputs for the 2L MRAD
+    Eigen::Matrix<double, 6, 1> z_measured_vs_mrad;       // Measured full outputs for the VS MRAD 
+    Eigen::Matrix<double, 6, 1> z_measured_vs_2l_mrad;    // Measured full outputs for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 1> Phi_y_mrad;               // Regressor vector for the MRAD
+    Eigen::Matrix<double, 3, 1> Phi_y_2l_mrad;            // Regressor vector for the 2L MRAD
+    Eigen::Matrix<double, 3, 1> Phi_y_vs_mrad;            // Regressor vector for the VS MRAD
+    Eigen::Matrix<double, 3, 1> Phi_y_vs_2l_mrad;         // Regressor vector for the VS 2L MRAD
+
+    Eigen::Matrix<double, 6, 1> nu_2l_mrad;               // Transient error for the 2L MRAD
+    Eigen::Matrix<double, 6, 1> nu_vs_2l_mrad;            // Transient error for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 1> u_mrad;                   // Virtual control input of the MRAD
+    Eigen::Matrix<double, 3, 1> u_2l_mrad;                // Virtual control input of the 2L MRAD
+    Eigen::Matrix<double, 3, 1> u_vs_mrad;                // Virtual control input of the VS MRAD
+    Eigen::Matrix<double, 3, 1> u_vs_2l_mrad;             // Virtual control input of the VS 2L MRAD
+
+    double rho_vs_mrad;                                   // rho term for the VS MRAD
+    double rho_vs_2l_mrad;                                // rho term for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 1> beta_vs_mrad;             // beta term for the VS MRAD
+    Eigen::Matrix<double, 3, 1> beta_vs_2l_mrad;          // beta term for the VS 2L MRAD
+
+    Eigen::Matrix<double, 3, 1> obs_error_mrad;           // (y_measured - y_estimated) for MRAD
+    Eigen::Matrix<double, 3, 1> obs_error_2l_mrad;        // (y_measured - y_estimated) for 2L MRAD
+    Eigen::Matrix<double, 3, 1> obs_error_vs_mrad;        // (y_measured - y_estimated) for VS MRAD
+    Eigen::Matrix<double, 3, 1> obs_error_vs_2l_mrad;     // (y_measured - y_estimated) for VS 2L MRAD
+
+    bool proj_op_activated_K_hat_y_mrad;                  // Boolean to record projection operator activation - MRAD
+    bool proj_op_activated_Theta_hat_mrad;                // Boolean to record projection operator activation - MRAD
+    bool proj_op_activated_K_hat_y_vs_mrad;               // Boolean to record projection operator activation - VS MRAD
+    bool proj_op_activated_Theta_hat_vs_mrad;             // Boolean to record projection operator activation - VS MRAD
+
+    bool proj_op_activated_K_hat_y_2l_mrad;               // Boolean to record projection operator activation - 2L MRAD
+    bool proj_op_activated_Theta_hat_2l_mrad;             // Boolean to record projection operator activation - 2L MRAD
+    bool proj_op_activated_K_hat_g_y_2l_mrad;             // Boolean to record projection operator activation - 2L MRAD
+    bool proj_op_activated_K_hat_y_vs_2l_mrad;            // Boolean to record projection operator activation - VS 2L MRAD
+    bool proj_op_activated_Theta_hat_vs_2l_mrad;          // Boolean to record projection operator activation - VS 2L MRAD
+    bool proj_op_activated_K_hat_g_y_vs_2l_mrad;          // Boolean to record projection operator activation - VS 2L MRAD
+
+    bool first_run_differentiator = false;                 // First run boolean to initialize the differentiator state
+};
 
 // =========================================================================================================
 // mrac_observer.hpp   -- QRBP MRAC Omega Controller w/ PID Baseline and Adaptive Observer for position.
@@ -472,11 +572,20 @@ private:
     // Define the internal members of the observer
     ::_acsl_::_qrbp_::_mrac_observer_::observer_internal_members oim;
 
-    // Definet the internal integrated state members of the observer
+    // Define the internal integrated state members of the observer
     ::_acsl_::_qrbp_::_mrac_observer_::observer_integrated_state_members osm;
 
     // Define the internal parameter members of the differentiator
     ::_acsl_::_qrbp_::_mrac_observer_::differentiator_internal_paramters dip;
+
+    // Define the internal members of the differentiator
+    ::_acsl_::_qrbp_::_mrac_observer_::differentiator_internal_members dim;
+
+    // Define the internal integrated state members of the differentiator
+    ::_acsl_::_qrbp_::_mrac_observer_::differentiator_integrated_state_members dsm;
+
+    // Member to unwrap the heading for differentiation
+    ::_shared_::_compute_::SimplePsiUnwrapState psiState;
 
 private:
     // -------------------------------------------------------------------------
@@ -507,7 +616,7 @@ private:
     void observe_outerloop();
 
     // Function to differentiate the innerloop desired orientation commands
-    void differentiate_innerloop_cmd();
+    void differentiate_innerloop();
 
 };
 

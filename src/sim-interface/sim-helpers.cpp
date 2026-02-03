@@ -259,6 +259,33 @@ double makeYawAngularErrorContinuous(double yaw, double user_defined_yaw)
     return continuous_error;
 }
 
+// Incrementally unwrap yaw by removing ±2*pi jumps in the difference.
+double unwrapPsiSimple(double psi_wrapped, SimplePsiUnwrapState &state)
+{
+    constexpr double pi    = M_PI;
+    constexpr double twoPi = 2.0 * M_PI;
+
+    // First sample: just pass through
+    if (!state.initialized) {
+        state.prevUnwrapped = psi_wrapped;
+        state.initialized   = true;
+        return psi_wrapped;
+    }
+
+    double dp = psi_wrapped - state.prevUnwrapped;
+
+    // Bring the increment into [-pi, pi]
+    if (dp > pi) {
+        dp -= twoPi;
+    } else if (dp < -pi) {
+        dp += twoPi;
+    }
+
+    double psi_unwrapped = state.prevUnwrapped + dp;
+    state.prevUnwrapped  = psi_unwrapped;
+    return psi_unwrapped;
+}
+
 } // namespace _compute_
 
 

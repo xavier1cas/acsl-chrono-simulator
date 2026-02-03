@@ -265,6 +265,32 @@ double wrapAngleToMinusPiAndPi(double alpha);
  */
 double makeYawAngularErrorContinuous(double yaw, double user_defined_yaw);
 
+/**
+ * @brief State for simple incremental yaw unwrapping.
+ *
+ * Maintains the last unwrapped yaw and an initialization flag.
+ */
+struct SimplePsiUnwrapState {
+    double prevUnwrapped;
+    bool   initialized;
+
+    SimplePsiUnwrapState()
+        : prevUnwrapped(0.0),
+          initialized(false)
+    {}
+};
+
+/**
+ * @brief Incrementally unwrap yaw by removing ±2*pi jumps in the difference.
+ *
+ * Standard rule: if dpsi > pi, subtract 2*pi; if dpsi < -pi, add 2*pi.
+ *
+ * @param[in]  psi_wrapped Wrapped yaw at current time step [rad].
+ * @param[in,out] state    Persistent unwrapping state (updated internally).
+ * @return Unwrapped (continuous) yaw [rad].
+ */
+double unwrapPsiSimple(double psi_wrapped, SimplePsiUnwrapState &state);
+
 
 } // namespace _compute_
 

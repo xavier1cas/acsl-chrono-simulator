@@ -1055,6 +1055,134 @@ void mrac_observer::observe_outerloop() {
 
 }
 
+// Function to compute the differentiator
+void mrac_observer::differentiate_innerloop() {
+
+    // ----------------------------------------------------------------------------- COMMON
+    dim.eta_rot_unwrapped << cim.eta_rot(0),                                                         // \phi
+                             cim.eta_rot(1),                                                         // \theta
+                             ::_shared_::_compute_::unwrapPsiSimple(cim.eta_rot(2), this->psiState); // \psi
+
+    // ----------------------------------------------------------------------------- MRAD
+    // Assign the total z_measured vector (use actual state vector)
+    dim.z_measured_mrad << dsm.int_euler_angles(0),  // \int \phi(\tau) d\tau
+                           dsm.int_euler_angles(1),  // \int \theta(\tau) d\tau
+                           dsm.int_euler_angles(2),  // \int \psi(\tau) d\tau
+                           dim.eta_rot_unwrapped(0), // \phi 
+                           dim.eta_rot_unwrapped(1), // \theta
+                           dim.eta_rot_unwrapped(2), // \psi
+
+    // Assign the measured output (use actual state vector)
+    dim.y_measured_mrad << dip.C_diff * dim.z_measured_mrad;
+
+    // Compute the observation error
+    dim.obs_error_mrad << dim.y_measured_mrad - dip.C_diff * dsm.x_hat_mrad;
+
+    // Regressor vector for the observer - It is the signal itself as we assume some noise in it 
+    dim.Phi_y_mrad << cim.eta_rot;  
+
+    // Compute the virtual control input for the differentitator
+    dim.u_mrad << cim.eta_rot - dsm.K_hat_y_mrad.transpose() * dim.y_measured_mrad 
+                  + dsm.Theta_hat_mrad.transpose() * dim.Phi_y_mrad;
+
+    // Compute the estimated state to be integrated
+    dim.x_hat_mrad_dot << dip.A_ref_y_diff * dsm.x_hat_mrad + dip.B_diff * dim.u_mrad
+                          + dip.L_diff * dim.obs_error_mrad;
+
+    // Compute the derivative of the differentiator gains to be integrated
+    dim.K_hat_y_mrad_dot << -dip.Gamma_y_diff * dim.y_measured_mrad * dim.obs_error_mrad.transpose();
+    dim.Theta_hat_mrad_dot << -dip.Gamma_Theta_diff * dim.Phi_y_mrad * dim.obs_error_mrad.transpose();
+
+    // Projection operator - Ball - NO boolean to switch off projection. It is always on.
+
+    // Projection operator K_hat_y_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_mrad)> proj_op_output_K_hat_y_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_mrad,
+                                                                    dim.K_hat_y_mrad_dot,
+                                                                    dip.projection_x_max_K_hat_y_diff,
+                                                                    dip.projection_epsilon_K_hat_y_diff);
+                                                                    
+    dim.K_hat_y_mrad_dot = proj_op_output_K_hat_y_mrad.projected_matrix;
+    dim.proj_op_activated_K_hat_y_mrad = proj_op_output_K_hat_y_mrad.projection_operator_activated;
+
+    // Projection operator Theta_hat_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_mrad)> proj_op_output_Theta_hat_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_mrad,
+                                                                    dim.Theta_hat_mrad_dot,
+                                                                    dip.projection_x_max_Theta_hat_diff,
+                                                                    dip.projection_epsilon_Theta_hat_diff);
+
+    dim.Theta_hat_mrad_dot = proj_op_output_Theta_hat_mrad.projected_matrix;
+    dim.proj_op_activated_Theta_hat_mrad = proj_op_output_Theta_hat_mrad.projection_operator_activated;
+
+    // ----------------------------------------------------------------------------- VARIABLE STRUCTURE MRAD
+    // Assign the total z_measured vector (use actual state vector)
+    dim.z_measured_vs_mrad << dsm.int_euler_angles(0),  // \int \phi(\tau) d\tau
+                              dsm.int_euler_angles(1),  // \int \theta(\tau) d\tau
+                              dsm.int_euler_angles(2),  // \int \psi(\tau) d\tau
+                              dim.eta_rot_unwrapped(0), // \phi 
+                              dim.eta_rot_unwrapped(1), // \theta
+                              dim.eta_rot_unwrapped(2), // \psi
+
+    // Assign the measured output (use actual state vector)
+    dim.y_measured_vs_mrad << dip.C_diff * dim.z_measured_vs_mrad;
+
+    // Compute the observation error
+    dim.obs_error_vs_mrad << dim.y_measured_vs_mrad - dip.C_diff * dsm.x_hat_vs_mrad;
+
+    // Regressor vector for the observer - It is the signal itself as we assume some noise in it 
+    dim.Phi_y_vs_mrad << cim.eta_rot;  
+
+    // Compute rho Eq. (38)
+    dim.rho_vs_mrad = dip.lambda_bar_diff * dip.theta_bar_diff * dim.Phi_y_vs_mrad.norm();
+    
+    // Compute beta Eq. (40)
+    double error_norm_vs_mrad = dim.obs_error_vs_mrad.norm();
+    if (std::abs(error_norm_vs_mrad) <= 1e-6) {
+        dim.beta_vs_mrad.setZero(dim.obs_error_vs_mrad.size());
+    } else {
+        dim.beta_vs_mrad = 0.45 * dim.rho_vs_mrad * (dim.obs_error_vs_mrad / error_norm_vs_mrad);
+    }
+
+    // Compute the virtual control input for the differentitator
+    dim.u_vs_mrad << cim.eta_rot - dsm.K_hat_y_vs_mrad.transpose() * dim.y_measured_vs_mrad 
+                  + dsm.Theta_hat_vs_mrad.transpose() * dim.Phi_y_vs_mrad
+                  + dim.beta_vs_mrad;
+
+    // Compute the estimated state to be integrated
+    dim.x_hat_vs_mrad_dot << dip.A_ref_y_diff * dsm.x_hat_vs_mrad + dip.B_diff * dim.u_vs_mrad
+                           + dip.L_diff * dim.obs_error_vs_mrad;
+
+    // Compute the derivative of the differentiator gains to be integrated
+    dim.K_hat_y_vs_mrad_dot << -dip.Gamma_y_diff * dim.y_measured_vs_mrad * dim.obs_error_vs_mrad.transpose();
+    dim.Theta_hat_vs_mrad_dot << -dip.Gamma_Theta_diff * dim.Phi_y_vs_mrad * dim.obs_error_vs_mrad.transpose();
+
+    // Projection operator - Ball - NO boolean to switch off projection. It is always on.
+
+    // Projection operator K_hat_y_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_vs_mrad)> proj_op_output_K_hat_y_vs_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_vs_mrad,
+                                                                    dim.K_hat_y_vs_mrad_dot,
+                                                                    dip.projection_x_max_K_hat_y_diff,
+                                                                    dip.projection_epsilon_K_hat_y_diff);
+                                                                    
+    dim.K_hat_y_vs_mrad_dot = proj_op_output_K_hat_y_vs_mrad.projected_matrix;
+    dim.proj_op_activated_K_hat_y_vs_mrad = proj_op_output_K_hat_y_vs_mrad.projection_operator_activated;
+
+    // Projection operator Theta_hat_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_vs_mrad)> proj_op_output_Theta_hat_vs_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_vs_mrad,
+                                                                    dim.Theta_hat_vs_mrad_dot,
+                                                                    dip.projection_x_max_Theta_hat_diff,
+                                                                    dip.projection_epsilon_Theta_hat_diff);
+
+    dim.Theta_hat_vs_mrad_dot = proj_op_output_Theta_hat_vs_mrad.projected_matrix;
+    dim.proj_op_activated_Theta_hat_vs_mrad = proj_op_output_Theta_hat_vs_mrad.projection_operator_activated;
+
+    // ----------------------------------------------------------------------------- 2L MRAD
+
+}
+
 // Function that is called in sim-bridge.cpp
 void mrac_observer::run(const double time_step_rk4_) {
 
@@ -1079,10 +1207,13 @@ void mrac_observer::run(const double time_step_rk4_) {
     // 7. Compute the rotational control input
     compute_rotational_control();
 
-    // 8. Compute the normalized thrust - Final Step
+    // 8. Compute the differentiator dynamics
+    differentiate_innerloop();
+
+    // 9. Compute the normalized thrust - Final Step
     compute_normalized_thrusts();
 
-    // 9. Do the integration
+    // 10. Do the integration
     rk4.do_step(boost::bind(&mrac_observer::model, this, bph::_1, bph::_2, bph::_3),
                 y, cim.t, time_step_rk4_);
     
@@ -1093,7 +1224,7 @@ void mrac_observer::run(const double time_step_rk4_) {
     cim.alg_duration = std::chrono::duration_cast<std::chrono::microseconds>(
                             cim.alg_end_time - cim.alg_start_time).count();
 
-    // 9. Log the Data after all the calculataions
+    // 11. Log the Data after all the calculataions
     this->LogData();
     
 }
