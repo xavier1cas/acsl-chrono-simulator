@@ -268,6 +268,24 @@ void mrac_observer::init(){
     
     // DISPLAY A DEBUG MESSAGE
     _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
+
+    // Initate the rk4 vector for the differentiator gain matrices
+    index = 379;
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.K_ye_diff, this->y, index);       // For MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.K_ye_diff, this->y, index);       // For 2L MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.K_ye_diff, this->y, index);       // For VS MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.K_ye_diff, this->y, index);       // For VS 2L MRAD
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.Theta_e_diff, this->y, index);    // For MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.Theta_e_diff, this->y, index);    // For 2L MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.Theta_e_diff, this->y, index);    // For VS MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.Theta_e_diff, this->y, index);    // For VS 2L MRAD
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.K_gye_diff, this->y, index);      // For 2L MRAD
+    ::_shared_::_serialize_::assignElementsToDxdt(dip.K_gye_diff, this->y, index);      // For VS 2L MRAD
+
+    // DISPLAY A DEBUG MESSAGE
+    _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAD DIFFERENTIATOR");
 }
 
 // Update function for the controller
@@ -331,11 +349,13 @@ void mrac_observer::update( double time,
     // 6. Assign the values from the integrator ------------------------------------
     assign_from_rk4();
 
-    // 7. Finally, Initialize the controller's estimated state vector --------------
+    // 7. Finally, Initialize the observer's estimated state vector --------------
     if(!oim.first_run_observer) {
         // Initiate the x_hat vector 
         osm.x_hat_mrao << cim.x_tran;
         osm.x_hat_2l_mrao << cim.x_tran;
+        osm.x_hat_vs_mrao << cim.x_tran;
+        osm.x_hat_vs_2l_mrao << cim.x_tran;
 
         // Initiate the corresponding rk4 vector 
         int index = 202; // For MRAO states
@@ -350,6 +370,21 @@ void mrac_observer::update( double time,
         
         // Set the initialization condition to true
         oim.first_run_observer = true;
+    }
+
+    // 8. Finally, Initalize the differentiator's estimated state vector --------------
+    if(!dim.first_run_differentiator) {
+        // Initiate the x_hat vector
+        dsm.x_hat_mrad.setZero(dsm.x_hat_mrad.size());
+        dsm.x_hat_2l_mrad.setZero(dsm.x_hat_2l_mrad.size());
+        dsm.x_hat_vs_mrad.setZero(dsm.x_hat_vs_mrad.size());
+        dsm.x_hat_vs_2l_mrad.setZero(dsm.x_hat_vs_2l_mrad.size());
+
+        // Do not need to initate the corresponding rk4 vector as they are already zero
+        _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL X HAT VECTOR SET FOR DIFFERENTIATOR");
+
+        // Set the initialization condition to true
+        dim.first_run_differentiator = true;
     }
 }
 
@@ -397,6 +432,30 @@ void mrac_observer::assign_from_rk4()
 
     ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_g_y_2l_mrao, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(osm.K_hat_g_y_vs_2l_mrao, y, index);
+
+    //------------ assign elements of the differentiator after integration  ------------//
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.int_euler_angles, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.x_hat_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.x_hat_2l_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.x_hat_vs_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.x_hat_vs_2l_mrad, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.eta_2l_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.eta_vs_2l_mrad, y, index);
+    
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_y_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_y_2l_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_y_vs_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_y_vs_2l_mrad, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.Theta_hat_mrad, y, index);    
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.Theta_hat_2l_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.Theta_hat_vs_mrad, y, index);    
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.Theta_hat_vs_2l_mrad, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_g_y_2l_mrad, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_g_y_vs_2l_mrad, y, index);
 }
 
 // Model function for integration
@@ -443,6 +502,30 @@ void mrac_observer::model(const _control_::rk4_array<double, NSI> &y, _control_:
 
     ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_g_y_2l_mrao_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_g_y_vs_2l_mrao_dot, dy, index);
+
+    //------------ Fill up the dy for integration for the differentiator ------------//
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.eta_rot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.x_hat_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.x_hat_2l_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.x_hat_vs_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.x_hat_vs_2l_mrad_dot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.eta_2l_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.eta_vs_2l_mrad_dot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.K_hat_y_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.K_hat_y_2l_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.K_hat_y_vs_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.K_hat_y_vs_2l_mrad_dot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.Theta_hat_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.Theta_hat_2l_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.Theta_hat_vs_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.Theta_hat_vs_2l_mrad_dot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.K_hat_g_y_2l_mrad_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.K_hat_g_y_vs_2l_mrad_dot, dy, index);
     
 }
 
@@ -1070,7 +1153,7 @@ void mrac_observer::differentiate_innerloop() {
                            dsm.int_euler_angles(2),  // \int \psi(\tau) d\tau
                            dim.eta_rot_unwrapped(0), // \phi 
                            dim.eta_rot_unwrapped(1), // \theta
-                           dim.eta_rot_unwrapped(2), // \psi
+                           dim.eta_rot_unwrapped(2); // \psi
 
     // Assign the measured output (use actual state vector)
     dim.y_measured_mrad << dip.C_diff * dim.z_measured_mrad;
@@ -1079,10 +1162,10 @@ void mrac_observer::differentiate_innerloop() {
     dim.obs_error_mrad << dim.y_measured_mrad - dip.C_diff * dsm.x_hat_mrad;
 
     // Regressor vector for the observer - It is the signal itself as we assume some noise in it 
-    dim.Phi_y_mrad << cim.eta_rot;  
+    dim.Phi_y_mrad << dim.eta_rot_unwrapped;  
 
     // Compute the virtual control input for the differentitator
-    dim.u_mrad << cim.eta_rot - dsm.K_hat_y_mrad.transpose() * dim.y_measured_mrad 
+    dim.u_mrad << dim.eta_rot_unwrapped - dsm.K_hat_y_mrad.transpose() * dim.y_measured_mrad 
                   + dsm.Theta_hat_mrad.transpose() * dim.Phi_y_mrad;
 
     // Compute the estimated state to be integrated
@@ -1122,7 +1205,7 @@ void mrac_observer::differentiate_innerloop() {
                               dsm.int_euler_angles(2),  // \int \psi(\tau) d\tau
                               dim.eta_rot_unwrapped(0), // \phi 
                               dim.eta_rot_unwrapped(1), // \theta
-                              dim.eta_rot_unwrapped(2), // \psi
+                              dim.eta_rot_unwrapped(2); // \psi
 
     // Assign the measured output (use actual state vector)
     dim.y_measured_vs_mrad << dip.C_diff * dim.z_measured_vs_mrad;
@@ -1131,7 +1214,7 @@ void mrac_observer::differentiate_innerloop() {
     dim.obs_error_vs_mrad << dim.y_measured_vs_mrad - dip.C_diff * dsm.x_hat_vs_mrad;
 
     // Regressor vector for the observer - It is the signal itself as we assume some noise in it 
-    dim.Phi_y_vs_mrad << cim.eta_rot;  
+    dim.Phi_y_vs_mrad << dim.eta_rot_unwrapped;  
 
     // Compute rho Eq. (38)
     dim.rho_vs_mrad = dip.lambda_bar_diff * dip.theta_bar_diff * dim.Phi_y_vs_mrad.norm();
@@ -1145,7 +1228,7 @@ void mrac_observer::differentiate_innerloop() {
     }
 
     // Compute the virtual control input for the differentitator
-    dim.u_vs_mrad << cim.eta_rot - dsm.K_hat_y_vs_mrad.transpose() * dim.y_measured_vs_mrad 
+    dim.u_vs_mrad << dim.eta_rot_unwrapped - dsm.K_hat_y_vs_mrad.transpose() * dim.y_measured_vs_mrad 
                   + dsm.Theta_hat_vs_mrad.transpose() * dim.Phi_y_vs_mrad
                   + dim.beta_vs_mrad;
 
@@ -1180,7 +1263,156 @@ void mrac_observer::differentiate_innerloop() {
     dim.proj_op_activated_Theta_hat_vs_mrad = proj_op_output_Theta_hat_vs_mrad.projection_operator_activated;
 
     // ----------------------------------------------------------------------------- 2L MRAD
+    // Assign the total z_measured vector (use actual state vector)
+    dim.z_measured_2l_mrad << dsm.int_euler_angles(0),  // \int \phi(\tau) d\tau
+                              dsm.int_euler_angles(1),  // \int \theta(\tau) d\tau
+                              dsm.int_euler_angles(2),  // \int \psi(\tau) d\tau
+                              dim.eta_rot_unwrapped(0), // \phi 
+                              dim.eta_rot_unwrapped(1), // \theta
+                              dim.eta_rot_unwrapped(2); // \psi
 
+    // Assign the measured output (use actual state vector)
+    dim.y_measured_2l_mrad << dip.C_diff * dim.z_measured_2l_mrad;
+
+    // Compute the observation error
+    dim.obs_error_2l_mrad << dim.y_measured_2l_mrad - dip.C_diff * dsm.x_hat_2l_mrad;
+
+    // Compute the transient error
+    dim.nu_2l_mrad << dim.z_measured_2l_mrad - dsm.x_hat_2l_mrad - dsm.eta_2l_mrad;
+
+    // Regressor vector for the observer - It is the signal itself as we assume some noise in it
+    dim.Phi_y_2l_mrad << dim.eta_rot_unwrapped;
+
+    // Compute the virtual control input for the differentitator
+    dim.u_2l_mrad << dim.eta_rot_unwrapped - dsm.K_hat_y_2l_mrad.transpose() * dim.y_measured_2l_mrad 
+                    + dsm.Theta_hat_2l_mrad.transpose() * dim.Phi_y_2l_mrad
+                    - dsm.K_hat_g_y_2l_mrad.transpose() * dim.obs_error_2l_mrad;
+
+    // Compute the estimated state to be integrated
+    dim.x_hat_2l_mrad_dot << dip.A_ref_y_diff * dsm.x_hat_2l_mrad + dip.B_diff * dim.u_2l_mrad
+                           + dip.L_diff * dim.obs_error_2l_mrad;
+
+    // Compute the transient error model
+    dim.eta_2l_mrad_dot << dip.A_tran_y_diff * dsm.eta_2l_mrad;
+
+    // Compute the derivative of the differentiator gains to be integrated
+    dim.K_hat_y_2l_mrad_dot << -dip.Gamma_y_diff * dim.y_measured_2l_mrad * dim.nu_2l_mrad.transpose();
+    dim.Theta_hat_2l_mrad_dot << -dip.Gamma_Theta_diff * dim.Phi_y_2l_mrad * dim.nu_2l_mrad.transpose();
+    dim.K_hat_g_y_2l_mrad_dot << -dip.Gamma_g_y_diff * dim.obs_error_2l_mrad * dim.nu_2l_mrad.transpose() * dip.C_diff.transpose();
+
+    // Projection operator - Ball - NO boolean to switch off projection. It is always on.
+
+    // Projection operator K_hat_y_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_2l_mrad)> proj_op_output_K_hat_y_2l_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_2l_mrad,
+                                                                    dim.K_hat_y_2l_mrad_dot,
+                                                                    dip.projection_x_max_K_hat_y_diff,
+                                                                    dip.projection_epsilon_K_hat_y_diff);
+                                                                    
+    dim.K_hat_y_2l_mrad_dot = proj_op_output_K_hat_y_2l_mrad.projected_matrix;
+    dim.proj_op_activated_K_hat_y_2l_mrad = proj_op_output_K_hat_y_2l_mrad.projection_operator_activated;
+
+    // Projection operator Theta_hat_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_2l_mrad)> proj_op_output_Theta_hat_2l_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_2l_mrad,
+                                                                    dim.Theta_hat_2l_mrad_dot,
+                                                                    dip.projection_x_max_Theta_hat_diff,
+                                                                    dip.projection_epsilon_Theta_hat_diff);
+
+    dim.Theta_hat_2l_mrad_dot = proj_op_output_Theta_hat_2l_mrad.projected_matrix;
+    dim.proj_op_activated_Theta_hat_2l_mrad = proj_op_output_Theta_hat_2l_mrad.projection_operator_activated;
+
+    // Projection operator K_hat_g_y_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_g_y_2l_mrad)> proj_op_output_K_hat_g_y_2l_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_g_y_2l_mrad,
+                                                                    dim.K_hat_g_y_2l_mrad_dot,
+                                                                    dip.projection_x_max_K_hat_g_y_diff,
+                                                                    dip.projection_epsilon_K_hat_g_y_diff);
+
+    dim.K_hat_g_y_2l_mrad_dot = proj_op_output_K_hat_g_y_2l_mrad.projected_matrix;
+    dim.proj_op_activated_K_hat_g_y_2l_mrad = proj_op_output_K_hat_g_y_2l_mrad.projection_operator_activated;
+
+    // ----------------------------------------------------------------------------- VARIABLE STRUCTURE 2L MRAD
+    // Assign the total z_measured vector (use actual state vector)
+    dim.z_measured_vs_2l_mrad << dsm.int_euler_angles(0),  // \int \phi(\tau) d\tau
+                                 dsm.int_euler_angles(1),  // \int \theta(\tau) d\tau
+                                 dsm.int_euler_angles(2),  // \int \psi(\tau) d\tau
+                                 dim.eta_rot_unwrapped(0), // \phi 
+                                 dim.eta_rot_unwrapped(1), // \theta
+                                 dim.eta_rot_unwrapped(2); // \psi
+
+    // Assign the measured output (use actual state vector)
+    dim.y_measured_vs_2l_mrad << dip.C_diff * dim.z_measured_vs_2l_mrad;
+
+    // Compute the observation error
+    dim.obs_error_vs_2l_mrad << dim.y_measured_vs_2l_mrad - dip.C_diff * dsm.x_hat_vs_2l_mrad;
+
+    // Compute the transient error
+    dim.nu_vs_2l_mrad << dim.z_measured_vs_2l_mrad - dsm.x_hat_vs_2l_mrad - dsm.eta_vs_2l_mrad;
+
+    // Regressor vector for the observer - It is the signal itself as we assume some noise in it
+    dim.Phi_y_vs_2l_mrad << dim.eta_rot_unwrapped;
+
+    // Compute rho Eq. (38)
+    dim.rho_vs_2l_mrad = dip.lambda_bar_diff * dip.theta_bar_diff * dim.Phi_y_vs_2l_mrad.norm();
+    
+    // Compute beta Eq. (40)
+    double error_norm_vs_2l_mrad = dim.obs_error_vs_2l_mrad.norm();
+    if (std::abs(error_norm_vs_2l_mrad) <= 1e-6) {
+        dim.beta_vs_2l_mrad.setZero(dim.obs_error_vs_2l_mrad.size());
+    } else {
+        dim.beta_vs_2l_mrad = 0.45 * dim.rho_vs_2l_mrad * (dim.obs_error_vs_2l_mrad / error_norm_vs_2l_mrad);
+    }
+
+    // Compute the virtual control input for the differentitator
+    dim.u_vs_2l_mrad << dim.eta_rot_unwrapped - dsm.K_hat_y_vs_2l_mrad.transpose() * dim.y_measured_vs_2l_mrad 
+                    + dsm.Theta_hat_vs_2l_mrad.transpose() * dim.Phi_y_vs_2l_mrad
+                    - dsm.K_hat_g_y_vs_2l_mrad.transpose() * dim.obs_error_vs_2l_mrad
+                    + dim.beta_vs_2l_mrad;
+
+    // Compute the estimated state to be integrated
+    dim.x_hat_vs_2l_mrad_dot << dip.A_ref_y_diff * dsm.x_hat_vs_2l_mrad + dip.B_diff * dim.u_vs_2l_mrad
+                           + dip.L_diff * dim.obs_error_vs_2l_mrad;
+
+    // Compute the transient error model
+    dim.eta_vs_2l_mrad_dot << dip.A_tran_y_diff * dsm.eta_vs_2l_mrad;
+
+    // Compute the derivative of the differentiator gains to be integrated
+    dim.K_hat_y_vs_2l_mrad_dot << -dip.Gamma_y_diff * dim.y_measured_vs_2l_mrad * dim.nu_vs_2l_mrad.transpose();
+    dim.Theta_hat_vs_2l_mrad_dot << -dip.Gamma_Theta_diff * dim.Phi_y_vs_2l_mrad * dim.nu_vs_2l_mrad.transpose();
+    dim.K_hat_g_y_vs_2l_mrad_dot << -dip.Gamma_g_y_diff * dim.obs_error_vs_2l_mrad * dim.nu_vs_2l_mrad.transpose() * dip.C_diff.transpose();
+
+    // Projection operator - Ball - NO boolean to switch off projection. It is always on.
+
+    // Projection operator K_hat_y_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_vs_2l_mrad)> proj_op_output_K_hat_y_vs_2l_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_vs_2l_mrad,
+                                                                    dim.K_hat_y_vs_2l_mrad_dot,
+                                                                    dip.projection_x_max_K_hat_y_diff,
+                                                                    dip.projection_epsilon_K_hat_y_diff);
+                                                                    
+    dim.K_hat_y_vs_2l_mrad_dot = proj_op_output_K_hat_y_vs_2l_mrad.projected_matrix;
+    dim.proj_op_activated_K_hat_y_vs_2l_mrad = proj_op_output_K_hat_y_vs_2l_mrad.projection_operator_activated;
+
+    // Projection operator Theta_hat_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_vs_2l_mrad)> proj_op_output_Theta_hat_vs_2l_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_vs_2l_mrad,
+                                                                    dim.Theta_hat_vs_2l_mrad_dot,
+                                                                    dip.projection_x_max_Theta_hat_diff,
+                                                                    dip.projection_epsilon_Theta_hat_diff);
+
+    dim.Theta_hat_vs_2l_mrad_dot = proj_op_output_Theta_hat_vs_2l_mrad.projected_matrix;
+    dim.proj_op_activated_Theta_hat_vs_2l_mrad = proj_op_output_Theta_hat_vs_2l_mrad.projection_operator_activated;
+
+    // Projection operator K_hat_g_y_mrad
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_g_y_vs_2l_mrad)> proj_op_output_K_hat_g_y_vs_2l_mrad = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_g_y_vs_2l_mrad,
+                                                                    dim.K_hat_g_y_vs_2l_mrad_dot,
+                                                                    dip.projection_x_max_K_hat_g_y_diff,
+                                                                    dip.projection_epsilon_K_hat_g_y_diff);
+
+    dim.K_hat_g_y_vs_2l_mrad_dot = proj_op_output_K_hat_g_y_vs_2l_mrad.projected_matrix;
+    dim.proj_op_activated_K_hat_g_y_vs_2l_mrad = proj_op_output_K_hat_g_y_vs_2l_mrad.projection_operator_activated;// Assign the measured output (use actual state vector)
 }
 
 // Function that is called in sim-bridge.cpp
@@ -1464,6 +1696,57 @@ void mrac_observer::ConfigureHeaders()
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_2l_mrao", osm.Theta_hat_vs_2l_mrao, "[-]");
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_vs_2l_mrao", osm.K_hat_g_y_vs_2l_mrao, "[-]"); 
 
+        // Differentiator part
+        oss << "x_hat mrad int phi, "
+            << "x_hat mrad int theta, "
+            << "x_hat mrad int psi, "
+            << "x_hat mrad phi, "
+            << "x_hat mrad theta, "
+            << "x_hat mrad psi, "
+            << "x_hat 2l mrad int phi, "
+            << "x_hat 2l mrad int theta, "
+            << "x_hat 2l mrad int psi, "
+            << "x_hat 2l mrad phi, "
+            << "x_hat 2l mrad theta, "
+            << "x_hat 2l mrad psi, "
+            << "x_hat vs mrad int phi, "
+            << "x_hat vs mrad int theta, "
+            << "x_hat vs mrad int psi, "
+            << "x_hat vs mrad phi, "
+            << "x_hat vs mrad theta, "
+            << "x_hat vs mrad psi, "
+            << "x_hat vs 2l mrad int phi, "
+            << "x_hat vs 2l mrad int theta, "
+            << "x_hat vs 2l mrad int psi, "
+            << "x_hat vs 2l mrad phi, "
+            << "x_hat vs 2l mrad theta, "
+            << "x_hat vs 2l mrad psi, "
+            << "x_hat mrad dot phi, "
+            << "x_hat mrad dot theta, "
+            << "x_hat mrad dot psi, "
+            << "x_hat mrad dot phi dot, "
+            << "x_hat mrad dot theta dot, "
+            << "x_hat mrad dot psi dot, "
+            << "x_hat 2l mrad dot phi, "
+            << "x_hat 2l mrad dot theta, "
+            << "x_hat 2l mrad dot psi, "
+            << "x_hat 2l mrad dot phi dot, "
+            << "x_hat 2l mrad dot theta dot, "
+            << "x_hat 2l mrad dot psi dot, "
+            << "x_hat vs mrad dot phi, "
+            << "x_hat vs mrad dot theta, "
+            << "x_hat vs mrad dot psi, "
+            << "x_hat vs mrad dot phi dot, "
+            << "x_hat vs mrad dot theta dot, "
+            << "x_hat vs mrad dot psi dot, "
+            << "x_hat vs 2l mrad dot phi, "
+            << "x_hat vs 2l mrad dot theta, "
+            << "x_hat vs 2l mrad dot psi, "
+            << "x_hat vs 2l mrad dot phi dot, "
+            << "x_hat vs 2l mrad dot theta dot, "
+            << "x_hat vs 2l mrad dot psi dot, "
+            ;
+
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
 
@@ -1708,6 +1991,57 @@ void mrac_observer::LogData()
         ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_y_vs_2l_mrao);
         ::_shared_::_serialize_::appendEigenData(oss, osm.Theta_hat_vs_2l_mrao);
         ::_shared_::_serialize_::appendEigenData(oss, osm.K_hat_g_y_vs_2l_mrao);
+
+        // Differentiator part
+        oss << dsm.x_hat_mrad(0) << ", "
+            << dsm.x_hat_mrad(1) << ", "
+            << dsm.x_hat_mrad(2) << ", "
+            << dsm.x_hat_mrad(3) << ", "
+            << dsm.x_hat_mrad(4) << ", "
+            << dsm.x_hat_mrad(5) << ", "
+            << dsm.x_hat_2l_mrad(0) << ", "
+            << dsm.x_hat_2l_mrad(1) << ", "
+            << dsm.x_hat_2l_mrad(2) << ", "
+            << dsm.x_hat_2l_mrad(3) << ", "
+            << dsm.x_hat_2l_mrad(4) << ", "
+            << dsm.x_hat_2l_mrad(5) << ", "
+            << dsm.x_hat_vs_mrad(0) << ", "
+            << dsm.x_hat_vs_mrad(1) << ", "
+            << dsm.x_hat_vs_mrad(2) << ", "
+            << dsm.x_hat_vs_mrad(3) << ", "
+            << dsm.x_hat_vs_mrad(4) << ", "
+            << dsm.x_hat_vs_mrad(5) << ", "
+            << dsm.x_hat_vs_2l_mrad(0) << ", "
+            << dsm.x_hat_vs_2l_mrad(1) << ", "
+            << dsm.x_hat_vs_2l_mrad(2) << ", "
+            << dsm.x_hat_vs_2l_mrad(3) << ", "
+            << dsm.x_hat_vs_2l_mrad(4) << ", "
+            << dsm.x_hat_vs_2l_mrad(5) << ", "
+            << dim.x_hat_mrad_dot(0) << ", "
+            << dim.x_hat_mrad_dot(1) << ", "
+            << dim.x_hat_mrad_dot(2) << ", "
+            << dim.x_hat_mrad_dot(3) << ", "
+            << dim.x_hat_mrad_dot(4) << ", "
+            << dim.x_hat_mrad_dot(5) << ", "
+            << dim.x_hat_2l_mrad_dot(0) << ", "
+            << dim.x_hat_2l_mrad_dot(1) << ", "
+            << dim.x_hat_2l_mrad_dot(2) << ", "
+            << dim.x_hat_2l_mrad_dot(3) << ", "
+            << dim.x_hat_2l_mrad_dot(4) << ", "
+            << dim.x_hat_2l_mrad_dot(5) << ", "
+            << dim.x_hat_vs_mrad_dot(0) << ", "
+            << dim.x_hat_vs_mrad_dot(1) << ", "
+            << dim.x_hat_vs_mrad_dot(2) << ", "
+            << dim.x_hat_vs_mrad_dot(3) << ", "
+            << dim.x_hat_vs_mrad_dot(4) << ", "
+            << dim.x_hat_vs_mrad_dot(5) << ", "
+            << dim.x_hat_vs_2l_mrad_dot(0) << ", "
+            << dim.x_hat_vs_2l_mrad_dot(1) << ", "
+            << dim.x_hat_vs_2l_mrad_dot(2) << ", "
+            << dim.x_hat_vs_2l_mrad_dot(3) << ", "
+            << dim.x_hat_vs_2l_mrad_dot(4) << ", "
+            << dim.x_hat_vs_2l_mrad_dot(5) << ", "
+            ;
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
