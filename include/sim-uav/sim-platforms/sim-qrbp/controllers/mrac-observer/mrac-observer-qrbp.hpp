@@ -50,7 +50,7 @@ namespace _mrac_observer_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 340;
+constexpr int NSI = 469;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -135,6 +135,7 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 3> R_I_J;                             // Rotation from inertial to body
     Eigen::Matrix<double, 3, 3> R_J_I;                             // Rotation from body to inertial
     Eigen::Matrix<double, 3, 3> Jacobian;                          // Jacobian Matrix
+    Eigen::Matrix<double, 3, 3> Jacobian_inv;                      // Inverse of Jacobian Matrix
     Eigen::Matrix<double, 3, 1> r_user;                            // Translational user position command
     Eigen::Matrix<double, 3, 1> r_dot_user;                        // Translational user veloctiy command
     Eigen::Matrix<double, 3, 1> r_ddot_user;                       // Translational user acceleration command 
@@ -151,6 +152,7 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 1> omega_rot_d;                       // Desired angular velocities
     Eigen::Matrix<double, 3, 1> alpha_rot_d;                       // Desired angular acceleration
     Eigen::Matrix<double, 3, 1> eta_rot;                           // Euler Angles
+    Eigen::Matrix<double, 3, 1> eta_rot_rate;                      // Euler Rates
     Eigen::Matrix<double, 3, 1> omega_rot;                         // Angular velocities
     Eigen::Matrix<double, 3, 1> e_rot_eta;                         // Error in the angles
     Eigen::Matrix<double, 3, 1> e_rot_omega;                       // Error in the angular velocities

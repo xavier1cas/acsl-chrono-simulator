@@ -22,12 +22,12 @@
     "L_differentiator": {
       "scaling_coef": 1,
       "matrix": [
-        [-0.0649, 0, 0],
-        [0, -0.0649, 0],
-        [0, 0, -0.0649],
-        [4.8705, 0, 0],
-        [0, 4.8705, 0],
-        [0, 0, 4.8705]
+        [-0.4039, 0, 0],
+        [0, -0.4039, 0],
+        [0, 0, -0.4039],
+        [1.8901, 0, 0],
+        [0, 1.8901, 0],
+        [0, 0, 1.8901]
       ]
     },
     "A_ref_y_differentiator": {
@@ -36,9 +36,9 @@
         [0, 0, 0, 1, 0, 0],
         [0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 1],
-        [-17, 0, 0, -90, 0, 0],
-        [0, -45, 0, 0, -110, 0],
-        [0, 0, -17, 0, 0, -142]
+        [-2, 0, 0, -7.68, 0, 0],
+        [0, -2, 0, 0, -10.08, 0],
+        [0, 0, -2, 0, 0, -6.48]
       ]
     },
     "A_tran_y_differentiator": {
@@ -47,17 +47,17 @@
         [0, 0, 0, 1, 0, 0],
         [0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 1],
-        [-22141.8802, 0, 0, -297.603, 0, 0],
-        [0, -22141.8802, 0, 0, -297.603, 0],
-        [0, 0, -22141.8802, 0, 0, -297.603]
+        [-97.8775, 0, 0, -19.7866, 0, 0],
+        [0, -97.8775, 0, 0, -19.7866, 0],
+        [0, 0, -97.8775, 0, 0, -19.7866]
       ]
     },
     "Gamma_y_differentiator": {
       "scaling_coef": 1,
       "matrix": [
-        [10000, 0, 0],
-        [0, 20000, 0],
-        [0, 0, 20000]
+        [0.1, 0, 0],
+        [0, 0.1, 0],
+        [0, 0, 0.1]
       ]
     },
     "Gamma_Theta_differentiator": {
@@ -71,17 +71,17 @@
     "Gamma_g_y_differentiator": {
       "scaling_coef": 1,
       "matrix": [
-        [9000, 0, 0],
-        [0, 9000, 0],
-        [0, 0, 9000]
+        [0.1, 0, 0],
+        [0, 0.1, 0],
+        [0, 0, 0.1]
       ]
     },
     "K_ye_differentiator": {
       "scaling_coef": 1,
       "matrix": [
-        [-90, 0, 0],
-        [0, -110, 0],
-        [0, 0, -142]
+        [-7.68, 0, 0],
+        [0, -10.08, 0],
+        [0, 0, -6.48]
       ]
     },
     "Theta_e_differentiator": {
@@ -95,17 +95,17 @@
     "K_gye_differentiator": {
       "scaling_coef": 1,
       "matrix": [
-        [-207.603, 0, 0],
-        [0, -187.603, 0],
-        [0, 0, -155.603]
+        [-12.1066, 0, 0],
+        [0, -9.7066, 0],
+        [0, 0, -13.3066]
       ]
     },
-    "projection_x_max_K_hat_y_differentiator": 40000,
-    "projection_epsilon_K_hat_y_differentiator": 50,
+    "projection_x_max_K_hat_y_differentiator": 2500,
+    "projection_epsilon_K_hat_y_differentiator": 10,
     "projection_x_max_Theta_hat_differentiator": 0.009,
     "projection_epsilon_Theta_hat_differentiator": 0.0001,
-    "projection_x_max_K_hat_g_y_differentiator": 202500,
-    "projection_epsilon_K_hat_g_y_differentiator": 50,
+    "projection_x_max_K_hat_g_y_differentiator": 2025,
+    "projection_epsilon_K_hat_g_y_differentiator": 7.5,
     "lambda_bar_differentiator": 1,
     "theta_bar_differentiator": 1
   }

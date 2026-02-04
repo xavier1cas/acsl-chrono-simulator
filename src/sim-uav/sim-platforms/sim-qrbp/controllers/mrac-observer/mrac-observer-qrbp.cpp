@@ -386,6 +386,12 @@ void mrac_observer::update( double time,
         // Set the initialization condition to true
         dim.first_run_differentiator = true;
     }
+
+    // 9. Compute the inverse jacobian for the Euler angles -------------------------------
+    cim.Jacobian_inv = ::_shared_::_transformations_::jacobianMatrixInverse(cim.eta_rot(0), cim.eta_rot(1));
+
+    // 10. Compute the angular rates from angular velocity --------------------------------
+    cim.eta_rot_rate = cim.Jacobian_inv * cim.omega_rot;
 }
 
 // Function to assign elements from the rk4 integrator
@@ -456,6 +462,7 @@ void mrac_observer::assign_from_rk4()
 
     ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_g_y_2l_mrad, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(dsm.K_hat_g_y_vs_2l_mrad, y, index);
+    
 }
 
 // Model function for integration
@@ -1745,6 +1752,9 @@ void mrac_observer::ConfigureHeaders()
             << "x_hat vs 2l mrad dot phi dot, "
             << "x_hat vs 2l mrad dot theta dot, "
             << "x_hat vs 2l mrad dot psi dot, "
+            << "phi dot, "
+            << "theta dot, "
+            << "psi dot, "
             ;
 
     try {
@@ -2041,6 +2051,9 @@ void mrac_observer::LogData()
             << dim.x_hat_vs_2l_mrad_dot(3) << ", "
             << dim.x_hat_vs_2l_mrad_dot(4) << ", "
             << dim.x_hat_vs_2l_mrad_dot(5) << ", "
+            << cim.eta_rot_rate(0) << ", "
+            << cim.eta_rot_rate(1) << ", "
+            << cim.eta_rot_rate(2) << ", "
             ;
 
     try {
