@@ -356,6 +356,7 @@ struct differentiator_internal_paramters
 struct differentiator_integrated_state_members
 {
     Eigen::Matrix<double, 3, 1> int_euler_angles;          // The integral of the Euler angles
+
     Eigen::Matrix<double, 6, 1> x_hat_mrad;                // Estimated rotational states for the MRAD
     Eigen::Matrix<double, 6, 1> x_hat_2l_mrad;             // Estimated rotational states for the 2L MRAD
     Eigen::Matrix<double, 6, 1> x_hat_vs_mrad;             // Estimated rotational states for the VS MRAD
@@ -558,6 +559,9 @@ private:
 
     // Create a RungeKutta object for integration functionality.
     boost::numeric::odeint::runge_kutta4<_control_::rk4_array<double, NSI>> rk4;
+
+    // Create a RungeKutta-Cash-Karp54 object
+    boost::numeric::odeint::runge_kutta_cash_karp54<_control_::rk4_array<double, NSI>> rk54;
 
     // Define the internal parameter members of the controller 
     ::_acsl_::_qrbp_::_mrac_observer_::controller_internal_parameters cip;

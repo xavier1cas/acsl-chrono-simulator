@@ -60,6 +60,7 @@
 #include <boost/numeric/odeint.hpp>
 #include <boost/numeric/interval.hpp>
 #include <boost/numeric/odeint/stepper/runge_kutta4.hpp>
+#include <boost/numeric/odeint/stepper/runge_kutta_cash_karp54.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/math/tools/polynomial.hpp>

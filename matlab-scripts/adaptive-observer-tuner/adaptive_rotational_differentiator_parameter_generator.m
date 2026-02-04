@@ -55,20 +55,21 @@ addpath("functions/");
 %%%%%%%%%%%%%%%%%% ADAPTIVE OBSERVER TUNABLE PARAMETERS %%%%%%%%%%%%%%%%%%
 
 % GAINS FOR THE A_ref_y MATRIX
-K_P_ref_y = [2.0,  0.0,  0.0;
-             0.0,  2.0,  0.0;
-             0.0,  0.0,  2.0];
-K_D_ref_y = [7.68,   0.0,  0.0;
-              0.0, 10.08,  0.0;
-              0.0,   0.0, 5.48];
+K_P_ref_y = blkdiag(2.0, ...
+                    2.0, ...
+                    2.0);
+
+K_D_ref_y = blkdiag(7.86, ...
+                    10.08, ...
+                    2.0);
 
 % GAINS FOR THE A_tran_y MATRIX
-K_P_tran_y = [17,  0.0,  0.0;
-              0.0,  17,  0.0;
-              0.0,  0.0,  16];
-K_D_tran_y = [ 90, 0.0,  0.0;
-              0.0,  90,  0.0;
-              0.0, 0.0,  57];
+K_P_tran_y = [2.0,  0.0,  0.0;
+              0.0,  2.0,  0.0;
+              0.0,  0.0,  2.0];
+K_D_tran_y = [ 7.86,   0.0,   0.0;
+                0.0, 10.08,   0.0;
+                0.0,   0.0,  5.48];
 
 % BOOLEANS FOR HOW YOU WANT TO CONTRUCT THE PLANT MATRICES
 build_transient_A_from_reference_A = true;
@@ -79,24 +80,24 @@ param.Gamma_y = blkdiag(1e-1, ...
                         1e-1, ...
                         1e-1);
 
-param.Gamma_Theta_y = blkdiag(0.0, ...
-                              0.0, ...
-                              0.0); 
+param.Gamma_Theta_y = blkdiag(0e-3, ...
+                              0e-3, ...
+                              0e-3); 
 
 param.Gamma_g_y = blkdiag(1e-1, ...
                           1e-1, ...
                           1e-1);
 
 % OBSERVER GAINS PROJECTION OPERTAOR PARAMETERS
-param.projection_x_max_K_hat_y_differentiator = 50^2;
+param.projection_x_max_K_hat_y_differentiator = 900;
 param.projection_epsilon_K_hat_y_differentiator = 10;
 
-param.projection_x_max_Theta_hat_differentiator = 0.095^2;
-param.projection_epsilon_Theta_hat_differentiator = 0.0001;
+param.projection_x_max_Theta_hat_differentiator = 0.5;
+param.projection_epsilon_Theta_hat_differentiator = 0.01;
 
 % OBSERVER GAINS DEADZONE SWITCH TOLERANCE
-param.projection_x_max_K_hat_g_y_differentiator = 45^2;
-param.projection_epsilon_K_hat_g_y_differentiator = 7.5;
+param.projection_x_max_K_hat_g_y_differentiator = 900;
+param.projection_epsilon_K_hat_g_y_differentiator = 10;
 
 %% -----------------------------------------------------------------------
 %%%%%%%%%%%%%%%%%%%% DO NOT MODIFY BEYOND THIS COMMENT %%%%%%%%%%%%%%%%%%%
@@ -116,7 +117,8 @@ param.B = [zeros(3,3);
                eye(3)];
 
 % Build C = [0_{3x3}, I_3]
-param.C = [zeros(3,3), eye(3)];
+% param.C = [zeros(3,3), eye(3)];
+param.C = [eye(3), eye(3)];
 
 % System parameters for adaptive differentiator
 % Build the Lambda
@@ -153,7 +155,7 @@ end
 
 % Reference plant dynamics (closed-loop) build A_tran_y from A_ref_y
 if (build_transient_A_from_reference_A && ~build_reference_A_from_transient_A)
-    for ii = 1:1:2000
+    for ii = 1:1:200000
         [param.A_tran_y, param.found] = generate_A_tran_y(param.A_ref_y, ii);
         if (param.found)
             break;

@@ -269,6 +269,20 @@ void mrac_observer::init(){
     // DISPLAY A DEBUG MESSAGE
     _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR MRAC OBSERVER");
 
+    // Initiate the gain matrices
+    dsm.K_hat_y_mrad << dip.K_ye_diff;
+    dsm.K_hat_y_2l_mrad << dip.K_ye_diff;
+    dsm.K_hat_y_vs_mrad << dip.K_ye_diff;
+    dsm.K_hat_y_vs_2l_mrad << dip.K_ye_diff;
+
+    dsm.Theta_hat_mrad << dip.Theta_e_diff;
+    dsm.Theta_hat_2l_mrad << dip.Theta_e_diff;
+    dsm.Theta_hat_vs_mrad << dip.Theta_e_diff;
+    dsm.Theta_hat_vs_2l_mrad << dip.Theta_e_diff;
+
+    dsm.K_hat_g_y_2l_mrad << dip.K_gye_diff;
+    dsm.K_hat_g_y_vs_2l_mrad << dip.K_gye_diff;
+
     // Initate the rk4 vector for the differentiator gain matrices
     index = 379;
     ::_shared_::_serialize_::assignElementsToDxdt(dip.K_ye_diff, this->y, index);       // For MRAD
@@ -380,7 +394,19 @@ void mrac_observer::update( double time,
         dsm.x_hat_vs_mrad.setZero(dsm.x_hat_vs_mrad.size());
         dsm.x_hat_vs_2l_mrad.setZero(dsm.x_hat_vs_2l_mrad.size());
 
-        // Do not need to initate the corresponding rk4 vector as they are already zero
+        // Build 6x1 vector [eta_rot; eta_rot]
+        Eigen::Matrix<double, 6, 1> zero_vec;
+        zero_vec << cim.eta_rot, cim.eta_rot;
+
+        // Initiate the corresponding rk4 vector
+        int index = 343; // For MRAD states
+        ::_shared_::_serialize_::assignElementsToDxdt(zero_vec, this->y, index);
+        index = 349; // For 2L MRAD states
+        ::_shared_::_serialize_::assignElementsToDxdt(zero_vec, this->y, index);
+        index = 355; // For VS MRAD states
+        ::_shared_::_serialize_::assignElementsToDxdt(zero_vec, this->y, index);
+        index = 361; // For VS 2L MRAD states
+        ::_shared_::_serialize_::assignElementsToDxdt(zero_vec, this->y, index);
         _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL X HAT VECTOR SET FOR DIFFERENTIATOR");
 
         // Set the initialization condition to true
@@ -511,7 +537,7 @@ void mrac_observer::model(const _control_::rk4_array<double, NSI> &y, _control_:
     ::_shared_::_serialize_::assignElementsToDxdt(oim.K_hat_g_y_vs_2l_mrao_dot, dy, index);
 
     //------------ Fill up the dy for integration for the differentiator ------------//
-    ::_shared_::_serialize_::assignElementsToDxdt(cim.eta_rot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(dim.eta_rot_unwrapped, dy, index);
 
     ::_shared_::_serialize_::assignElementsToDxdt(dim.x_hat_mrad_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(dim.x_hat_2l_mrad_dot, dy, index);
@@ -1231,13 +1257,12 @@ void mrac_observer::differentiate_innerloop() {
     if (std::abs(error_norm_vs_mrad) <= 1e-6) {
         dim.beta_vs_mrad.setZero(dim.obs_error_vs_mrad.size());
     } else {
-        dim.beta_vs_mrad = 0.45 * dim.rho_vs_mrad * (dim.obs_error_vs_mrad / error_norm_vs_mrad);
+        dim.beta_vs_mrad = 0.001 * dim.rho_vs_mrad * (dim.obs_error_vs_mrad / error_norm_vs_mrad);
     }
 
     // Compute the virtual control input for the differentitator
-    dim.u_vs_mrad << dim.eta_rot_unwrapped - dsm.K_hat_y_vs_mrad.transpose() * dim.y_measured_vs_mrad 
-                  + dsm.Theta_hat_vs_mrad.transpose() * dim.Phi_y_vs_mrad
-                  + dim.beta_vs_mrad;
+    dim.u_vs_mrad << dim.eta_rot_unwrapped - dsm.K_hat_y_mrad.transpose() * dim.y_measured_vs_mrad 
+                  + dsm.Theta_hat_vs_mrad.transpose() * dim.Phi_y_mrad;
 
     // Compute the estimated state to be integrated
     dim.x_hat_vs_mrad_dot << dip.A_ref_y_diff * dsm.x_hat_vs_mrad + dip.B_diff * dim.u_vs_mrad
@@ -1249,7 +1274,7 @@ void mrac_observer::differentiate_innerloop() {
 
     // Projection operator - Ball - NO boolean to switch off projection. It is always on.
 
-    // Projection operator K_hat_y_mrad
+    // Projection operator K_hat_y_vs_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_vs_mrad)> proj_op_output_K_hat_y_vs_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_vs_mrad,
                                                                     dim.K_hat_y_vs_mrad_dot,
@@ -1259,7 +1284,7 @@ void mrac_observer::differentiate_innerloop() {
     dim.K_hat_y_vs_mrad_dot = proj_op_output_K_hat_y_vs_mrad.projected_matrix;
     dim.proj_op_activated_K_hat_y_vs_mrad = proj_op_output_K_hat_y_vs_mrad.projection_operator_activated;
 
-    // Projection operator Theta_hat_mrad
+    // Projection operator Theta_hat_vs_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_vs_mrad)> proj_op_output_Theta_hat_vs_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_vs_mrad,
                                                                     dim.Theta_hat_vs_mrad_dot,
@@ -1309,7 +1334,7 @@ void mrac_observer::differentiate_innerloop() {
 
     // Projection operator - Ball - NO boolean to switch off projection. It is always on.
 
-    // Projection operator K_hat_y_mrad
+    // Projection operator K_hat_y_2l_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_2l_mrad)> proj_op_output_K_hat_y_2l_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_2l_mrad,
                                                                     dim.K_hat_y_2l_mrad_dot,
@@ -1319,7 +1344,7 @@ void mrac_observer::differentiate_innerloop() {
     dim.K_hat_y_2l_mrad_dot = proj_op_output_K_hat_y_2l_mrad.projected_matrix;
     dim.proj_op_activated_K_hat_y_2l_mrad = proj_op_output_K_hat_y_2l_mrad.projection_operator_activated;
 
-    // Projection operator Theta_hat_mrad
+    // Projection operator Theta_hat_2l_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_2l_mrad)> proj_op_output_Theta_hat_2l_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_2l_mrad,
                                                                     dim.Theta_hat_2l_mrad_dot,
@@ -1329,7 +1354,7 @@ void mrac_observer::differentiate_innerloop() {
     dim.Theta_hat_2l_mrad_dot = proj_op_output_Theta_hat_2l_mrad.projected_matrix;
     dim.proj_op_activated_Theta_hat_2l_mrad = proj_op_output_Theta_hat_2l_mrad.projection_operator_activated;
 
-    // Projection operator K_hat_g_y_mrad
+    // Projection operator K_hat_g_y_2l_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_g_y_2l_mrad)> proj_op_output_K_hat_g_y_2l_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_g_y_2l_mrad,
                                                                     dim.K_hat_g_y_2l_mrad_dot,
@@ -1368,7 +1393,7 @@ void mrac_observer::differentiate_innerloop() {
     if (std::abs(error_norm_vs_2l_mrad) <= 1e-6) {
         dim.beta_vs_2l_mrad.setZero(dim.obs_error_vs_2l_mrad.size());
     } else {
-        dim.beta_vs_2l_mrad = 0.45 * dim.rho_vs_2l_mrad * (dim.obs_error_vs_2l_mrad / error_norm_vs_2l_mrad);
+        dim.beta_vs_2l_mrad = 0.001 * dim.rho_vs_2l_mrad * (dim.obs_error_vs_2l_mrad / error_norm_vs_2l_mrad);
     }
 
     // Compute the virtual control input for the differentitator
@@ -1391,7 +1416,7 @@ void mrac_observer::differentiate_innerloop() {
 
     // Projection operator - Ball - NO boolean to switch off projection. It is always on.
 
-    // Projection operator K_hat_y_mrad
+    // Projection operator K_hat_y_vs_2l_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.K_hat_y_vs_2l_mrad)> proj_op_output_K_hat_y_vs_2l_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.K_hat_y_vs_2l_mrad,
                                                                     dim.K_hat_y_vs_2l_mrad_dot,
@@ -1401,7 +1426,7 @@ void mrac_observer::differentiate_innerloop() {
     dim.K_hat_y_vs_2l_mrad_dot = proj_op_output_K_hat_y_vs_2l_mrad.projected_matrix;
     dim.proj_op_activated_K_hat_y_vs_2l_mrad = proj_op_output_K_hat_y_vs_2l_mrad.projection_operator_activated;
 
-    // Projection operator Theta_hat_mrad
+    // Projection operator Theta_hat_vs_2l_mrad
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(dsm.Theta_hat_vs_2l_mrad)> proj_op_output_Theta_hat_vs_2l_mrad = 
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(dsm.Theta_hat_vs_2l_mrad,
                                                                     dim.Theta_hat_vs_2l_mrad_dot,
@@ -1453,7 +1478,7 @@ void mrac_observer::run(const double time_step_rk4_) {
     compute_normalized_thrusts();
 
     // 10. Do the integration
-    rk4.do_step(boost::bind(&mrac_observer::model, this, bph::_1, bph::_2, bph::_3),
+    rk54.do_step(boost::bind(&mrac_observer::model, this, bph::_1, bph::_2, bph::_3),
                 y, cim.t, time_step_rk4_);
     
     // Capture the time after the execution of the controller
@@ -1755,6 +1780,7 @@ void mrac_observer::ConfigureHeaders()
             << "phi dot, "
             << "theta dot, "
             << "psi dot, "
+            << "psi unwrapped, "
             ;
 
     try {
@@ -2054,6 +2080,7 @@ void mrac_observer::LogData()
             << cim.eta_rot_rate(0) << ", "
             << cim.eta_rot_rate(1) << ", "
             << cim.eta_rot_rate(2) << ", "
+            << dim.eta_rot_unwrapped(2) << ", "
             ;
 
     try {
