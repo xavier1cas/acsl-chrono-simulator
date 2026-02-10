@@ -54,12 +54,14 @@ addpath("functions/");
 %% =======================================================================
 %%%%%%%%%%%%%%%%%% ADAPTIVE OBSERVER TUNABLE PARAMETERS %%%%%%%%%%%%%%%%%%
 
+
+
 % GAINS FOR THE A_ref_y MATRIX
 K_P_ref_y = [17,  0.0,  0.0;
              0.0,  50,  0.0;
              0.0,  0.0,  17];
 K_D_ref_y = [ 90, 0.0,  0.0;
-             0.0,  150,  0.0;
+             0.0,  160,  0.0;
              0.0, 0.0,  142];
 
 % GAINS FOR THE A_tran_y MATRIX
@@ -75,7 +77,7 @@ build_transient_A_from_reference_A = true;
 build_reference_A_from_transient_A = false;
 
 % OBSERVER ADAPTIVE RATES
-param.Gamma_y = blkdiag(10000, ...
+param.Gamma_y = blkdiag(30000, ...
                         30000, ...
                         20000);
 
@@ -89,7 +91,7 @@ param.Gamma_g_y = blkdiag(9000, ...
                           9000);
 
 % OBSERVER GAINS PROJECTION OPERTAOR PARAMETERS
-param.projection_x_max_K_hat_y_observer = 220^2;
+param.projection_x_max_K_hat_y_observer = 240^2;
 param.projection_epsilon_K_hat_y_observer = 50;
 
 param.projection_x_max_Theta_hat_observer = 0.095^2;
