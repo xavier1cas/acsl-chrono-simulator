@@ -106,6 +106,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->log2terminal = config_file["debug"]["terminal"].as_bool();
     this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
     this->sim_stop_time = static_cast<double>(config_file["debug"]["sim_stop_time"].as_float()); 
+    this->developer_mode = config_file["debug"]["developer_mode"].as_bool();
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -436,8 +437,10 @@ void simbridge::UpdatePhysicsSystem()
     // ------------------------------------------------------------------------
     // STEP 3 – IF EFSL is not on. i.e no software/hardware-in-the-loop
     //          THEN apply model in the loop control.
+    //          IF DEVELOPERMODE is not on. i.e we just want the environment
+    //          loaded in. THEN apply model in the loop control.
     // ------------------------------------------------------------------------
-    if (!this->GetSimMode()) {
+    if (!this->GetSimMode() && !this->developer_mode) {
         this->m_ctrl->update(m_state.time, 
                             m_state.pos.x(),
                             m_state.pos.y(),
@@ -780,30 +783,45 @@ void simbridge::LogData()
 // Prototype ever run function -  will house the logic for all the modes.
 void simbridge::EverRun()
 {
-    // If the debug stop is used, then you stop at the specified time, else you stop when the drone lands
-    if (this->sim_debug_stop)
+    // If you are in developer mode, you do not update the control input for the system
+    if (this->developer_mode)
     {
-        while (this->m_sys.GetPhysicsSystem().GetChTime() < this->sim_stop_time)
-        {
-            // Update the vision system
-        this->UpdateVisualizationSystem();
-
-        // Update the physics system
-        this->UpdatePhysicsSystem();    
-        }
-    }
-    else
-    {
-        while (this->m_sys.GetPhysicsSystem().GetChTime() < this->m_trj->GetTmax())
+        while (true)
         {
             // Update the vision system
             this->UpdateVisualizationSystem();
 
             // Update the physics system
-            this->UpdatePhysicsSystem();
+            this->UpdatePhysicsSystem();  
+        }
+
+    }
+    else
+    {
+        // If the debug stop is used, then you stop at the specified time, else you stop when the drone lands
+        if (this->sim_debug_stop)
+        {
+            while (this->m_sys.GetPhysicsSystem().GetChTime() < this->sim_stop_time)
+            {
+                // Update the vision system
+                this->UpdateVisualizationSystem();
+
+                // Update the physics system
+                this->UpdatePhysicsSystem();    
+            }
+        }
+        else
+        {
+            while (this->m_sys.GetPhysicsSystem().GetChTime() < this->m_trj->GetTmax())
+            {
+                // Update the vision system
+                this->UpdateVisualizationSystem();
+
+                // Update the physics system
+                this->UpdatePhysicsSystem();
+            }
         }
     }
-    
 }
 
 
