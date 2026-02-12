@@ -58,6 +58,8 @@ main:
   render_all_COG_frames: false
   # Show the trajectory in the secene
   render_trajectory: false
+  # Show the biplane frame
+  render_biplane_frame: true
 
   # Rendering effects ----------------------------------------------
   # Toggle shadow rendering (GPU-intensive)

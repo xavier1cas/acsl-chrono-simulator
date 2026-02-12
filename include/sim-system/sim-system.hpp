@@ -96,6 +96,7 @@ struct visionconfig {
     bool render_all_COG_frames;
     bool render_prop_frames;
     bool render_trajectory;
+    bool render_biplane_frame;
 };
 
 // =====================================================================================================================

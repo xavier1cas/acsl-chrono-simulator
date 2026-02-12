@@ -128,25 +128,31 @@ jerk.x(ii) = polyval(jerk.coef.x(segment(ii),:), t_adjusted(ii));
 jerk.y(ii) = polyval(jerk.coef.y(segment(ii),:), t_adjusted(ii));
 jerk.z(ii) = polyval(jerk.coef.z(segment(ii),:), t_adjusted(ii));
 
-if t_adjusted(ii) == 0
-    yaw(ii) = 0;
-    yaw_dot(ii) = 0;
-    yaw_dot_dot(ii) = 0;
-
-elseif t_adjusted(ii) > 0 & velocity.norm2D(ii) < 1e-2
-    yaw(ii) = yaw(ii-1);
-    yaw_dot(ii) = 0;
-    yaw_dot_dot(ii) = 0;
-
+if (traj.set_yaw_zero)
+    yaw(ii) = 0.0;
+    yaw_dot(ii) = 0.0;
+    yaw_dot_dot(ii) = 0.0;
 else
-    [yaw(ii), yaw_dot(ii), yaw_dot_dot(ii)] = ...
-    ComputeYawTrajectory(velocity.coef.x(segment(ii),:),...  
-                         velocity.coef.y(segment(ii),:),...
-                         acceleration.coef.x(segment(ii),:),...
-                         acceleration.coef.y(segment(ii),:),...
-                         jerk.coef.x(segment(ii),:),...
-                         jerk.coef.y(segment(ii),:),...
-                         t_adjusted(ii));
+    if t_adjusted(ii) == 0
+        yaw(ii) = 0;
+        yaw_dot(ii) = 0;
+        yaw_dot_dot(ii) = 0;
+    
+    elseif t_adjusted(ii) > 0 & velocity.norm2D(ii) < 1e-2
+        yaw(ii) = yaw(ii-1);
+        yaw_dot(ii) = 0;
+        yaw_dot_dot(ii) = 0;
+    
+    else
+        [yaw(ii), yaw_dot(ii), yaw_dot_dot(ii)] = ...
+        ComputeYawTrajectory(velocity.coef.x(segment(ii),:),...  
+                             velocity.coef.y(segment(ii),:),...
+                             acceleration.coef.x(segment(ii),:),...
+                             acceleration.coef.y(segment(ii),:),...
+                             jerk.coef.x(segment(ii),:),...
+                             jerk.coef.y(segment(ii),:),...
+                             t_adjusted(ii));
+    end
 end
 
 end

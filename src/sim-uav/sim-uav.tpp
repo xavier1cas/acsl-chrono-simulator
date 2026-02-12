@@ -175,6 +175,31 @@ void simuav<nop>::InitiateUAVChassis()
     chassis.body->SetFrameCOMToRef(chassis.COM);  // Center of mass frame relative to reference
 
     // ------------------------------------------------------------------------
+    // STEP 2.1 – Create and attach biplane_frame marker at COM. Place marker 
+    //            so its origin coincides with the body AuxRef origin: chassis.
+    //            COM is the frame from AuxRef -> COM, so we need the opposite 
+    //            offset (COM -> AuxRef) to bring the marker origin back to the 
+    //            AuxRef origin. Additionally, rotate the marker +90 deg about
+    //            the chassis Y axis to align it as a biplane frame.
+    // ------------------------------------------------------------------------
+    chassis.biplane_frame = chrono_types::make_shared<chrono::ChMarker>();
+    chassis.biplane_frame->SetName("biplane_frame");
+
+    // Attach the marker to the chassis body at the COM location
+    chassis.body->AddMarker(chassis.biplane_frame);
+    chrono::ChVector3d rel_pos_COM = -chassis.COM.GetPos(); 
+    chrono::ChQuaternion<> rel_rot_COM = chassis.COM.GetRot(); 
+
+    // +90 deg rotation about COM/chassis Y axis
+    chrono::ChQuaternion<> q_y90 = chrono::QuatFromAngleY(chrono::CH_PI_2);
+    chrono::ChQuaternion<> rel_rot_marker;
+    rel_rot_marker.Cross(rel_rot_COM, q_y90);
+
+    // Frame of marker relative to body reference (AuxRef) frame
+    chrono::ChFramed marker_frame(rel_pos_COM, rel_rot_marker);
+    chassis.biplane_frame->ImposeRelativeTransform(marker_frame);    
+
+    // ------------------------------------------------------------------------
     // STEP 3 – Load and attach a visual mesh for the chassis
     // ------------------------------------------------------------------------
     // Load mesh geometry from Wavefront (.obj) file

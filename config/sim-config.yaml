@@ -58,10 +58,10 @@ debug:
   # Set to true if you want to stop the simulation at a given time (in seconds)
   sim_debug_stop: true
   # Set the value at which you want the simulation to stop (in seconds)
-  sim_stop_time: 31.0
+  sim_stop_time: 1.0
   # Set the value to true if you want the system to import model and not run 
   # anything else
-  developer_mode: true
+  developer_mode: false
 
 # ============================================================================
 # UAV Platform Selection
@@ -85,7 +85,8 @@ controller:
   qrbp:
     pid_omega: false
     mrac_omega: false
-    mrac_observer: true
+    mrac_observer: false
+    mrac_long_lat: true
   x8copter: 
     pid: false
     mrac: false
@@ -118,7 +119,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: bean_trajectory_modified0p8
+  filename: fto0p2
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

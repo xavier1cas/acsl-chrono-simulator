@@ -65,6 +65,7 @@ traj.numsamples = yamlData.numsamples;
 traj.step = yamlData.tstep;
 traj.codebase = yamlData.codebase;
 traj.hover_time = yamlData.hover_time;
+traj.set_yaw_zero = yamlData.set_yaw_zero;
 
 % Extract waypoints and initialize empty matrices
 wpts = yamlData.waypoints;

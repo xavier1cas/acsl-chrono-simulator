@@ -185,20 +185,20 @@ void mrac_omega::init(){
 void mrac_omega::update(double time, 
                         double x,
                         double y,
-												double z,
-												double vx,
-												double vy,
-												double vz,
-												double q0,
-												double q1,
-												double q2,
-												double q3,
-												double roll,
-												double pitch,
-												double yaw,
-												double w_x,
-												double w_y,
-												double w_z)     
+                        double z,
+                        double vx,
+                        double vy,
+                        double vz,
+                        double q0,
+                        double q1,
+                        double q2,
+                        double q3,
+                        double roll,
+                        double pitch,
+                        double yaw,
+                        double w_x,
+                        double w_y,
+                        double w_z)     
 {
     // 1. Assign all the states ----------------------------------------------------
     cim.t = time;
@@ -705,7 +705,7 @@ bool mrac_omega::InitiateLogging()
     return status;
 }
 
-// Funciton that setups up the headers for the log file
+// Funciton that sets up the headers for the log file
 void mrac_omega::ConfigureHeaders()
 {
 

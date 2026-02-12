@@ -1659,129 +1659,129 @@ void mrac_observer::ConfigureHeaders()
         << "proj_op_activated_Theta_hat_rotational [-], "
 		;
 
-        // Use the deader function to create the header for the matrix data
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_x_translational", csm.K_hat_x_tran, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_r_translational", csm.K_hat_r_tran, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_translational", csm.Theta_hat_tran, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_x_rotational", csm.K_hat_x_rot, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_r_rotational", csm.K_hat_r_rot, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_rotational", csm.Theta_hat_rot, "[-]");    
+    // Use the deader function to create the header for the matrix data
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_x_translational", csm.K_hat_x_tran, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_r_translational", csm.K_hat_r_tran, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_translational", csm.Theta_hat_tran, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_x_rotational", csm.K_hat_x_rot, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_r_rotational", csm.K_hat_r_rot, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_rotational", csm.Theta_hat_rot, "[-]");    
 
-        //  Observer part
-        oss << "Estimated Position MRAO x [m], "
-            << "Estimated Position MRAO y [m], "
-            << "Estimated Position MRAO z [m], "
-            << "Estimated Position MRAO vx [m], "
-            << "Estimated Position MRAO vy [m], "
-            << "Estimated Position MRAO vz [m], "
-            << "Estimated Position 2L MRAO x [m], "
-            << "Estimated Position 2L MRAO y [m], "
-            << "Estimated Position 2L MRAO z [m], "
-            << "Estimated Position 2L MRAO vx [m], "
-            << "Estimated Position 2L MRAO vy [m], "
-            << "Estimated Position 2L MRAO vz [m], "
-            << "proj_op_activated_K_hat_y_mrao, "
-            << "proj_op_activated_Theta_hat_mrao, "
-            << "proj_op_activated_K_hat_y_2l_mrao, "
-            << "proj_op_activated_Theta_hat_2l_mrao, "
-            << "proj_op_activated_K_hat_g_y_2l_mrao, "
-            ;
+    //  Observer part
+    oss << "Estimated Position MRAO x [m], "
+        << "Estimated Position MRAO y [m], "
+        << "Estimated Position MRAO z [m], "
+        << "Estimated Position MRAO vx [m], "
+        << "Estimated Position MRAO vy [m], "
+        << "Estimated Position MRAO vz [m], "
+        << "Estimated Position 2L MRAO x [m], "
+        << "Estimated Position 2L MRAO y [m], "
+        << "Estimated Position 2L MRAO z [m], "
+        << "Estimated Position 2L MRAO vx [m], "
+        << "Estimated Position 2L MRAO vy [m], "
+        << "Estimated Position 2L MRAO vz [m], "
+        << "proj_op_activated_K_hat_y_mrao, "
+        << "proj_op_activated_Theta_hat_mrao, "
+        << "proj_op_activated_K_hat_y_2l_mrao, "
+        << "proj_op_activated_Theta_hat_2l_mrao, "
+        << "proj_op_activated_K_hat_g_y_2l_mrao, "
+        ;
 
-        // Use the deader function to create the header for the matrix data
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_mrao", osm.K_hat_y_mrao, "[-]"); 
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_mrao", osm.Theta_hat_mrao, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_2l_mrao", osm.K_hat_y_2l_mrao, "[-]"); 
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_2l_mrao", osm.Theta_hat_2l_mrao, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_2l_mrao", osm.K_hat_g_y_2l_mrao, "[-]"); 
+    // Use the deader function to create the header for the matrix data
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_mrao", osm.K_hat_y_mrao, "[-]"); 
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_mrao", osm.Theta_hat_mrao, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_2l_mrao", osm.K_hat_y_2l_mrao, "[-]"); 
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_2l_mrao", osm.Theta_hat_2l_mrao, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_2l_mrao", osm.K_hat_g_y_2l_mrao, "[-]"); 
 
-        oss << "Estimated Position VS MRAO x [m], "
-            << "Estimated Position VS MRAO y [m], "
-            << "Estimated Position VS MRAO z [m], "
-            << "Estimated Position VS MRAO vx [m], "
-            << "Estimated Position VS MRAO vy [m], "
-            << "Estimated Position VS MRAO vz [m], "
-            << "Estimated Position VS 2L MRAO x [m], "
-            << "Estimated Position VS 2L MRAO y [m], "
-            << "Estimated Position VS 2L MRAO z [m], "
-            << "Estimated Position VS 2L MRAO vx [m], "
-            << "Estimated Position VS 2L MRAO vy [m], "
-            << "Estimated Position VS 2L MRAO vz [m], "
-            << "proj_op_activated_K_hat_y_vs_mrao, "
-            << "proj_op_activated_Theta_hat_vs_mrao, "
-            << "proj_op_activated_K_hat_y_vs_2l_mrao, "
-            << "proj_op_activated_Theta_hat_vs_2l_mrao, "
-            << "proj_op_activated_K_hat_g_y_vs_2l_mrao, "
-            << "rho_vs_mrao [-], "
-            << "beta_vs_mrao x [-], "
-            << "beta_vs_mrao y [-], "
-            << "beta_vs_mrao z [-], "
-            << "rho_vs_2l_mrao [-], "
-            << "beta_vs_2l_mrao x [-], "
-            << "beta_vs_2l_mrao y [-], "
-            << "beta_vs_2l_mrao z [-], "
-            ;
+    oss << "Estimated Position VS MRAO x [m], "
+        << "Estimated Position VS MRAO y [m], "
+        << "Estimated Position VS MRAO z [m], "
+        << "Estimated Position VS MRAO vx [m], "
+        << "Estimated Position VS MRAO vy [m], "
+        << "Estimated Position VS MRAO vz [m], "
+        << "Estimated Position VS 2L MRAO x [m], "
+        << "Estimated Position VS 2L MRAO y [m], "
+        << "Estimated Position VS 2L MRAO z [m], "
+        << "Estimated Position VS 2L MRAO vx [m], "
+        << "Estimated Position VS 2L MRAO vy [m], "
+        << "Estimated Position VS 2L MRAO vz [m], "
+        << "proj_op_activated_K_hat_y_vs_mrao, "
+        << "proj_op_activated_Theta_hat_vs_mrao, "
+        << "proj_op_activated_K_hat_y_vs_2l_mrao, "
+        << "proj_op_activated_Theta_hat_vs_2l_mrao, "
+        << "proj_op_activated_K_hat_g_y_vs_2l_mrao, "
+        << "rho_vs_mrao [-], "
+        << "beta_vs_mrao x [-], "
+        << "beta_vs_mrao y [-], "
+        << "beta_vs_mrao z [-], "
+        << "rho_vs_2l_mrao [-], "
+        << "beta_vs_2l_mrao x [-], "
+        << "beta_vs_2l_mrao y [-], "
+        << "beta_vs_2l_mrao z [-], "
+        ;
 
-        // Use the deader function to create the header for the matrix data
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_vs_mrao", osm.K_hat_y_vs_mrao, "[-]"); 
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_mrao", osm.Theta_hat_vs_mrao, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_vs_2l_mrao", osm.K_hat_y_vs_2l_mrao, "[-]"); 
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_2l_mrao", osm.Theta_hat_vs_2l_mrao, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_vs_2l_mrao", osm.K_hat_g_y_vs_2l_mrao, "[-]"); 
+    // Use the deader function to create the header for the matrix data
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_vs_mrao", osm.K_hat_y_vs_mrao, "[-]"); 
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_mrao", osm.Theta_hat_vs_mrao, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_y_vs_2l_mrao", osm.K_hat_y_vs_2l_mrao, "[-]"); 
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_vs_2l_mrao", osm.Theta_hat_vs_2l_mrao, "[-]");
+    ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_g_y_vs_2l_mrao", osm.K_hat_g_y_vs_2l_mrao, "[-]"); 
 
-        // Differentiator part
-        oss << "x_hat mrad int phi, "
-            << "x_hat mrad int theta, "
-            << "x_hat mrad int psi, "
-            << "x_hat mrad phi, "
-            << "x_hat mrad theta, "
-            << "x_hat mrad psi, "
-            << "x_hat 2l mrad int phi, "
-            << "x_hat 2l mrad int theta, "
-            << "x_hat 2l mrad int psi, "
-            << "x_hat 2l mrad phi, "
-            << "x_hat 2l mrad theta, "
-            << "x_hat 2l mrad psi, "
-            << "x_hat vs mrad int phi, "
-            << "x_hat vs mrad int theta, "
-            << "x_hat vs mrad int psi, "
-            << "x_hat vs mrad phi, "
-            << "x_hat vs mrad theta, "
-            << "x_hat vs mrad psi, "
-            << "x_hat vs 2l mrad int phi, "
-            << "x_hat vs 2l mrad int theta, "
-            << "x_hat vs 2l mrad int psi, "
-            << "x_hat vs 2l mrad phi, "
-            << "x_hat vs 2l mrad theta, "
-            << "x_hat vs 2l mrad psi, "
-            << "x_hat mrad dot phi, "
-            << "x_hat mrad dot theta, "
-            << "x_hat mrad dot psi, "
-            << "x_hat mrad dot phi dot, "
-            << "x_hat mrad dot theta dot, "
-            << "x_hat mrad dot psi dot, "
-            << "x_hat 2l mrad dot phi, "
-            << "x_hat 2l mrad dot theta, "
-            << "x_hat 2l mrad dot psi, "
-            << "x_hat 2l mrad dot phi dot, "
-            << "x_hat 2l mrad dot theta dot, "
-            << "x_hat 2l mrad dot psi dot, "
-            << "x_hat vs mrad dot phi, "
-            << "x_hat vs mrad dot theta, "
-            << "x_hat vs mrad dot psi, "
-            << "x_hat vs mrad dot phi dot, "
-            << "x_hat vs mrad dot theta dot, "
-            << "x_hat vs mrad dot psi dot, "
-            << "x_hat vs 2l mrad dot phi, "
-            << "x_hat vs 2l mrad dot theta, "
-            << "x_hat vs 2l mrad dot psi, "
-            << "x_hat vs 2l mrad dot phi dot, "
-            << "x_hat vs 2l mrad dot theta dot, "
-            << "x_hat vs 2l mrad dot psi dot, "
-            << "phi dot, "
-            << "theta dot, "
-            << "psi dot, "
-            << "psi unwrapped, "
-            ;
+    // Differentiator part
+    oss << "x_hat mrad int phi, "
+        << "x_hat mrad int theta, "
+        << "x_hat mrad int psi, "
+        << "x_hat mrad phi, "
+        << "x_hat mrad theta, "
+        << "x_hat mrad psi, "
+        << "x_hat 2l mrad int phi, "
+        << "x_hat 2l mrad int theta, "
+        << "x_hat 2l mrad int psi, "
+        << "x_hat 2l mrad phi, "
+        << "x_hat 2l mrad theta, "
+        << "x_hat 2l mrad psi, "
+        << "x_hat vs mrad int phi, "
+        << "x_hat vs mrad int theta, "
+        << "x_hat vs mrad int psi, "
+        << "x_hat vs mrad phi, "
+        << "x_hat vs mrad theta, "
+        << "x_hat vs mrad psi, "
+        << "x_hat vs 2l mrad int phi, "
+        << "x_hat vs 2l mrad int theta, "
+        << "x_hat vs 2l mrad int psi, "
+        << "x_hat vs 2l mrad phi, "
+        << "x_hat vs 2l mrad theta, "
+        << "x_hat vs 2l mrad psi, "
+        << "x_hat mrad dot phi, "
+        << "x_hat mrad dot theta, "
+        << "x_hat mrad dot psi, "
+        << "x_hat mrad dot phi dot, "
+        << "x_hat mrad dot theta dot, "
+        << "x_hat mrad dot psi dot, "
+        << "x_hat 2l mrad dot phi, "
+        << "x_hat 2l mrad dot theta, "
+        << "x_hat 2l mrad dot psi, "
+        << "x_hat 2l mrad dot phi dot, "
+        << "x_hat 2l mrad dot theta dot, "
+        << "x_hat 2l mrad dot psi dot, "
+        << "x_hat vs mrad dot phi, "
+        << "x_hat vs mrad dot theta, "
+        << "x_hat vs mrad dot psi, "
+        << "x_hat vs mrad dot phi dot, "
+        << "x_hat vs mrad dot theta dot, "
+        << "x_hat vs mrad dot psi dot, "
+        << "x_hat vs 2l mrad dot phi, "
+        << "x_hat vs 2l mrad dot theta, "
+        << "x_hat vs 2l mrad dot psi, "
+        << "x_hat vs 2l mrad dot phi dot, "
+        << "x_hat vs 2l mrad dot theta dot, "
+        << "x_hat vs 2l mrad dot psi dot, "
+        << "phi dot, "
+        << "theta dot, "
+        << "psi dot, "
+        << "psi unwrapped, "
+        ;
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
@@ -2089,7 +2089,7 @@ void mrac_observer::LogData()
         BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
     }
     catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC OBSERVER LOG HEADER DATA", e.what());
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC OBSERVER LOG DATA", e.what());
     }
 }
 

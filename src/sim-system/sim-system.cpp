@@ -176,6 +176,7 @@ void simsystem::ReadVisionConfigFile()
     visconfig.render_all_COG_frames  = config_file["main"]["render_all_COG_frames"].as_bool();           // Draw all COG frames
     visconfig.render_prop_frames     = config_file["main"]["render_prop_frames"].as_bool();              // Draw all the propeller frames
     visconfig.render_trajectory      = config_file["main"]["render_trajectory"].as_bool();               // Draw the trajectory in the scene
+    visconfig.render_biplane_frame   = config_file["main"]["render_biplane_frame"].as_bool();            // Draw the biplane frame in the scene
 
     // ------------------------------------------------------------------------
     // STEP 5 – Extract "window" options

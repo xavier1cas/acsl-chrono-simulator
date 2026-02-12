@@ -66,6 +66,8 @@
 #include "chrono/physics/ChLinkRSDA.h"
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/functions/ChFunction.h"
+#include "chrono/physics/ChMarker.h"
+
 
 
 namespace _acsl_
@@ -165,6 +167,7 @@ struct chassisstruct {
     chrono::ChFramed COM;
     std::string vis_obj_name;
     std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
+    std::shared_ptr<chrono::ChMarker> biplane_frame;    
 };
 
 

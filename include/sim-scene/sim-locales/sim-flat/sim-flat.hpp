@@ -75,8 +75,10 @@ namespace _flat_
 //   - These values are only altered by changing the source code; they are
 //     NOT loaded from YAML or any external configuration.
 // ============================================================================
-constexpr double FLOOR_LENGTH         = 50;
-constexpr double FLOOR_WIDTH          = 50;
+// constexpr double FLOOR_LENGTH         = 50;
+// constexpr double FLOOR_WIDTH          = 50;
+constexpr double FLOOR_LENGTH         = 5;
+constexpr double FLOOR_WIDTH          = 5;
 constexpr double FLOOR_HEIGHT         = 0.1;
 constexpr double FLOOR_DENSITY        = 1000;
 constexpr bool   FLOOR_VISIBILITY     = true;
