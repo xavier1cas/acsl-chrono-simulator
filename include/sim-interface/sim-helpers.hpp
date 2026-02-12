@@ -291,6 +291,18 @@ struct SimplePsiUnwrapState {
  */
 double unwrapPsiSimple(double psi_wrapped, SimplePsiUnwrapState &state);
 
+/**
+ * @brief Regularize XYZ Cardan angles to avoid numerical issues near +90 deg pitch.
+ *
+ * If theta >= theta_max_deg, clamp theta to theta_max_deg and set phi, psi to zero.
+ *
+ * @param[in] eul           Raw XYZ Cardan angles [rad] as (phi, theta, psi).
+ * @param[in] theta_max_deg Maximum allowed theta in degrees (default 89 deg).
+ * @return Regularized XYZ Cardan angles [rad].
+ */
+chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
+                                       double theta_max_deg = 89.0);
+
 
 } // namespace _compute_
 

@@ -985,10 +985,18 @@ m_states simuav<nop>::GetUAVStateData()
     // UAV chassis frame relative to Chrono's absolute world frame
     chrono::ChFrame<> uav_abs = GetUAVChassis().body->GetFrameRefToAbs();
 
+    // UAV biplane frame relative to Chrono's absolute world frame
+    chrono::ChFrame<> uav_biplane_abs = GetUAVChassis().biplane_frame->GetAbsFrame();
+
     // UAV chassis frame relative to the NED frame
     //   - Inverse transform of NED_abs gives Abs->NED conversion
     //   - Multiply by uav_abs to express UAV pose w.r.t NED origin
     chrono::ChFrame<> uav_ned = ned_abs.GetInverse() * uav_abs;
+
+    // UAV biplane frame reltive to the NED frame
+    //   - Inverse transform of NED_abs gives Abs->NED conversion
+    //   - Multiply by uav_biplane_abs to express UAV biplane pose w.r.t NED origin
+    chrono::ChFrame<> uav_biplane_ned = ned_abs.GetInverse() * uav_biplane_abs;
 
     // ------------------------------------------------------------------------
     // STEP 2 - Get linear kinematics in absolute frame
@@ -1033,8 +1041,15 @@ m_states simuav<nop>::GetUAVStateData()
     // Quaternion (scalar-last in Chrono convention)
     m_state.quat = uav_ned.GetRot();
 
+    // Quaternion (scalar-last in Chrono convention)
+    m_state.quat_bp = uav_biplane_ned.GetRot();
+
     // Euler angles from quaternion (XYZ Cardan convention)
     m_state.eul = m_state.quat.GetCardanAnglesXYZ();
+
+    // Euler angles from quaternion (XYZ Cardan convention)
+    auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
+    m_state.eul_bp = ::_shared_::_compute_::RegularizeCardanXYZ(eul_bp_raw);
 
     // --- Angular velocity (in UAV local frame) ---
     m_state.ovel = GetUAVChassis().body->GetAngVelLocal();

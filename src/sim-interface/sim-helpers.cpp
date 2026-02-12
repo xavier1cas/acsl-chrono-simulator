@@ -286,6 +286,56 @@ double unwrapPsiSimple(double psi_wrapped, SimplePsiUnwrapState &state)
     return psi_unwrapped;
 }
 
+// Regularizes Euler angles near the gimbal lock singularity at +90° pitch
+// by fixing obvious NaN cases and zeroing roll/yaw for reporting.
+chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
+                                       double theta_max_deg) {
+    chrono::ChVector3d e = eul;  // (phi, theta, psi)
+
+    // --- Block 1: explicit NaN pitch case (first step at singularity) ---
+    if (std::isnan(e.y())) {
+        e.x() = 0.0;                                      // phi = 0
+        e.y() = theta_max_deg * chrono::CH_PI / 180.0;    // theta ≈ +90 deg
+        e.z() = 0.0;                                      // psi = 0
+        return e;
+    }
+
+    // Convert to degrees for logic
+    double phi_deg   = e.x() * 180.0 / chrono::CH_PI;
+    double theta_deg = e.y() * 180.0 / chrono::CH_PI;
+    double psi_deg   = e.z() * 180.0 / chrono::CH_PI;
+
+    // --- Block 2: near +90 deg pitch -> zero roll/yaw for reporting ---
+    if (std::abs(theta_deg - theta_max_deg) < 2.0) {
+        e.x() = 0.0;  // phi
+        e.z() = 0.0;  // psi
+        return e;
+    }
+
+    // --- Block 3: flipped representation (roll,yaw ~ -180 deg, pitch > 90) ---
+    // If roll and yaw are approximately -180 deg and pitch is above 90,
+    // map to (phi+180, 180-theta, psi+180) to keep a continuous branch.
+    const double ang_tol = 5.0;  // deg tolerance around -180
+    if ((std::abs(phi_deg + 180.0) < ang_tol) &&
+        (std::abs(psi_deg + 180.0) < ang_tol)) {
+
+        double phi_new_deg   = phi_deg   + 180.0;
+        double theta_new_deg = 180.0     - theta_deg;
+        double psi_new_deg   = psi_deg   + 180.0;
+
+        e.x() = phi_new_deg   * chrono::CH_PI / 180.0;
+        e.y() = theta_new_deg * chrono::CH_PI / 180.0;
+        e.z() = psi_new_deg   * chrono::CH_PI / 180.0;
+
+        return e;
+    }
+
+    // Default: no regularization
+    return e;
+}
+
+
+
 } // namespace _compute_
 
 

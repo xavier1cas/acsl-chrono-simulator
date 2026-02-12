@@ -256,17 +256,19 @@ struct motorstruct {
 //   translation, rotation, and kinematic properties.
 //
 // Members:
-//   time  - Simulation time stamp.
-//   pos   - Position in NED coordinates.
-//   vel   - Linear velocity in NED coordinates.
-//   acc   - Linear acceleration in NED coordinates.
-//   eul   - Euler angles (rotation) in NED coordinates.
-//   quat  - Orientation quaternion in NED coordinates.
-//   ovel  - Angular velocity in body frame (relative to NED).
-//   oacc  - Angular acceleration in body frame (relative to NED).
-//   muI   - Forces acting on the body in the inertial frame (NED).
-//   muJ   - Forces acting on the body in the body frame (NED).
-//   tauJ  - Torque acting on the body in the body frame (NED).
+//   time    - Simulation time stamp.
+//   pos     - Position in NED coordinates.
+//   vel     - Linear velocity in NED coordinates.
+//   acc     - Linear acceleration in NED coordinates.
+//   eul     - Euler angles (rotation) in NED coordinates.
+//   eul_bp  - Euler angles (rotation) in biplane frame (relative to NED).
+//   quat    - Orientation quaternion in NED coordinates.
+//   quat_bp - Orientation quaternion in biplane frame (relative to NED).
+//   ovel    - Angular velocity in body frame (relative to NED).
+//   oacc    - Angular acceleration in body frame (relative to NED).
+//   muI     - Forces acting on the body in the inertial frame (NED).
+//   muJ     - Forces acting on the body in the body frame (NED).
+//   tauJ    - Torque acting on the body in the body frame (NED).
 // ----------------------------------------------------------------------------
 struct m_states {
     double time;
@@ -274,7 +276,9 @@ struct m_states {
     chrono::ChVector3d vel;
     chrono::ChVector3d acc;
     chrono::ChVector3d eul;
+    chrono::ChVector3d eul_bp;
     chrono::ChQuaterniond quat;
+    chrono::ChQuaterniond quat_bp;
     chrono::ChVector3d ovel;
     chrono::ChVector3d oacc;
     chrono::ChVector3d muI;
@@ -293,7 +297,9 @@ struct m_states {
             << vel.x() << ", " << vel.y() << ", " << vel.z() << ", "
             << acc.x() << ", " << acc.y() << ", " << acc.z() << ", "
             << eul.x() << ", " << eul.y() << ", " << eul.z() << ", "
+            << eul_bp.x() << ", " << eul_bp.y() << ", " << eul_bp.z() << ", "
             << quat.e0() << ", " << quat.e1() << ", " << quat.e2() << ", " << quat.e3() << ", "
+            << quat_bp.e0() << ", " << quat_bp.e1() << ", " << quat_bp.e2() << ", " << quat_bp.e3() << ", "
             << ovel.x() << ", " << ovel.y() << ", " << ovel.z() << ", "
             << oacc.x() << ", " << oacc.y() << ", " << oacc.z() << ", "
             << muI.x() << ", " << muI.y() << ", " << muI.z() << ", "

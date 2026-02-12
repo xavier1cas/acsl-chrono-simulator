@@ -58,7 +58,7 @@ debug:
   # Set to true if you want to stop the simulation at a given time (in seconds)
   sim_debug_stop: true
   # Set the value at which you want the simulation to stop (in seconds)
-  sim_stop_time: 1.0
+  sim_stop_time: 0.8
   # Set the value to true if you want the system to import model and not run 
   # anything else
   developer_mode: false

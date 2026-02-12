@@ -494,10 +494,14 @@ void simbridge::UpdatePhysicsSystem()
             << m_state.vel.x() << ", "
             << m_state.vel.y() << ", "
             << m_state.vel.z() << "\n" << color_reset
-            << color_label << "UAV rotation IN NED frame: " << color_value
+            << color_label << "UAV rotation IN NED FRAME: " << color_value
             << _shared_::_conversions_::rad2deg(m_state.eul.x()) << ", "
             << _shared_::_conversions_::rad2deg(m_state.eul.y()) << ", "
             << _shared_::_conversions_::rad2deg(m_state.eul.z()) << "\n" << color_reset
+            << color_label << "UAV rotation IN BIPLANE FRAME: " << color_value
+            << _shared_::_conversions_::rad2deg(m_state.eul_bp.x()) << ", "
+            << _shared_::_conversions_::rad2deg(m_state.eul_bp.y()) << ", "
+            << _shared_::_conversions_::rad2deg(m_state.eul_bp.z()) << "\n" << color_reset
             << color_label << "UAV ANGULAR VELOCITY IN NED FRAME: " << color_value
             << m_state.ovel.x() << ", "
             << m_state.ovel.y() << ", "
@@ -670,7 +674,9 @@ void simbridge::ConfigureHeaders()
         "_vx", "_vy", "_vz",
         "_ax", "_ay", "_az",
         "_phi", "_theta", "_psi",
+        "_phi_bp", "_theta_bp", "_psi_bp",
         "_q0", "_q1", "_q2", "_q3",
+        "_q0_bp", "_q1_bp", "_q2_bp", "_q3_bp",
         "_wx", "_wy", "_wz",
         "_alphx", "_alphy", "_alphz",
         "_muIx", "_muIy", "_muIz",
