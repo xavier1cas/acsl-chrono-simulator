@@ -214,6 +214,14 @@ namespace _conversions_
  */
 double rad2deg(double rad);
 
+/**
+ * @brief Convert a boolean value to "true" or "false".
+ *
+ * @param value Boolean value to convert.
+ * @return std::string "true" if value is true, otherwise "false".
+ */
+std::string bool2string(bool value);
+
 } // namespace _conversions_
 
 // ============================================================================================================

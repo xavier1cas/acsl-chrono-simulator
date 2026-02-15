@@ -197,7 +197,8 @@ private:
     // ------------------------------------------------------------------------
     // Boolean for telling the system if it's in HIL/SIL mode
     // ------------------------------------------------------------------------
-    bool efsl;          // <- Stands for enable flightstack loop.
+    bool efsl;                // <- Stands for enable flightstack loop.
+    bool enable_aerodynamics; // <- Stands for enable aerodynamics.
 
     // ------------------------------------------------------------------------
     // Boolean for telling the system it's debugging configuration

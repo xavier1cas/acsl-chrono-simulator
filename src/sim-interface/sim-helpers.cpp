@@ -200,6 +200,12 @@ double rad2deg(double rad)
     return rad * 180.0 / chrono::CH_PI;
 }
 
+// Converts boolean values to "true" or "false" strings for logging purposes.
+std::string bool2string(bool value) {
+    return value ? "true" : "false";
+}
+
+
 } // namespace _conversions_
 
 

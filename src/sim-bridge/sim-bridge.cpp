@@ -102,6 +102,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // STEP 4 – Extract simulation mode and debuging settings
     // ------------------------------------------------------------------------
     this->efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
+    this->enable_aerodynamics = config_file["mode"]["enable_aerodynamics"].as_bool();
     this->log2file = config_file["debug"]["log_physics"].as_bool();
     this->log2terminal = config_file["debug"]["terminal"].as_bool();
     this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
@@ -204,12 +205,19 @@ void simbridge::ConfigureSimulatorFromConfig()
     // STEP 9 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : " + std::to_string(efsl));
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: " + active_platform);
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: " + active_locale);
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: " + active_trajectory);
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY FILE: " + available_trajectories.GetTrajectoryFile());
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE CONTROLLER: " + active_controller.second);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - DEVELOPER MODE: "               + ::_shared_::_conversions_::bool2string(developer_mode));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : "              + ::_shared_::_conversions_::bool2string(efsl));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - AERODYNAMICS ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_aerodynamics));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: "              + active_platform);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: "                + active_locale);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: "     + active_trajectory);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY FILE: "       + available_trajectories.GetTrajectoryFile());
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE CONTROLLER: "            + active_controller.second);
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - DISPLAY STATES TO TERMINAL: "   + ::_shared_::_conversions_::bool2string(log2terminal));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - LOG PHYSICS STATES TO FILE: "   + ::_shared_::_conversions_::bool2string(log2file));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - SIMULATION HARD DEBUG STOP: "   + ::_shared_::_conversions_::bool2string(sim_debug_stop));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - SIMULATION STOP TIME (s): "     + std::to_string(sim_stop_time));
+
 }
 
 // =====================================================================================================================

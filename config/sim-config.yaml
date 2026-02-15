@@ -42,10 +42,16 @@
 # ============================================================================
 # Simulation Mode
 # ============================================================================
-# Set to true to run in SOFTWARE-IN-THE-LOOP / HARDWARE-IN-THE-LOOP mode
-# Set to false to run in MODEL-IN-THE-LOOP mode
 mode:
+  # Set to true to run in SOFTWARE-IN-THE-LOOP / HARDWARE-IN-THE-LOOP mode
+  # Set to false to run in MODEL-IN-THE-LOOP mode
   enable_flightstack_loop: false
+  # Set to true if you want to enable aerodynamics in the simulation
+  # Will switch on the body drag due to aerodynamics by default,
+  # IF you have configured aerodynamics for wings, it will switch it on 
+  # for your platform as well.
+  enable_aerodynamics: true
+
 
 # ============================================================================
 # DEBUGGING toggles
