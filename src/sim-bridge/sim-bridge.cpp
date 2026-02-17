@@ -235,6 +235,7 @@ void simbridge::ConfigureSimulatorFromConfig()
 //   4. If enabled, render the inertial NED frame visualization.
 //   5. If enabled, render the UAV body frame visualization.
 //   5.1 If enabled, render the biplane frame visualization.
+//   5.2 If enabled, render the chassis drag frame visualization.
 //   6. If enabled, render frames for all UAV propellers.
 //   7. If enabled, render all center-of-gravity (COG) frames.
 //   8. If enabled, activate shadow rendering for all physics bodies.
@@ -279,10 +280,17 @@ void simbridge::UpdateVisualizationSystem()
         }
 
         // --------------------------------------------------------------------
-        // STEP 5.5 – If enabled, render the biplane body frame of the UAV.
+        // STEP 5.1 – If enabled, render the biplane body frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_biplane_frame) {
             this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVChassis().biplane_frame->GetAbsFrame(), 0.6);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 5.2 – If enabled, render the chassis drag frame of the UAV.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_chassis_drag_frame) {
+            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVChassis().chassis_drag_frame->GetAbsFrame(), 0.3);
         }
 
         // --------------------------------------------------------------------

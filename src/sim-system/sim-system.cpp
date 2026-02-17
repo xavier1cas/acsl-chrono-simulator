@@ -177,6 +177,7 @@ void simsystem::ReadVisionConfigFile()
     visconfig.render_prop_frames     = config_file["main"]["render_prop_frames"].as_bool();              // Draw all the propeller frames
     visconfig.render_trajectory      = config_file["main"]["render_trajectory"].as_bool();               // Draw the trajectory in the scene
     visconfig.render_biplane_frame   = config_file["main"]["render_biplane_frame"].as_bool();            // Draw the biplane frame in the scene
+    visconfig.render_chassis_drag_frame   = config_file["main"]["render_chassis_drag_frame"].as_bool();  // Draw the chassis drag frame in the scene
 
     // ------------------------------------------------------------------------
     // STEP 5 – Extract "window" options
@@ -388,6 +389,8 @@ void simsystem::SetupVisualizationSystem()
     _message_::SIMULATOR_INFO("[SIMSYS]:  - STARTED WINDOW WITH TITLE: " + visconfig.title);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER NED FRAME: ", ::_shared_::_conversions_::bool2string(visconfig.render_ned_frame));
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER BODY FRAME: ", ::_shared_::_conversions_::bool2string(visconfig.render_body_frame));
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER BIPLANE FRAME: ", ::_shared_::_conversions_::bool2string(visconfig.render_biplane_frame));
+    _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER CHASSIS DRAG FRAME: ", ::_shared_::_conversions_::bool2string(visconfig.render_chassis_drag_frame));
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER PROP FRAMES: ", ::_shared_::_conversions_::bool2string(visconfig.render_prop_frames));
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER ALL COG FRAMES: ", ::_shared_::_conversions_::bool2string(visconfig.render_all_COG_frames));
     _message_::SIMULATOR_INFO("[SIMSYS]:  - RENDER TRAJECTORY: ", ::_shared_::_conversions_::bool2string(visconfig.render_trajectory));

@@ -139,7 +139,7 @@ namespace _motor_dir_ {
 // Shared data structures
 // =====================================================================================================================
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: chassisstruct
 //
 // Purpose:
@@ -147,16 +147,19 @@ namespace _motor_dir_ {
 //   main chassis.
 //
 // Members:
-//   body          - Shared pointer to the Chrono body (AuxRef) for the chassis.
-//   init_pos      - Initial position of the chassis in Chrono coordinates.
-//   init_rot      - Initial orientation of the chassis (quaternion).
-//   mass          - Mass of the chassis body.
-//   InertiaXX     - Principal moments of inertia about the chassis axes.
-//   InertiaXY     - Products of inertia of the chassis body.
-//   COM           - Center of mass reference frame (offset from body origin).
-//   vis_obj_name  - Filename of the visualization mesh (.obj).
-//   collision     - List of collision shapes with their associated frames.
-// ----------------------------------------------------------------------------
+//   body                      - Shared pointer to the Chrono body (AuxRef) for the chassis.
+//   init_pos                  - Initial position of the chassis in Chrono coordinates.
+//   init_rot                  - Initial orientation of the chassis (quaternion).
+//   mass                      - Mass of the chassis body.
+//   InertiaXX                 - Principal moments of inertia about the chassis axes.
+//   InertiaXY                 - Products of inertia of the chassis body.
+//   COM                       - Center of mass reference frame (offset from body origin).
+//   vis_obj_name              - Filename of the visualization mesh (.obj).
+//   collision                 - List of collision shapes with their associated frames.
+//   biplane_frame             - Marker frame for the biplane reference (is always on).
+//   chassis_drag_frame        - Marker frame for applying drag forces on the chassis. (NED Convention)
+//   aerodynamic_center_frames - List of marker frames for applying aerodynamic forces (NED Convention).
+// ------------------------------------------------------------------------------------------------------------
 struct chassisstruct {
     std::shared_ptr<chrono::ChBodyAuxRef> body;
     chrono::ChVector3d init_pos;
@@ -168,10 +171,12 @@ struct chassisstruct {
     std::string vis_obj_name;
     std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
     std::shared_ptr<chrono::ChMarker> biplane_frame;    
+    std::shared_ptr<chrono::ChMarker> chassis_drag_frame;
+    std::vector<std::shared_ptr<chrono::ChMarker>> aerodynamic_center_frames;
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: propstruct
 //
 // Purpose:
@@ -193,7 +198,7 @@ struct chassisstruct {
 //   color         - Chrono RGB color value (default: NULLCOLOR for unset).
 //   opacity       - Opacity value (default: 1.0 for fully opaque; 
 //                                           0.0 is transparent/null).
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 struct propstruct {
     std::shared_ptr<chrono::ChBodyAuxRef> body;
     chrono::ChVector3d init_pos;
@@ -209,7 +214,7 @@ struct propstruct {
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: motorstruct
 //
 // Purpose:
@@ -233,7 +238,7 @@ struct propstruct {
 //   norm2rps      - Polynomial vector to compute the rad/s speed of the rotor
 //                   from a normalized thrust [0-1] value.
 //   ct            - Motor torque coefficient for computing the backtorque.
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 struct motorstruct {
     std::shared_ptr<chrono::ChLinkMotorRotationSpeed> motor;
     std::shared_ptr<chrono::ChFunctionConst> speed;
@@ -248,7 +253,7 @@ struct motorstruct {
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: m_states
 //
 // Purpose:
@@ -269,7 +274,7 @@ struct motorstruct {
 //   muI     - Forces acting on the body in the inertial frame (NED).
 //   muJ     - Forces acting on the body in the body frame (NED).
 //   tauJ    - Torque acting on the body in the body frame (NED).
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 struct m_states {
     double time;
     chrono::ChVector3d pos;
@@ -309,7 +314,7 @@ struct m_states {
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Enum: LinkType
 //
 // Purpose:
@@ -320,11 +325,11 @@ struct m_states {
 //   Parallel   - Represents a ChLinkMateParallel constraint (parallel axis).
 //   Generic    - Represents a ChLinkMateGeneric constraint (custom DOF lock).
 //   DistanceZ  - Represents a ChLinkMateDistanceZ constraint (Z-axis distance).
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 enum class LinkType { Parallel, Generic, DistanceZ };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Template: LinkProperty<LT>
 //
 // Purpose:
@@ -335,12 +340,12 @@ enum class LinkType { Parallel, Generic, DistanceZ };
 // Notes:
 //   Each specialization holds only the properties required to fully
 //   specify and later create a link of that type.
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 template<LinkType LT>
 struct LinkProperty;
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: LinkProperty<LinkType::Parallel>
 //
 // Purpose:
@@ -356,7 +361,7 @@ struct LinkProperty;
 //   cB      - Constraint position on bodyB (local frame).
 //   dA      - Direction vector on bodyA for axis alignment.
 //   dB      - Direction vector on bodyB for axis alignment.
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 template<>
 struct LinkProperty<LinkType::Parallel> {
     bool flipped;
@@ -366,7 +371,7 @@ struct LinkProperty<LinkType::Parallel> {
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: LinkProperty<LinkType::Generic>
 //
 // Purpose:
@@ -383,7 +388,7 @@ struct LinkProperty<LinkType::Parallel> {
 //   dB      - Direction vector on bodyB for orientation.
 //   cx,cy,cz - If true, locks translation along X, Y, and Z, respectively.
 //   rx,ry,rz - If true, locks rotation about X, Y, and Z axes, respectively.
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 template<>
 struct LinkProperty<LinkType::Generic> {
     std::string name;
@@ -393,7 +398,7 @@ struct LinkProperty<LinkType::Generic> {
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Structure: LinkProperty<LinkType::DistanceZ>
 //
 // Purpose:
@@ -408,7 +413,7 @@ struct LinkProperty<LinkType::Generic> {
 //   cB       - Constraint point on bodyB (local frame).
 //   dB       - Direction vector on bodyB (should point along constrained axis).
 //   distance - The signed Z distance value; 0 for coincident constraints.
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 template<>
 struct LinkProperty<LinkType::DistanceZ> {
     std::string name;
@@ -418,7 +423,7 @@ struct LinkProperty<LinkType::DistanceZ> {
 };
 
 
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 // Type Alias: LinkData
 //
 // Purpose:
@@ -434,7 +439,7 @@ struct LinkProperty<LinkType::DistanceZ> {
 //   LinkProperty<LinkType::Parallel>   — Properties for parallel constraints.
 //   LinkProperty<LinkType::Generic>    — Properties for generic constraints.
 //   LinkProperty<LinkType::DistanceZ>  — Properties for Z distance constraints.
-// ----------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------
 using LinkData = std::variant<
     LinkProperty<LinkType::Parallel>,
     LinkProperty<LinkType::Generic>,

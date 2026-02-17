@@ -200,6 +200,25 @@ void simuav<nop>::InitiateUAVChassis()
     chassis.biplane_frame->ImposeRelativeTransform(marker_frame);    
 
     // ------------------------------------------------------------------------
+    // STEP 2.2 - Create and attach the chassis_drag_frame to the UAV. Place
+    //            marker so its origin coincides with the body AuxRef origin:
+    //            chassis. COM is the frame from AuxRef -> COM, so we need the
+    //            opposite offset (COM -> AuxRef) to bring the marker origin
+    //            back to the AuxRef origin. No additional rotation is needed.
+    // ------------------------------------------------------------------------
+    chassis.chassis_drag_frame = chrono_types::make_shared<chrono::ChMarker>();
+    chassis.chassis_drag_frame->SetName("chassis_drag_frame");
+
+    // Attach the marker to the chassis body at the COM location
+    chassis.body->AddMarker(chassis.chassis_drag_frame);
+    chrono::ChQuaternion<> q_identity(1, 0, 0, 0); // No rotation for drag frame
+    rel_rot_marker.Cross(rel_rot_COM, q_identity);
+
+    // Frame of the marker relative to body reference (AuxRef) frame
+    chrono::ChFramed drag_marker_frame(rel_pos_COM, rel_rot_marker);
+    chassis.chassis_drag_frame->ImposeRelativeTransform(drag_marker_frame);
+
+    // ------------------------------------------------------------------------
     // STEP 3 – Load and attach a visual mesh for the chassis
     // ------------------------------------------------------------------------
     // Load mesh geometry from Wavefront (.obj) file

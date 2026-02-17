@@ -97,6 +97,7 @@ struct visionconfig {
     bool render_prop_frames;
     bool render_trajectory;
     bool render_biplane_frame;
+    bool render_chassis_drag_frame;
 };
 
 // =====================================================================================================================
