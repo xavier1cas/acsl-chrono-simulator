@@ -555,8 +555,14 @@ void simqrbp::ConfigureQRBPAerodynamics()
     // Set the air density for the simulation
     GetUAVAerodynamics().air_density = 1.225;
 
-    ConfigureUAVWingAeroCenters(1, 5, chrono::ChVector3d(-0.00942816685338455,0.308068237403483,0.152623963796843), 
-                                      chrono::ChVector3d(-0.00942816685338317,0.086637844787446,0.152623963796845));
+    // Lower Wing                                      
+    ConfigureUAVTailSitterWingAeroCenters(1, 5, chrono::ChVector3d(0.184376362665988,0.0866378447874975,0.152623963796846), 
+                                                chrono::ChVector3d(0.184376362665965,0.308068237403556,0.152623963796844));
+
+    // Upper Wing
+    ConfigureUAVTailSitterWingAeroCenters(2, 5, chrono::ChVector3d(-0.00942816685338455,0.308068237403483,0.152623963796843), 
+                                                chrono::ChVector3d(-0.00942816685338317,0.086637844787446,0.152623963796845));
+
 }
 
 

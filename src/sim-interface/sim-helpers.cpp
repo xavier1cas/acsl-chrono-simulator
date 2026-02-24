@@ -342,6 +342,8 @@ chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
 
 // This function computes the n midpoints for n segements and returns them.
 // Primarily used to compute the aerodynamic center points for distributed aerodynamics.
+// NOTE: If using for computing the aero points, p1 and p2 are already in NED frame from
+//       the solidworks plugin exported file.
 std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(
     const chrono::ChVector3d& p1,
     const chrono::ChVector3d& p2,
@@ -350,10 +352,6 @@ std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(
     if (n <= 0) {
         throw std::invalid_argument("ComputeSegmentMidpoints: n must be > 0");
     }
-
-    // Convert to the NED convention internally for ease of use
-    chrono::ChVector3d p1ned = ::_shared_::_transformations_::GetNEDPosFromChrono(p1);
-    chrono::ChVector3d p2ned = ::_shared_::_transformations_::GetNEDPosFromChrono(p2);
 
     std::vector<chrono::ChVector3d> mids;
     mids.reserve(static_cast<std::size_t>(n));
@@ -365,7 +363,7 @@ std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(
         double lambda = (2.0 * k + 1.0) / (2.0 * n);
 
         // Linear interpolation: p(λ) = p1 + λ (p2 - p1)
-        chrono::ChVector3d p = p1ned + (p2ned - p1ned) * lambda;
+        chrono::ChVector3d p = p1 + (p2 - p1) * lambda;
         mids.push_back(p);
     }
 

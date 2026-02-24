@@ -657,8 +657,8 @@ protected:
     // Set the chassis drag coefficient
     virtual void ConfigureUAVChassisDragCoefficient(double coeff) = 0;
 
-    // Set the wing aerodynamic centers based on the frames passed in and the number of centers per wing
-    virtual void ConfigureUAVWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2) = 0;
+    // Set the wing aerodynamic centers based on the frames passed in and the number of centers per wing - For a tilsitter
+    virtual void ConfigureUAVTailSitterWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2) = 0;
     
 };
 
@@ -768,7 +768,7 @@ protected:
 
     void ConfigureUAVChassisDragCoefficient(double coeff) override { aerodynamics.chassis_drag_coefficient = coeff; }
 
-    void ConfigureUAVWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2) override;
+    void ConfigureUAVTailSitterWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2) override;
 
 private:
     // ---------------- Internal state ----------------

@@ -53,7 +53,7 @@ mode:
 # ============================================================================
 debug:
   # Set to true if you want to print the chassis state data to the screen
-  terminal: false
+  terminal: true
   # Set to true if you want to log the uav chassis and prop state data to file
   log_physics: true
   # Set to true if you want to stop the simulation at a given time (in seconds)
@@ -62,7 +62,7 @@ debug:
   sim_stop_time: 0.8
   # Set the value to true if you want the system to import model and not run 
   # anything else
-  developer_mode: false
+  developer_mode: true
 
 # ============================================================================
 # UAV Platform Selection

@@ -974,39 +974,74 @@ void simuav<nop>::InitiateUAVMotors()
 // ConfigureUAVWingAeroCenters()
 //
 // Purpose:
-//   Configure and place aerodynamic center markers along a specified wing segment.
+//   Configure and place aerodynamic center markers along a specified wing segment,
+//   and create the associated lift and drag ChForce objects at each center.
 //   The aerodynamic centers are placed as midpoints of equally divided segments
 //   between two given endpoints.
 //
 // Notes:
-//   - The line segment from p1 to p2 (in Chrono frame) is divided into
-//     `num_centers_per_wing` equal parts.
-//   - A marker is created at the midpoint of each segment and attached to the
-//     chassis body.
-//   - Each marker is named using the wing ID and its center index for easy
-//     identification.
+//   - The line segment from p1 to p2 is provided in the NED frame exported from
+//     the SolidWorks plugin (CAD/NED coordinates).
+//   - The function assumes the UAV is geometrically symmetric and the wings are
+//     placed symmetrically about the NED x–z plane (y = 0), so the same logic
+//     applies to left/right wings with mirrored y-coordinates.
+//   - All intermediate computations for the center locations are done in this
+//     CAD/NED frame, consistent with how the chassis COM and initial pose were
+//     defined.
+//   - For each aerodynamic center:
+//       * A marker is created and attached to the chassis body (AuxRef frame).
+//       * Two ChForce objects are created and attached to the chassis body:
+//           - A lift force acting along the negative X-axis of the UAV body
+//             frame (−X in body/NED).
+//           - A drag force acting along the positive Z-axis of the UAV body
+//             frame (+Z in body/NED).
+//       * The forces are applied at the aerodynamic center location.
+//   - Each marker and its lift/drag forces are named using the wing ID and
+//     center index for easy identification and debugging.
 //   - The markers are rotated by +90 deg about the chassis Y axis to align with
-//     the biplane frame convention.
+//     the biplane frame convention used for aerodynamics.
 // =========================================================================================================
+
 template <int nop>
-void simuav<nop>::ConfigureUAVWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2)
+void simuav<nop>::ConfigureUAVTailSitterWingAeroCenters(int wing_id,
+                                                        int num_centers_per_wing,
+                                                        chrono::ChVector3d p1,
+                                                        chrono::ChVector3d p2)
 {
     // ------------------------------------------------------------------------
     // STEP 1 – Compute aerodynamic center locations along the wing segment
-    //   The segment between p1 and p2 is divided into equal parts and the
-    //   midpoints of each subsegment are returned.
+    //   - p1 and p2 are given in CAD/NED coordinates (from SolidWorks).
+    //   - ComputeSegmentMidpoints interpolates directly in this NED frame and
+    //     returns the midpoints in the same CAD/NED coordinates.
     // ------------------------------------------------------------------------
-    auto aero_center_locations = ::_shared_::_compute_::ComputeSegmentMidpoints(p1, p2, num_centers_per_wing);
+    auto aero_center_locations =
+        ::_shared_::_compute_::ComputeSegmentMidpoints(p1, p2, num_centers_per_wing);
+
 
 
     // ------------------------------------------------------------------------
     // STEP 2 – Iterate through the centers and create markers
-    //   For each aerodynamic center, create a marker, name it uniquely, attach
-    //   it to the chassis body, and impose the proper relative transform.
+    //   For each aerodynamic center:
+    //   - Create a marker.
+    //   - Give it a unique name using wing_id and center index.
+    //   - Attach it to the chassis body (AuxRef).
+    //   - Compute its position relative to the chassis COM in the common
+    //     CAD/NED frame used by the CAD export.
+    //   - Impose the appropriate relative transform (position + orientation).
     // ------------------------------------------------------------------------
     for (std::size_t i = 0; i < aero_center_locations.size(); ++i) {
+
+        // Cache the center in the NED frame
+        //   - This is the aerodynamic center location in CAD/NED coordinates.
         const auto& center = aero_center_locations[i];
 
+
+        // Debug print for verification of aero center locations in NED
+        _message_::SIMULATOR_INFO("[SIMUAV]: AERO_CENTER | wing_id: " + std::to_string(wing_id) +
+                                  " | center_" + std::to_string(i + 1) +
+                                  " -> x[" + std::to_string(center.x()) +
+                                  "] y[" + std::to_string(center.y()) +
+                                  "] z[" + std::to_string(center.z()) + "]");
 
         // Create a marker for the aerodynamic center
         auto marker = chrono_types::make_shared<chrono::ChMarker>();
@@ -1014,43 +1049,144 @@ void simuav<nop>::ConfigureUAVWingAeroCenters(int wing_id, int num_centers_per_w
 
         // Create unique markers for aerodynamic centers of each wing using the
         // wing_id and center index (1-based for readability).
-        marker->SetName("aero_center_wing_" 
-                        + std::to_string(wing_id) 
-                        + "_center_" 
+        marker->SetName("aero_center_wing_"
+                        + std::to_string(wing_id)
+                        + "_center_"
                         + std::to_string(i + 1));  // 1-based index
-        
 
 
-        // Attach the marker to the chassis body
-        GetUAVChassis().body->AddMarker(marker);
+
+        // Attach the marker to the chassis body (AuxRef frame)
+        this->GetUAVChassis().body->AddMarker(marker);
 
 
-        // Prepare the quaternion that depicts the rotation
-        // +90 deg rotation about COM/chassis Y axis
+        // --------------------------------------------------------------------
+        // STEP 2.1 – Compute relative position of the aerodynamic center
+        //            with respect to the chassis COM, in the CAD/NED frame.
+        //
+        //   - init_pos is the chassis initial position in CAD/NED.
+        //   - temp encodes the origin shift from global CAD/NED to the chassis
+        //     body reference (AuxRef) in this same NED frame.
+        //   - COM.GetPos() is the COM position stored in the chassis AuxRef
+        //     frame; GetNEDPosFromChrono brings it back to CAD/NED.
+        //   - The combination center + temp - COM_NED yields a pure relative
+        //     vector from COM to the aerodynamic center, expressed in CAD/NED.
+        //   - Because the chassis, COM, and aero centers are all specified in
+        //     the same CAD/NED frame (and the UAV is symmetric about the NED
+        //     x–z plane), this relative vector can be used directly as the
+        //     marker position in the AuxRef frame.
+        // --------------------------------------------------------------------
+        chrono::ChVector3d temp;
+        temp = chrono::ChVector3d(-this->GetUAVChassis().init_pos.x(),
+                                   this->GetUAVChassis().init_pos.y(),
+                                  -this->GetUAVChassis().init_pos.z());
+
+        chrono::ChVector3d rel_pos_COM =
+            center + temp
+            - ::_shared_::_transformations_::GetNEDPosFromChrono(
+                  this->GetUAVChassis().COM.GetPos());
+
+
+        // --------------------------------------------------------------------
+        // STEP 2.2 – Compute marker orientation in the body frame
+        //
+        //   - Start from the COM frame orientation in Chrono coordinates.
+        //   - Apply a +90 deg rotation about the chassis Y axis to align the
+        //     marker axes with the biplane aerodynamic frame convention.
+        // --------------------------------------------------------------------
         chrono::ChQuaternion<> q_y90 = chrono::QuatFromAngleY(chrono::CH_PI_2);
-        chrono::ChQuaternion<> rel_rot_COM = GetUAVChassis().COM.GetRot();
         chrono::ChQuaternion<> rel_rot_marker;
-        rel_rot_marker.Cross(rel_rot_COM, q_y90);
-    
-        // Prepare the center positions
-        //   - Convert the center from NED to Chrono.
-        //   - Offset by the chassis initial position.
-        //   - Express position relative to the COM frame.
-        chrono::ChVector3d rel_pos_COM = ::_shared_::_transformations_::GetChronoPosFromNED(center + GetUAVChassis().init_pos) 
-                                            - GetUAVChassis().COM.GetPos();
-        
-        // Prepare the frame of the marker relative to the body reference (AuxRef) frame
+        rel_rot_marker.Cross(this->GetUAVChassis().COM.GetRot(), q_y90);
+
+
+        // --------------------------------------------------------------------
+        // STEP 2.3 – Apply the relative transform
+        //
+        //   - rel_pos_COM is interpreted as the marker position relative to the
+        //     chassis AuxRef frame.
+        //   - rel_rot_marker is the marker orientation relative to AuxRef.
+        //   - Because the chassis geometry and aero centers share the same
+        //     CAD/NED basis and the UAV is symmetric about the NED x–z plane,
+        //     this placement yields aero centers physically between the front
+        //     two motors as expected.
+        // --------------------------------------------------------------------
         chrono::ChFramed marker_frame(rel_pos_COM, rel_rot_marker);
-
-
-        // Set the marker's frame to the computed position and orientation
         marker->ImposeRelativeTransform(marker_frame);
-        
+
+
         // Add the marker to the aerodynamic center markers list for the specified wing
         GetUAVAerodynamics().aerodynamic_center_frames.push_back(marker);
+
+        // ------------------------------------------------------------------------
+        // STEP 2.4 – Create and configure lift/drag forces at each aero center
+        //
+        //   For each aerodynamic center marker, create two ChForce objects:
+        //   - A lift force acting along the negative X-axis of the UAV body frame
+        //     (i.e., -X in the body/NED convention).
+        //   - A drag force acting along the positive Z-axis of the UAV body frame
+        //     (i.e., +Z in the body/NED convention).
+        //
+        //   Both forces:
+        //   - Are attached to the chassis body.
+        //   - Use the BODY reference frame so RelDir/Vrelpoint are in body coords.
+        //   - Are named consistently with the aerodynamic center marker name.
+        //   - Are stored in wing_aero_lift_forces and wing_aero_drag_forces so
+        //     they can be updated during the simulation.
+        // ------------------------------------------------------------------------
+
+        // Create lift and drag forces associated with this aerodynamic center
+        auto lift_force = chrono_types::make_shared<chrono::ChForce>();
+        auto drag_force = chrono_types::make_shared<chrono::ChForce>();
+
+        // Name them consistently with the aero center marker
+        lift_force->SetName("aero_center_wing_"
+                            + std::to_string(wing_id)
+                            + "_center_" + std::to_string(i + 1)
+                            + "_lift");
+
+        drag_force->SetName("aero_center_wing_"
+                            + std::to_string(wing_id)
+                            + "_center_" + std::to_string(i + 1)
+                            + "_drag");
+
+        // Attach the forces to the chassis body
+        lift_force->SetBody(this->GetUAVChassis().body.get());
+        drag_force->SetBody(this->GetUAVChassis().body.get());
+
+        // Configure as body-frame forces
+        lift_force->SetMode(chrono::ChForce::ForceType::FORCE);
+        drag_force->SetMode(chrono::ChForce::ForceType::FORCE);
+
+        lift_force->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
+        drag_force->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
+
+        // Set the direction of each force in the body frame:
+        //   - Lift acts along -X (negative body X axis).
+        //   - Drag acts along +Z (positive body Z axis).
+        lift_force->SetRelDir(chrono::ChVector3d(-1, 0, 0));  // -X body
+        drag_force->SetRelDir(chrono::ChVector3d(0, 0, 1));   // +Z body
+
+        // Apply both forces at the aerodynamic center location in the body frame.
+        // rel_pos_COM is already the aerodynamic center position relative to the
+        // chassis AuxRef frame.
+        lift_force->SetVrelpoint(rel_pos_COM);
+        drag_force->SetVrelpoint(rel_pos_COM);
+
+        // Initialize magnitudes to zero; they will be updated in the aero model.
+        lift_force->SetMforce(0.0);
+        drag_force->SetMforce(-1.2);
+
+        // Register these forces with the chassis body
+        this->GetUAVChassis().body->AddForce(lift_force);
+        this->GetUAVChassis().body->AddForce(drag_force);
+
+        // Store them in the aerodynamics struct so each center is tied to its
+        // corresponding lift and drag forces.
+        this->GetUAVAerodynamics().wing_aero_lift_forces.push_back(lift_force);
+        this->GetUAVAerodynamics().wing_aero_drag_forces.push_back(drag_force);
+
     }
 }
-
 
 
 // =========================================================================================================
