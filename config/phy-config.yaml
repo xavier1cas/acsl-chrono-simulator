@@ -58,7 +58,7 @@ solver:
   EnableWarmStart: true
 
   # Step size - Size of each iteration step
-  StepSize: 1e-3
+  StepSize: 5e-3
 
 
 # ============================================================================

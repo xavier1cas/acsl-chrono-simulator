@@ -383,10 +383,10 @@ void mrac_long_lat::run(const double time_step_rk4_)
                  y, cim.t, time_step_rk4_);
 
     // PLACEHOLDER TO GIVE RANDOM INPUTS
-    control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.45*MAX_THRUST);
-    control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.35*MAX_THRUST);
+    control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.55*MAX_THRUST);
+    control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.55*MAX_THRUST);
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.45*MAX_THRUST);
-    control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.35*MAX_THRUST);
+    control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.65*MAX_THRUST);
 
     // Capture the time after the execution of the controller
     cim.alg_end_time = std::chrono::high_resolution_clock::now();

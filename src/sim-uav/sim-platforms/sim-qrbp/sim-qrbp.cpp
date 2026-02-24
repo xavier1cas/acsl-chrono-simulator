@@ -541,6 +541,26 @@ void simqrbp::ConfigureQRBPMotors()
     
 }
 
+// Compulsary derived class function that initiates the aerodynamic properties with all the necessary parameters
+void simqrbp::ConfigureQRBPAerodynamics()
+{
+    // Set the chassis drag coefficient - We consider this a flat plane
+    GetUAVAerodynamics().chassis_drag_coefficient = 1.28; 
+
+    // Set the chassis drag surface area - We consider this to be the area of the flat plane so only
+    // measure the top surface area of the chassis - preferably this should be computed in blender
+    // with the 3D print toolbox on the acutal exported model .obj file.
+    GetUAVAerodynamics().chassis_body_surface_aera = 1.0319;
+
+    // Set the air density for the simulation
+    GetUAVAerodynamics().air_density = 1.225;
+
+    ConfigureUAVWingAeroCenters(1, 5, chrono::ChVector3d(-0.00942816685338455,0.308068237403483,0.152623963796843), 
+                                      chrono::ChVector3d(-0.00942816685338317,0.086637844787446,0.152623963796845));
+}
+
+
+
 }   // namespace _qrbp_
 
 }   // namespace _acsl_

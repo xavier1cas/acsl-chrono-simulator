@@ -51,17 +51,19 @@ main:
   # Show NED reference frame axes in the scene
   render_ned_frame: true
   # Show body-fixed UAV frame axes
-  render_body_frame: false
+  render_body_frame: true
   # Show propeller frame axes
   render_prop_frames: false
   # Show all COG frames in the scene
   render_all_COG_frames: false
   # Show the trajectory in the secene
-  render_trajectory: false
+  render_trajectory: true
   # Show the biplane frame
   render_biplane_frame: false
   # Show the chassis aerodynamic drag frame
-  render_chassis_drag_frame: true
+  render_chassis_drag_frame: false
+  # Show the chassis aerodynamic wing frames
+  render_wing_aero_frames: true
 
   # Rendering effects ----------------------------------------------
   # Toggle shadow rendering (GPU-intensive)

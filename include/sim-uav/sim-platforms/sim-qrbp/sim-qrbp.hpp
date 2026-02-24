@@ -89,6 +89,7 @@ public:
         ConfigureQRBPProps();                                   // <- Compulsary derived class function
         ConfigureQRBPLinks();                                   // <- Compulsary derived class function
         ConfigureQRBPMotors();                                  // <- Compulsary derived class function
+        ConfigureQRBPAerodynamics();                            // <- Compulsary derived class function
         
         AddUAVToSystem();                                       // <- Baseclass function
 
@@ -107,6 +108,7 @@ public:
     //   - Function to setup the propellers
     //   - Function to setup all the links for the platform
     //   - Function to setup all the motors for the platform
+    //   - Function to setup all the uav aerodynamics properties
     //
     // The unique functions are:
     //   -
@@ -115,6 +117,7 @@ public:
     void ConfigureQRBPProps();
     void ConfigureQRBPLinks();
     void ConfigureQRBPMotors();
+    void ConfigureQRBPAerodynamics();
 };
 
 

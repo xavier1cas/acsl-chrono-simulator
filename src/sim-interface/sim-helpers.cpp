@@ -312,7 +312,7 @@ chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
     double psi_deg   = e.z() * 180.0 / chrono::CH_PI;
 
     // --- Block 2: near +90 deg pitch -> zero roll/yaw for reporting ---
-    if (std::abs(theta_deg - theta_max_deg) < 2.0) {
+    if (std::abs(theta_deg - theta_max_deg) < 1.0) {
         e.x() = 0.0;  // phi
         e.z() = 0.0;  // psi
         return e;
@@ -321,7 +321,7 @@ chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
     // --- Block 3: flipped representation (roll,yaw ~ -180 deg, pitch > 90) ---
     // If roll and yaw are approximately -180 deg and pitch is above 90,
     // map to (phi+180, 180-theta, psi+180) to keep a continuous branch.
-    const double ang_tol = 5.0;  // deg tolerance around -180
+    const double ang_tol = 2.0;  // deg tolerance around -180
     if ((std::abs(phi_deg + 180.0) < ang_tol) &&
         (std::abs(psi_deg + 180.0) < ang_tol)) {
 
@@ -338,6 +338,38 @@ chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
 
     // Default: no regularization
     return e;
+}
+
+// This function computes the n midpoints for n segements and returns them.
+// Primarily used to compute the aerodynamic center points for distributed aerodynamics.
+std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(
+    const chrono::ChVector3d& p1,
+    const chrono::ChVector3d& p2,
+    int n)
+{
+    if (n <= 0) {
+        throw std::invalid_argument("ComputeSegmentMidpoints: n must be > 0");
+    }
+
+    // Convert to the NED convention internally for ease of use
+    chrono::ChVector3d p1ned = ::_shared_::_transformations_::GetNEDPosFromChrono(p1);
+    chrono::ChVector3d p2ned = ::_shared_::_transformations_::GetNEDPosFromChrono(p2);
+
+    std::vector<chrono::ChVector3d> mids;
+    mids.reserve(static_cast<std::size_t>(n));
+
+    for (int k = 0; k < n; ++k) {
+        // Parameter value at midpoint of k-th subsegment in [0, 1]
+        // Subsegments: [0,1/n], [1/n,2/n], ..., [(n-1)/n,1]
+        // Midpoint: λ_k = (2k + 1) / (2n)
+        double lambda = (2.0 * k + 1.0) / (2.0 * n);
+
+        // Linear interpolation: p(λ) = p1 + λ (p2 - p1)
+        chrono::ChVector3d p = p1ned + (p2ned - p1ned) * lambda;
+        mids.push_back(p);
+    }
+
+    return mids;
 }
 
 

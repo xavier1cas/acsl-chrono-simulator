@@ -312,6 +312,18 @@ chrono::ChVector3d RegularizeCardanXYZ(const chrono::ChVector3d& eul,
                                        double theta_max_deg = 89.0);
 
 
+/**
+ * @brief Computes midpoints of n equal segments along a 3D line segment.
+ * @param p1 Start point of the line segment (chrono::ChVector3d)
+ * @param p2 End point of the line segment (chrono::ChVector3d)
+ * @param n  Number of equal segments to divide the line into (must be > 0)
+ * @return Vector of midpoints for each segment, ordered from p1 to p2
+ */
+std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(const chrono::ChVector3d& p1,
+                                                        const chrono::ChVector3d& p2,
+                                                        int n);
+
+
 } // namespace _compute_
 
 // ============================================================================================================

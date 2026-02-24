@@ -157,8 +157,6 @@ namespace _motor_dir_ {
 //   vis_obj_name              - Filename of the visualization mesh (.obj).
 //   collision                 - List of collision shapes with their associated frames.
 //   biplane_frame             - Marker frame for the biplane reference (is always on).
-//   chassis_drag_frame        - Marker frame for applying drag forces on the chassis. (NED Convention)
-//   aerodynamic_center_frames - List of marker frames for applying aerodynamic forces (NED Convention).
 // ------------------------------------------------------------------------------------------------------------
 struct chassisstruct {
     std::shared_ptr<chrono::ChBodyAuxRef> body;
@@ -171,8 +169,6 @@ struct chassisstruct {
     std::string vis_obj_name;
     std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
     std::shared_ptr<chrono::ChMarker> biplane_frame;    
-    std::shared_ptr<chrono::ChMarker> chassis_drag_frame;
-    std::vector<std::shared_ptr<chrono::ChMarker>> aerodynamic_center_frames;
 };
 
 
@@ -250,6 +246,43 @@ struct motorstruct {
     Eigen::VectorXd newt2norm;
     Eigen::VectorXd norm2rps;
     double ct;
+};
+
+// ------------------------------------------------------------------------------------------------------------
+// Structure: aerodynamicstruct
+//
+// Purpose:
+//   Stores all the data associated with the aerodynamic surfaces for the UAV.
+//
+// Members:
+//   chassis_drag_frame        - Marker frame for applying drag forces on the chassis. (NED Convention)
+//   aerodynamic_center_frames - List of marker frames for applying aerodynamic forces (NED Convention).
+//   chassis_drag_coefficients - Coefficients for computing the aerodynamic drag force on the chassis.
+//   chassis_drag_force        - Chrono drag force vector computed for the chassis.
+// ------------------------------------------------------------------------------------------------------------
+struct aerodynamicstruct {
+    
+    // Common Aerodynamic Parameters
+    double air_density = std::numeric_limits<double>::quiet_NaN();
+
+    // Parameters for the chassis drag force calculation
+    double chassis_drag_coefficient = std::numeric_limits<double>::quiet_NaN();
+    double chassis_body_surface_aera = std::numeric_limits<double>::quiet_NaN();
+
+    // Variables to store the chassis drag force 
+    std::shared_ptr<chrono::ChMarker> chassis_drag_frame;   // For visualizatoin
+    chrono::ChVector3d chassis_drag_force;                  // For computation
+    std::shared_ptr<chrono::ChForce> chassis_drag_force_x;  // For application in X direction
+    std::shared_ptr<chrono::ChForce> chassis_drag_force_y;  // For application in Y direction
+    std::shared_ptr<chrono::ChForce> chassis_drag_force_z;  // For application in Z direction
+
+    // Variables to store the wing aerodynamic forces
+    int num_of_aero_centers_per_wing = 0;                                      // Number of aerodynamic centers per wing (for distributed aerodynamics)
+    std::vector<std::shared_ptr<chrono::ChMarker>> aerodynamic_center_frames;  // For visualizatoin
+    std::vector<Eigen::Matrix<double, 2,1>> wing_aero_forces;                  // For computation
+    std::vector<std::shared_ptr<chrono::ChForce>> wing_aero_drag_forces;       // For application of drag in -ve x direction (NED)
+    std::vector<std::shared_ptr<chrono::ChForce>> wing_aero_lift_forces;       // For application of lift in -ve z direction (NED)
+
 };
 
 
@@ -490,6 +523,9 @@ public:
     // Access the chassisstruct for modifying chassis parameters directly.
     virtual chassisstruct& GetUAVChassis() = 0;
 
+    // Access the aerodynamicstruct for modifying aerodynamic parameters directly.
+    virtual aerodynamicstruct& GetUAVAerodynamics() = 0;
+
     // Access the propstruct for modifying prop parameters directly.
     virtual propstruct& GetUAVProp(size_t idx) = 0;
 
@@ -516,6 +552,9 @@ public:
 
     // Function to set the normalized thrust setpoint for the UAV
     virtual void SetThrustSetPoint(size_t idx, double thrustSP) = 0;
+
+    // Function to compute and apply the aerodynamic chassis drag force
+    virtual void SetChassisDrag() = 0;
 
 protected:
     // ---------------- Protected API ----------------
@@ -566,7 +605,7 @@ protected:
     // Set the propeller mass (kg).
     virtual void ConfigureUAVPropMass(size_t idx, double mass) = 0;
 
-    // Set principal moments of inertia (Ixx, Iyy, Izz).
+    // Set principal moments of inertia (Ixx, Iyy, Izz).override
     virtual void ConfigureUAVPropInertiaXX(size_t idx, chrono::ChVector3d IXX) = 0;
 
     // Set products of inertia (Ixy, Ixz, Iyz).
@@ -614,6 +653,12 @@ protected:
 
     // Create, inialize, and register all the links present in the drone.
     virtual void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) = 0;
+
+    // Set the chassis drag coefficient
+    virtual void ConfigureUAVChassisDragCoefficient(double coeff) = 0;
+
+    // Set the wing aerodynamic centers based on the frames passed in and the number of centers per wing
+    virtual void ConfigureUAVWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2) = 0;
     
 };
 
@@ -650,6 +695,7 @@ public:
     chassisstruct& GetUAVChassis() override { return chassis; }
     propstruct& GetUAVProp(size_t idx) override;
     motorstruct& GetUAVMotor(size_t idx) override;
+    aerodynamicstruct& GetUAVAerodynamics() override { return aerodynamics; }
 
     std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
     std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
@@ -662,6 +708,8 @@ public:
     void SetActuator(size_t idx, double thrust, double torque, double rpm) override;
 
     void SetThrustSetPoint(size_t idx, double thrustSP) override;
+
+    void SetChassisDrag() override;
 
 protected:
     // ---------------- Protected API overrides ----------------
@@ -718,6 +766,10 @@ protected:
 
     void LinkUAVBodies(const std::vector<LinkData>& link_data_vec) override;
 
+    void ConfigureUAVChassisDragCoefficient(double coeff) override { aerodynamics.chassis_drag_coefficient = coeff; }
+
+    void ConfigureUAVWingAeroCenters(int wing_id, int num_centers_per_wing, chrono::ChVector3d p1, chrono::ChVector3d p2) override;
+
 private:
     // ---------------- Internal state ----------------
 
@@ -726,6 +778,7 @@ private:
     std::string shapes_dir;                                      // Path to visual shape files (.obj)
     std::shared_ptr<chrono::ChBodyAuxRef> InertialFrameNED;      // Inertial NED frame chrono-body
     chassisstruct chassis;                                       // Chassis data
+    aerodynamicstruct aerodynamics;                              // Vehicle aerodynamics
     std::array<propstruct, nop> props;                           // Propeller data
     std::array<motorstruct, nop> motors;                         // Actuator data
     std::vector<LinkData> links;                                 // All the link data for the UAV

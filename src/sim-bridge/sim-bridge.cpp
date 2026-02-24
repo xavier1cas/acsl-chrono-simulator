@@ -102,12 +102,17 @@ void simbridge::ConfigureSimulatorFromConfig()
     // STEP 4 – Extract simulation mode and debuging settings
     // ------------------------------------------------------------------------
     this->efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
-    this->enable_aerodynamics = config_file["mode"]["enable_aerodynamics"].as_bool();
     this->log2file = config_file["debug"]["log_physics"].as_bool();
     this->log2terminal = config_file["debug"]["terminal"].as_bool();
     this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
     this->sim_stop_time = static_cast<double>(config_file["debug"]["sim_stop_time"].as_float()); 
     this->developer_mode = config_file["debug"]["developer_mode"].as_bool();
+
+    // ------------------------------------------------------------------------
+    // STEP 4.1 – Extrack the aerodynamic mode and debugging settings
+    // ------------------------------------------------------------------------
+    this->enable_chassis_drag = config_file["aerodynamics"]["chassis_drag"].as_bool();
+    this->enable_aerodynamics = config_file["aerodynamics"]["wing_aero"].as_bool();
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -202,11 +207,37 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->m_ctrl = available_controllers.createSelectedController(this->active_platform, this->m_logger, *this->m_trj);
 
     // ------------------------------------------------------------------------
+    // STEP 8.3 – Checks for aerodynamics
+    // ------------------------------------------------------------------------
+    // If the chassis drag is enabled, check that the necessary parameters are set in the UAV object. If not, throw an error.
+    if (this->enable_chassis_drag) {
+        if (std::isnan(this->m_uav->GetUAVAerodynamics().chassis_drag_coefficient)) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: CHASSIS DRAG ENABLED BUT CHASSIS DRAG COEFFICIENT IS NOT SET FOR THIS UAV");
+        }
+        if (std::isnan(this->m_uav->GetUAVAerodynamics().air_density)) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: CHASSIS DRAG ENABLED BUT AIR DENSITY IS NOT SET FOR THIS UAV");
+        }
+        if (std::isnan(this->m_uav->GetUAVAerodynamics().chassis_body_surface_aera)) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: CHASSIS DRAG ENABLED BUT CHASSIS BODY SURFACE AREA IS NOT SET FOR THIS UAV");
+        }
+    }
+    // If the wing aerodynamics is enabled, check that the necessary parameters are set in the UAV object. If not, throw an error.
+    if (this->enable_aerodynamics) {
+        if (std::isnan(this->m_uav->GetUAVAerodynamics().air_density)) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: WING AERODYNAMICS ENABLED BUT AIR DENSITY IS NOT SET FOR THIS UAV");
+        }
+        if (this->m_uav->GetUAVAerodynamics().aerodynamic_center_frames.empty()) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: WING AERODYNAMICS ENABLED BUT AERODYNAMIC CENTER FRAMES ARE NOT SET FOR THIS UAV");
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // STEP 9 – Log the loaded config and UAV instantiation
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO("[SIMBRG]:  - DEVELOPER MODE: "               + ::_shared_::_conversions_::bool2string(developer_mode));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : "              + ::_shared_::_conversions_::bool2string(efsl));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - CHASSIS DRAG ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_chassis_drag));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - AERODYNAMICS ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_aerodynamics));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: "              + active_platform);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: "                + active_locale);
@@ -236,6 +267,7 @@ void simbridge::ConfigureSimulatorFromConfig()
 //   5. If enabled, render the UAV body frame visualization.
 //   5.1 If enabled, render the biplane frame visualization.
 //   5.2 If enabled, render the chassis drag frame visualization.
+//   5.3 If enabled, render the wing aerodynamic frames visualization.
 //   6. If enabled, render frames for all UAV propellers.
 //   7. If enabled, render all center-of-gravity (COG) frames.
 //   8. If enabled, activate shadow rendering for all physics bodies.
@@ -290,7 +322,16 @@ void simbridge::UpdateVisualizationSystem()
         // STEP 5.2 – If enabled, render the chassis drag frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_chassis_drag_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVChassis().chassis_drag_frame->GetAbsFrame(), 0.3);
+            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVAerodynamics().chassis_drag_frame->GetAbsFrame(), 0.3);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 5.3 – If enabled, render the wing aerodynamic frames of the UAV.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_wing_aero_frames) {
+            for (const auto& aero_frame : m_uav->GetUAVAerodynamics().aerodynamic_center_frames) {
+                this->m_sys.GetVisionSystem().RenderFrame(aero_frame->GetAbsFrame(), 0.3);
+            }
         }
 
         // --------------------------------------------------------------------
@@ -432,7 +473,8 @@ void simbridge::UpdateControlAction() {
 //   1. Perform one physics simulation time step using Chrono with the configured step size.
 //   2. Maintain soft real-time pacing by spinning until step duration matches target (avoids CPU overrun).
 //   3. Query the UAV's current states (position, velocity, rotation, etc.).
-//   4. If terminal logging is enabled, format and print the state block in color for operator readability.
+//   4. Apply the aerodynamic forces.
+//   5. If terminal logging is enabled, format and print the state block in color for operator readability.
 //
 // Notes:
 //   - Real-time spinning helps match simulation wall-clock to desired step size, especially in live/interactive modes.
@@ -459,7 +501,14 @@ void simbridge::UpdatePhysicsSystem()
     m_state = this->m_uav->GetUAVStateData();
 
     // ------------------------------------------------------------------------
-    // STEP 3 – IF EFSL is not on. i.e no software/hardware-in-the-loop
+    // STEP 4 – Apply the aerodynamic forces if enabled in the config.
+    // ------------------------------------------------------------------------
+    if (this->enable_chassis_drag) {
+        this->m_uav->SetChassisDrag();
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 5 – IF EFSL is not on. i.e no software/hardware-in-the-loop
     //          THEN apply model in the loop control.
     //          IF DEVELOPERMODE is not on. i.e we just want the environment
     //          loaded in. THEN apply model in the loop control.
@@ -533,7 +582,11 @@ void simbridge::UpdatePhysicsSystem()
             << color_label << "UAV TORQUES IN NED FRAME: " << color_value
             << m_state.tauJ.x() << ", "
             << m_state.tauJ.y() << ", "
-            << m_state.tauJ.z() << color_reset;
+            << m_state.tauJ.z() << "\n" <<color_reset
+            << color_label << "UAV CHASSIS DRAG FORCES IN  NED FRAME [J]: " << color_value
+            << m_uav->GetUAVAerodynamics().chassis_drag_force.x() << ", "
+            << m_uav->GetUAVAerodynamics().chassis_drag_force.y() << ", "
+            << m_uav->GetUAVAerodynamics().chassis_drag_force.z() << color_reset;
         
         // Print the colorized output to the terminal.
         std::cout << msg.str() << std::endl;
