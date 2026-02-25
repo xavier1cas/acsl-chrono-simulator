@@ -312,7 +312,7 @@ void minjerkpoly::InitiateModule()
     auto controlpts = ::_shared_::_serialize_::serialize2ChVector3d(this->waypoints_[0],
                                                                     this->waypoints_[1],
                                                                     this->waypoints_[2]);
-    this->visualshape = ::_shared_::_visualize_::createNurbsVisual(controlpts);
+    this->visualshape = ::_shared_::_visualize_::createNurbsVisual(controlpts,2);
     
 }
 

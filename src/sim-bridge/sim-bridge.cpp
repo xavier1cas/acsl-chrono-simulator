@@ -322,7 +322,7 @@ void simbridge::UpdateVisualizationSystem()
         // STEP 5.2 – If enabled, render the chassis drag frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_chassis_drag_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVAerodynamics().chassis_drag_frame->GetAbsFrame(), 0.3);
+            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVAerodynamics().chassis_drag_frame->GetAbsFrame(), 0.1);
         }
 
         // --------------------------------------------------------------------
@@ -330,7 +330,7 @@ void simbridge::UpdateVisualizationSystem()
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_wing_aero_frames) {
             for (const auto& aero_frame : m_uav->GetUAVAerodynamics().aerodynamic_center_frames) {
-                this->m_sys.GetVisionSystem().RenderFrame(aero_frame->GetAbsFrame(), 0.3);
+                this->m_sys.GetVisionSystem().RenderFrame(aero_frame->GetAbsFrame(), 0.1);
             }
         }
 
