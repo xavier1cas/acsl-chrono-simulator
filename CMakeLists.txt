@@ -170,6 +170,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/piecewise-polynomial)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-trajectory/sim-trajectories/vector-interpolation)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-aerofoil)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-aerofoil/sim-aerofoils/NACA0012)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/pid-omega)
@@ -212,6 +214,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/piecewise-polynomial/piecewise-polynomial-trajectory.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/vector-interpolation/vector-interpolation-trajectory.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/continuous-lyapunov-equation.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-aerofoil/sim-aerofoil.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/pid-omega/pid-omega-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/mrac-omega/mrac-omega-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/mrac-observer/mrac-observer-qrbp.cpp

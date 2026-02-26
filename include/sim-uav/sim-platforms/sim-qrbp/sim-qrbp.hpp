@@ -67,8 +67,8 @@ public:
     // This constructor *must* forward 'sys' to the base class constructor
     // for simuav<4>, because that class stores a reference to ChSystemNSC.
     // ------------------------------------------------------------------------
-    simqrbp(chrono::ChSystemNSC& sys)
-        : _acsl_::_uav_::simuav<NOP>(sys)  // <-- Call the base class constructor
+    simqrbp(chrono::ChSystemNSC& sys) // <-- Call the base class constructor, Set the wing data.
+        : _acsl_::_uav_::simuav<NOP>(sys, ::_acsl_::_uav_::_aerofoil_::AirFoilType::NACA0012)  
     {
         // All initialization specific to 'simqrbp' goes here.
         // NOTE: THE ORDER OF THESE FUNCTIONS MATTER. YOU CAN IGNORE THE UNIQUE FNS

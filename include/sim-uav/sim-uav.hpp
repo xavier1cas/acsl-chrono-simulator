@@ -50,6 +50,7 @@
 #include "fkYAML/node.hpp"
 #include "Eigen/Dense"
 #include "sim-templated-helpers.hpp"
+#include "sim-aerofoil.hpp"
 
 // Chrono includes
 #include "chrono/physics/ChSystemNSC.h"
@@ -669,18 +670,25 @@ protected:
 // Purpose:
 //   Provides a complete base UAV implementation that is parameterized by the
 //   number of propellers (nop) and implements all functions from simuavbase.
+//   Also inherits the simairfoil class with the aerofoil types. The type will
+//   need to be set at instantiation of this class.  
+// 
 //
 // Notes:
 //   - Implements both high-level control API (e.g., AddUAVToSystem) and
 //     lower-level setup/configuration API from the base.
 //   - Designed to be extended by platform-specific UAV classes that call
 //     protected setup methods in their constructors.
+//   - Inherits simairfoil to expose CL/CD/CM(alpha) based on a
+//     selected AirFoilType, without fixing the type here.
 // =====================================================================================================================
 template <int nop>
-class simuav : public simuavbase {
+class simuav : public simuavbase, public ::_acsl_::_uav_::_aerofoil_::simairfoil {
 public:
     // Constructor: stores a reference to the Chrono simulation system.
-    simuav(chrono::ChSystemNSC& sys) : m_physics_(sys) { }
+    simuav(chrono::ChSystemNSC& sys, // <-- The base class constructor need system, Set the wing data to none by default.
+           ::_acsl_::_uav_::_aerofoil_::AirFoilType type = ::_acsl_::_uav_::_aerofoil_::AirFoilType::NONE) 
+           : m_physics_(sys), simairfoil(type) { }
 
     // ---------------- Public API overrides ----------------
 
