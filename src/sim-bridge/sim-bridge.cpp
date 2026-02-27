@@ -112,7 +112,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // STEP 4.1 – Extrack the aerodynamic mode and debugging settings
     // ------------------------------------------------------------------------
     this->enable_chassis_drag = config_file["aerodynamics"]["chassis_drag"].as_bool();
-    this->enable_aerodynamics = config_file["aerodynamics"]["wing_aero"].as_bool();
+    this->enable_wing_aerodynamics = config_file["aerodynamics"]["wing_aero"].as_bool();
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -222,9 +222,15 @@ void simbridge::ConfigureSimulatorFromConfig()
         }
     }
     // If the wing aerodynamics is enabled, check that the necessary parameters are set in the UAV object. If not, throw an error.
-    if (this->enable_aerodynamics) {
+    if (this->enable_wing_aerodynamics) {
         if (std::isnan(this->m_uav->GetUAVAerodynamics().air_density)) {
             _message_::SIMULATOR_ERROR("[SIMBRG]: WING AERODYNAMICS ENABLED BUT AIR DENSITY IS NOT SET FOR THIS UAV");
+        }
+        if (std::isnan(this->m_uav->GetUAVAerodynamics().aerofoil_span)) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: WING AERODYNAMICS ENABLED BUT WING SPAN IS NOT SET FOR THIS UAV");
+        }
+        if (std::isnan(this->m_uav->GetUAVAerodynamics().aerofoil_chord)) {
+            _message_::SIMULATOR_ERROR("[SIMBRG]: WING AERODYNAMICS ENABLED BUT WING CHORD LENGTH IS NOT SET FOR THIS UAV");
         }
         if (this->m_uav->GetUAVAerodynamics().aerodynamic_center_frames.empty()) {
             _message_::SIMULATOR_ERROR("[SIMBRG]: WING AERODYNAMICS ENABLED BUT AERODYNAMIC CENTER FRAMES ARE NOT SET FOR THIS UAV");
@@ -238,7 +244,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     _message_::SIMULATOR_INFO("[SIMBRG]:  - DEVELOPER MODE: "               + ::_shared_::_conversions_::bool2string(developer_mode));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : "              + ::_shared_::_conversions_::bool2string(efsl));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - CHASSIS DRAG ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_chassis_drag));
-    _message_::SIMULATOR_INFO("[SIMBRG]:  - AERODYNAMICS ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_aerodynamics));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - AERODYNAMICS ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_wing_aerodynamics));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE PLATFORM: "              + active_platform);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE LOCALE: "                + active_locale);
     _message_::SIMULATOR_INFO("[SIMBRG]:  - ACTIVE TRAJECTORY MODULE: "     + active_trajectory);
@@ -381,23 +387,24 @@ void simbridge::UpdateVisualizationSystem()
 }
 
 // =====================================================================================================================
-// UpdatePhysicsSystem()
+// UpdateControlAction()
 //
 // Purpose:
-//   Advances the physics simulation for the current step, manages real-time synchronization,
-//   retrieves the UAV state, and prints color-coded state information to the terminal (if enabled).
+//   Dispatches the control law’s thrust commands to the simulated UAV by mapping
+//   controller outputs to individual propulsors based on the current propulsion layout.
 //
 // Workflow:
-//   1. Perform one physics simulation time step using Chrono with the configured step size.
-//   2. Maintain soft real-time pacing by spinning until step duration matches target (avoids CPU overrun).
-//   3. Query the UAV's current states (position, velocity, rotation, etc.).
-//   4. If terminal logging is enabled, format and print the state block in color for operator readability.
+//   1. Query the UAV for the number of propulsors currently configured.
+//   2. For 1–8 propulsors, route controller thrust setpoints t1…t8 to the
+//      corresponding prop indices on the UAV model.
+//   3. If the requested number of propulsors is outside the supported range,
+//      raise a simulator error with a descriptive message.
 //
 // Notes:
-//   - Real-time spinning helps match simulation wall-clock to desired step size, especially in live/interactive modes.
-//   - State block includes simulation time, position, velocity, Euler angles, angular velocity, forces, and torques.
-//   - Color-coding improves operational clarity in high-frequency terminal output scenarios.
-//   - Updates are performed every simulation tick; rapid terminal output may occur if log2terminal is set true.
+//   - Supports single-rotor, multi-rotor, and unconventional 1–8 actuator layouts.
+//   - Controller interface is assumed to expose get_t1()…get_t8() accessors.
+//   - This function only updates thrust setpoints; it does not advance the
+//     physics simulation or perform real-time synchronization.
 // =====================================================================================================================
 void simbridge::UpdateControlAction() {
     int propCount = m_uav->GetPropCount();
@@ -507,6 +514,10 @@ void simbridge::UpdatePhysicsSystem()
         this->m_uav->SetChassisDrag();
     }
 
+    if (this->enable_wing_aerodynamics) {
+        this->m_uav->SetUAVTailSitterWingLiftDrag();
+    }
+
     // ------------------------------------------------------------------------
     // STEP 5 – IF EFSL is not on. i.e no software/hardware-in-the-loop
     //          THEN apply model in the loop control.
@@ -583,7 +594,7 @@ void simbridge::UpdatePhysicsSystem()
             << m_state.tauJ.x() << ", "
             << m_state.tauJ.y() << ", "
             << m_state.tauJ.z() << "\n" <<color_reset
-            << color_label << "UAV CHASSIS DRAG FORCES IN  NED FRAME [J]: " << color_value
+            << color_label << "UAV CHASSIS DRAG FORCES IN NED FRAME [J]: " << color_value
             << m_uav->GetUAVAerodynamics().chassis_drag_force.x() << ", "
             << m_uav->GetUAVAerodynamics().chassis_drag_force.y() << ", "
             << m_uav->GetUAVAerodynamics().chassis_drag_force.z() << color_reset;

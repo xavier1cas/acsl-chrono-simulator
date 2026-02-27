@@ -277,10 +277,15 @@ struct aerodynamicstruct {
     std::shared_ptr<chrono::ChForce> chassis_drag_force_y;  // For application in Y direction
     std::shared_ptr<chrono::ChForce> chassis_drag_force_z;  // For application in Z direction
 
+    // Parameters for the aerofoil lift and drag force calculation
+    double aerofoil_span = std::numeric_limits<double>::quiet_NaN();
+    double aerofoil_chord = std::numeric_limits<double>::quiet_NaN();
+
     // Variables to store the wing aerodynamic forces
     int num_of_aero_centers_per_wing = 0;                                      // Number of aerodynamic centers per wing (for distributed aerodynamics)
     std::vector<std::shared_ptr<chrono::ChMarker>> aerodynamic_center_frames;  // For visualizatoin
-    std::vector<Eigen::Matrix<double, 2,1>> wing_aero_forces;                  // For computation
+    std::vector<double> wing_aero_drag;                                        // For computation
+    std::vector<double> wing_aero_lift;                                        // For computation
     std::vector<std::shared_ptr<chrono::ChForce>> wing_aero_drag_forces;       // For application of drag in -ve x direction (NED)
     std::vector<std::shared_ptr<chrono::ChForce>> wing_aero_lift_forces;       // For application of lift in -ve z direction (NED)
 
@@ -557,6 +562,9 @@ public:
     // Function to compute and apply the aerodynamic chassis drag force
     virtual void SetChassisDrag() = 0;
 
+    // Function to compute and apply the aerodynamic forces for the aerofoil of a tailsitter
+    virtual void SetUAVTailSitterWingLiftDrag() = 0;
+
 protected:
     // ---------------- Protected API ----------------
 
@@ -718,6 +726,8 @@ public:
     void SetThrustSetPoint(size_t idx, double thrustSP) override;
 
     void SetChassisDrag() override;
+
+    void SetUAVTailSitterWingLiftDrag() override;
 
 protected:
     // ---------------- Protected API overrides ----------------

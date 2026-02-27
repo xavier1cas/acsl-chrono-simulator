@@ -1154,6 +1154,9 @@ void simuav<nop>::ConfigureUAVTailSitterWingAeroCenters(int wing_id,
         // Set the direction of each force in the body frame:
         //   - Lift acts along -X (negative body X axis).
         //   - Drag acts along +Z (positive body Z axis).
+        //   - Note that these are set w.r.t to the NED frame as the drone is 
+        //     imported in the NED frame, and we are applying the forces in the
+        //     chassis' body frame of reference.
         lift_force->SetRelDir(chrono::ChVector3d(-1, 0, 0));  // -X body
         drag_force->SetRelDir(chrono::ChVector3d(0, 0, 1));   // +Z body
 
@@ -1607,6 +1610,183 @@ void simuav<nop>::SetChassisDrag()
     this->aerodynamics.chassis_drag_force_z->SetMforce(this->aerodynamics.chassis_drag_force.z());
 }
 
+// =========================================================================================================
+// SetUAVTailSitterWingLiftDrag()
+// 
+// Purpose:
+//   Sets the lift and drag for the uav tail-sitter aerodynamic surfaces according to the sim-aerofoil
+// 
+// Parameters:
+//   none
+// 
+// Notes:
+//   - The wing span and chord should be configured during the UAV setup process else will throw an error.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::SetUAVTailSitterWingLiftDrag()
+{
+    // Pre-cahce the aerodynamics struct here for ease of use.
+    auto& aero = this->aerodynamics;
+
+    // --------------------------------------------------------------------------------------------
+    // STEP 0 – Compute local wing area per aerodynamic segment
+    //   - Treat each aerodynamic center as representing an equal spanwise strip.
+    //   - S_seg = (span * chord) / N_segments, where N_segments is the number of markers.
+    // --------------------------------------------------------------------------------------------
+    const std::size_t num_centers = aero.aerodynamic_center_frames.size();
+    const double S_per_seg = (num_centers > 0)
+                             ? (aero.aerofoil_span * aero.aerofoil_chord / static_cast<double>(num_centers))
+                             : 0.0;                             
+
+    // Resize aerodynamic force storage to match the number of aerodynamic centers.
+    // Each entry will later store [drag; lift] for one aerodynamic center.
+    if (aero.wing_aero_drag.size() != num_centers) {
+        aero.wing_aero_drag.resize(num_centers, 0.0);
+    }
+
+    if (aero.wing_aero_lift.size() != num_centers) {
+        aero.wing_aero_lift.resize(num_centers, 0.0);
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // STEP 1 – Get NED frame pose and rotation in the absolute (Chrono) frame
+    //   - ned_abs: pose of the inertial NED frame with respect to Chrono's global frame.
+    //   - R_ned  : rotation matrix that maps vectors from Abs -> NED coordinates.
+    // --------------------------------------------------------------------------------------------
+    chrono::ChFrame<> ned_abs = this->GetInertialNEDFrameAuxBody()->GetFrameRefToAbs();
+    chrono::ChMatrix33d R_ned = ned_abs.GetRotMat();
+
+    // --------------------------------------------------------------------------------------------
+    // STEP 2 – Loop over all aerodynamic center markers on the wing
+    //   For each marker i:
+    //     1) Get its pose and velocity in the absolute frame.
+    //     2) Express its pose relative to NED.
+    //     3) Build rotation matrices for NED and marker frames.
+    //     4) Transform its linear velocity into NED and then marker body frame.
+    // --------------------------------------------------------------------------------------------
+    for (std::size_t i = 0; i < num_centers; ++i)
+    {
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.1 – Get aerodynamic center frame in absolute coordinates
+        //   - marker_abs: pose and velocity of the aerodynamic center marker in Abs frame.
+        // ----------------------------------------------------------------------------------------
+        auto marker_abs = aero.aerodynamic_center_frames[i]->GetAbsFrame();
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.2 – Express aerodynamic center frame relative to NED frame
+        //   - marker_ned: pose of the marker with respect to the NED frame.
+        //   - This uses ned_abs^{-1} to map from Abs -> NED and composes with marker_abs.
+        // ----------------------------------------------------------------------------------------
+        chrono::ChFrame<> marker_ned = ned_abs.GetInverse() * marker_abs;
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.3 – Build rotation matrix for marker frame
+        //   - R_marker: rotation of the marker frame relative to NED.
+        //   - Used to transform vectors between NED and the local marker body frame.
+        // ----------------------------------------------------------------------------------------
+        chrono::ChMatrix33d R_marker = marker_ned.GetRotMat();
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.4 – Get linear velocity of the marker in the absolute frame
+        //   - vel_abs: linear velocity of the aerodynamic center marker in Abs coordinates.
+        // ----------------------------------------------------------------------------------------
+        chrono::ChVector3d vel_abs = marker_abs.GetPosDt();
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.5 – Transform marker velocity from Abs -> NED frame
+        //   - Use R_ned^T (inverse of R_ned) to convert velocity from Abs to NED coordinates.
+        // ----------------------------------------------------------------------------------------
+        chrono::ChVector3d vel_ned = R_ned.transpose() * vel_abs;
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.6 – Transform marker velocity from NED -> local marker body frame
+        //   - Use R_marker^T (inverse of R_marker) to convert velocity from NED to marker frame.
+        //   - vel_body now contains the velocity components in the aerodynamic center's body frame.
+        // ----------------------------------------------------------------------------------------
+        chrono::ChVector3d vel_body = R_marker.transpose() * vel_ned;
+
+        // ----------------------------------------------------------------------------------------
+        // NOTE:
+        //   At this point, vel_body.x(), vel_body.y(), vel_body.z() give the body-frame velocity
+        //   components at the aerodynamic center:
+        //     - Use vel_body to compute angle of attack.
+        //     - Then evaluate CL/CD/CM and construct lift/drag forces in this local frame.
+        //
+        // ----------------------------------------------------------------------------------------
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.7 – Find the angle of attack of each aerodynamic center
+        //   - \alpha = atan2(vel_body.z(), vel_body.x())
+        // ----------------------------------------------------------------------------------------
+        double alpha = atan2(vel_body.z(), vel_body.x());
+
+        std::cout << "ALPHA [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << alpha << std::endl;
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.8 – Find the coefficeint of lift of each aerodynamic center
+        //   - CL = ComputeCL(alpha)
+        // ----------------------------------------------------------------------------------------
+        double CL = this->ComputeCL(alpha);
+
+        std::cout << "CL [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << CL << std::endl;
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 2.9 – Find the coefficeint of drag of each aerodynamic center
+        //   - CD = ComputeCD(alpha)
+        // ----------------------------------------------------------------------------------------
+        double CD = this->ComputeCD(alpha);
+
+        std::cout << "CD [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << CD << std::endl;
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 3.0 – Compute the lift and drag forces 
+        //
+        //   Definitions:
+        //     - vel_body : local relative wind velocity at this aerodynamic center,
+        //                  expressed in the marker's body frame [m/s].
+        //     - V_mag    : magnitude of vel_body, i.e. |V| [m/s].
+        //     - rho      : air density (aero.air_density) [kg/m^3].
+        //     - S_per_seg: reference area represented by this aerodynamic segment
+        //                  (span * chord / number_of_segments) [m^2].
+        //     - cl       : lift coefficient C_L at the local angle of attack [-].
+        //     - cd       : drag coefficient C_D at the local angle of attack [-].
+        //
+        //   Full formulas:
+        //     - Dynamic pressure:
+        //         q_dyn = 0.5 * rho * V_mag^2
+        //
+        //     - Segment drag force magnitude:
+        //         D_seg = q_dyn * S_per_seg * cd
+        //
+        //     - Segment lift force magnitude:
+        //         L_seg = q_dyn * S_per_seg * cl
+        //
+        //   Notes:
+        //     - Drag acts along the direction of the relative wind, opposite to vel_body.
+        //     - Lift acts perpendicular to the local relative wind in the lift plane;
+        //       its exact direction will be constructed later using unit vectors.
+        // ----------------------------------------------------------------------------------------
+        // Magnitude of local velocity in the marker body frame [m/s]
+        const double V_mag_sq = vel_body.Length2();
+
+        // Dynamic pressure at this segment [N/m^2]
+        const double q_dyn = 0.5 * aero.air_density * V_mag_sq;
+
+        aero.wing_aero_drag[i] = q_dyn * S_per_seg * CD;  // Drag force magnitude
+        aero.wing_aero_lift[i] = q_dyn * S_per_seg * CL;  // Lift force magnitude
+
+        std::cout << "LIFT FORCE [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << aero.wing_aero_lift[i] << std::endl;
+        std::cout << "DRAG FORCE [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << aero.wing_aero_drag[i] << std::endl;
+
+        // ----------------------------------------------------------------------------------------
+        // STEP 4.0 – Apply the forces due to aerodynamic interaction
+        // ----------------------------------------------------------------------------------------
+        // Apply the lift and drag forces to the body.
+        aero.wing_aero_drag_forces[i]->SetMforce(aero.wing_aero_drag[i]);
+        aero.wing_aero_lift_forces[i]->SetMforce(aero.wing_aero_lift[i]);
+
+    }
+}
 
 
 

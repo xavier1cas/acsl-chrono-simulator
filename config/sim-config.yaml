@@ -86,7 +86,7 @@ aerodynamics:
   # Set to true to import the chassis drag aerodynamics
   chassis_drag: true
   # Set to true to import the wing aerodynamics
-  wing_aero: false
+  wing_aero: true
 
 # ============================================================================
 # CONTROLLER Selection
@@ -132,7 +132,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: bean_trajectory0p6
+  filename: bean_trajectory0p3
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

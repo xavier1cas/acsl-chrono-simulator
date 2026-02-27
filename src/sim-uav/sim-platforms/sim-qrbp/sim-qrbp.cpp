@@ -64,8 +64,11 @@ void simqrbp::ConfigureQRBPChassis()
 
     // Configure the chassis COM along with it's auxilliary frame at the COM ------------------------------------------
     // This is the most important as we will consider this to be the pixhawk in our subsequent calculations
-    chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0163151142227842,0.0102080920244478,0.017016814810521),
-                                               chrono::ChQuaternion<>(1,0,0,0));                            
+    // chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0163151142227842,0.0102080920244478,0.017016814810521),
+    //                                            chrono::ChQuaternion<>(1,0,0,0)); 
+
+    chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0163151142227842,0.0,0.017016814810521),
+                                               chrono::ChQuaternion<>(1,0,0,0));                                                
 
     // Configure the name of the visualization obj file ---------------------------------------------------------------
     chassis_properties.vis_obj_name = "body_3_1.obj";
@@ -554,6 +557,12 @@ void simqrbp::ConfigureQRBPAerodynamics()
 
     // Set the air density for the simulation
     GetUAVAerodynamics().air_density = 1.225;
+
+    // Set the span of a single wing
+    GetUAVAerodynamics().aerofoil_span = 0.50;
+
+    // Set the chord of a single wing
+    GetUAVAerodynamics().aerofoil_chord = 0.12;
 
     // Lower Wing                                      
     ConfigureUAVTailSitterWingAeroCenters(1, 10, chrono::ChVector3d(0.0859162968652246,0.2702797625509060,0.0350554117109310 ), 
