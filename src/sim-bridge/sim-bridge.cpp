@@ -625,7 +625,38 @@ void simbridge::UpdatePhysicsSystem()
             << color_label << "UAV CHASSIS DRAG FORCES IN NED FRAME [J]: " << color_value
             << m_uav->GetUAVAerodynamics().chassis_drag_force.x() << ", "
             << m_uav->GetUAVAerodynamics().chassis_drag_force.y() << ", "
-            << m_uav->GetUAVAerodynamics().chassis_drag_force.z() << color_reset;
+            << m_uav->GetUAVAerodynamics().chassis_drag_force.z() << "\n" <<color_reset;
+            // --------------------------------------------------------------------
+            // Print per-aerodynamic-center debug info (for all centers)
+            // --------------------------------------------------------------------
+            const auto& aero = m_uav->GetUAVAerodynamics();
+
+            const std::size_t n = aero.aerodynamic_center_frames.size();
+            if (this->enable_wing_aerodynamics)
+            {
+                msg << color_label << "AERODYNAMIC CENTERS:\n" << color_reset;
+                
+                for (std::size_t i = 0; i < n; ++i)
+                {
+                    const double alpha_deg = _shared_::_conversions_::rad2deg(aero.alpha[i]);
+
+                    msg << color_label << "  "
+                        << aero.aerodynamic_center_frames[i]->GetName() << ": "
+                        << "alpha [deg]: " << color_value << alpha_deg << color_label
+                        << " | CL: "       << color_value << aero.CL[i] << color_label
+                        << " | CD: "       << color_value << aero.CD[i] << color_label
+                        << " | L [N]: "    << color_value << aero.wing_aero_lift[i] << color_label
+                        << " | D [N]: "    << color_value << aero.wing_aero_drag[i]
+                        << "\n" << color_reset;
+                }
+            }
+            else
+            {
+                msg << color_label << "AERODYNAMIC CENTERS: " 
+                    << color_value << "NONE" 
+                    << color_reset << "\n";
+            }
+
         
         // Print the colorized output to the terminal.
         std::cout << msg.str() << std::endl;

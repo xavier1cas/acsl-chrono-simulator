@@ -283,7 +283,10 @@ struct aerodynamicstruct {
 
     // Variables to store the wing aerodynamic forces
     int num_of_aero_centers_per_wing = 0;                                      // Number of aerodynamic centers per wing (for distributed aerodynamics)
-    std::vector<std::shared_ptr<chrono::ChMarker>> aerodynamic_center_frames;  // For visualizatoin
+    std::vector<std::shared_ptr<chrono::ChMarker>> aerodynamic_center_frames;  // For visualization
+    std::vector<double> alpha;                                                 // For computation
+    std::vector<double> CL;                                                    // For computation
+    std::vector<double> CD;                                                    // For computation
     std::vector<double> wing_aero_drag;                                        // For computation
     std::vector<double> wing_aero_lift;                                        // For computation
     std::vector<std::shared_ptr<chrono::ChForce>> wing_aero_drag_forces;       // For application of drag in -ve x direction (NED)

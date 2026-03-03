@@ -106,6 +106,23 @@
     "projection_x_max_Theta_lon_out": 0.0225,
     "projection_epsilon_Theta_lon_out": 0.04
   },
+  "LONGITUDINAL_IL": {
+    "Kp_refmod_lon_il": 5.4,
+    "Kd_refmod_lon_il": 0.006,
+    "Kp_cmd_lon_il": 5.4,
+    "Kd_cmd_lon_il": 0.006,
+    "Ki_cmd_lon_il": 0.001,
+    "Kp_lon_il": 16.5,
+    "Ki_lon_il": 0.3,
+    "Kd_lon_il": 5.0,
+    "Q_lon_il": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1.0, 0.0],
+        [0.0, 1.0]
+      ]
+    }
+  },
   "DIFFERENTIATOR": {
     "C_differentiator": {
       "scaling_coef": 1,

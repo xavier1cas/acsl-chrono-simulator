@@ -122,7 +122,16 @@ void mrac_long_lat::read_params(const std::string& jsonFile)
     cip.projection_x_max_r_lon_out = j["LONGITUDINAL_OL"]["projection_x_max_r_lon_out"];
     cip.projection_epsilon_r_lon_out = j["LONGITUDINAL_OL"]["projection_epsilon_r_lon_out"];
     cip.projection_x_max_Theta_lon_out = j["LONGITUDINAL_OL"]["projection_x_max_Theta_lon_out"];
-    cip.projection_epsilon_Theta_lon_out = j["LONGITUDINAL_OL"]["projection_epsilon_Theta_lon_out"];    
+    cip.projection_epsilon_Theta_lon_out = j["LONGITUDINAL_OL"]["projection_epsilon_Theta_lon_out"];
+    cip.Kp_refmod_lon_il = j["LONGITUDINAL_IL"]["Kp_refmod_lon_il"];
+    cip.Kd_refmod_lon_il = j["LONGITUDINAL_IL"]["Kd_refmod_lon_il"];
+    cip.Kp_cmd_lon_il = j["LONGITUDINAL_IL"]["Kp_cmd_lon_il"];
+    cip.Kd_cmd_lon_il = j["LONGITUDINAL_IL"]["Kd_cmd_lon_il"];
+    cip.Ki_cmd_lon_il = j["LONGITUDINAL_IL"]["Ki_cmd_lon_il"];
+    cip.Kp_lon_il = j["LONGITUDINAL_IL"]["Kp_lon_il"];
+    cip.Ki_lon_il = j["LONGITUDINAL_IL"]["Ki_lon_il"];
+    cip.Kd_lon_il = j["LONGITUDINAL_IL"]["Kd_lon_il"];
+    cip.Q_lon_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LONGITUDINAL_IL"]["Q_lon_il"], 2, 2);
 }
 
 // Implementing virtual functios from controller_base
@@ -162,19 +171,36 @@ void mrac_long_lat::init(){
     // Set the bottom-right 2x2 block as follows
     cip.A_ref_lon_ol.block<2, 2>(2, 2) = -cip.Kd_refmod_lon_ol;
 
-    // Initialize to zero the 4x2 matrix and set the bottom 2x2 bloack as follows
+    // Initialize to zero the 4x2 matrix and set the bottom 2x2 block as follows
     ::_shared_::_initiate_::initMat(cip.B_ref_lon_ol);
     cip.B_ref_lon_ol.block<2, 2>(2, 0) = (1.0 / MASS) * Eigen::Matrix2d::Identity();
 
     // Solve the continuous Lyapunov equation to compute P_lon_ol
     cip.P_long_ol = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_lon_ol, cip.Q_lon_ol);
 
-    // Initialize to zero the 4x2 matrix and set the bottom 2x2 bloack as follows
+    // Initialize to zero the 4x2 matrix and set the bottom 2x2 block as follows
 	::_shared_::_initiate_::initMat(cip.B_lon_ol);
 	cip.B_lon_ol.block<2, 2>(2, 0) = Eigen::Matrix2d::Identity();
 
     // DISPLAY A DEBUG MESSAGE
     _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR LONGITUDINAL OUTERLOOP");
+
+    // Set the longituindal innerloop parameters
+    cip.A_ref_lon_il(0,0) = 0.0;
+    cip.A_ref_lon_il(0,1) = 1.0;
+    cip.A_ref_lon_il(1,0) = -cip.Kp_refmod_lon_il;
+    cip.A_ref_lon_il(1,1) = -cip.Kd_refmod_lon_il;
+
+    // Initialize to zero the 4x2 matrix and set the bottom 2x2 block as follows
+    cip.B_ref_lon_il(0,0) = 0.0;
+    cip.B_ref_lon_il(1,0) = (1.0/inertia_matrix_b(1,1));
+    
+    // Solve the continuous Lyapunov equation to compute P_lon_ol
+    cip.P_long_il = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_lon_il, cip.Q_lon_il);
+
+    // Set the longitudinal innerloop parameters
+    // Initialize to zero the 2x1 matrix and set the bottom 1x1 block as follows
+	cip.B_lon_il << 0, 1;
 
 
     
@@ -298,6 +324,11 @@ void mrac_long_lat::assign_from_rk4()
     ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_lon_out, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_lon_out, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_lon_out, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_theta_cmd_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_theta_cmd_d_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_ref_lon_in_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.x_ref_lon_in, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_lon_in_I, y, index);
 }
 
 // Model function for integration
@@ -317,6 +348,12 @@ void mrac_long_lat::model(const _control_::rk4_array<double, NSI> &y, _control_:
     ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_lon_out_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_lon_out_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_lon_out_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_theta_cmd_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_theta_cmd_d_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_ref_lon_in, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.x_ref_lon_in_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_lon_in_theta, dy, index);
+    
 }
 
 // Function to compute the differentiator
@@ -425,8 +462,8 @@ void mrac_long_lat::compute_outerloop_longitudinal()
     // Compute the aerodynamic inversion term
     auto lift_cache = (ComputeCL(cim.alpha_lw) + ComputeCL(cim.alpha_up));
     auto drag_cache = (ComputeCD(cim.alpha_lw) + ComputeCD(cim.alpha_up));
-    cim.F_inv_lon_out(0) = - DYN_PRESS_COEFF_W * cim.v_norm * (lift_cache * sin(cim.gamma_com) + drag_cache * cos(cim.gamma_com));
-    cim.F_inv_lon_out(1) = - DYN_PRESS_COEFF_W * cim.v_norm * (lift_cache * cos(cim.gamma_com) - drag_cache * sin(cim.gamma_com));
+    cim.F_inv_lon_out(0) = - DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * (lift_cache * sin(cim.gamma_com) + drag_cache * cos(cim.gamma_com));
+    cim.F_inv_lon_out(1) = - DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * (lift_cache * cos(cim.gamma_com) - drag_cache * sin(cim.gamma_com));
                            
     // Compute the baseline control input
     cim.F_baseline_lon_out << MASS * (- cip.Kp_lon_ol * cim.e_lon_out_pos        // Proportional term
@@ -436,8 +473,8 @@ void mrac_long_lat::compute_outerloop_longitudinal()
                                       + cim.F_inv_lon_out);                      // Aerodynamic inversion term
 
     // Compute the augmented regressor vector
-    cim.regressor_lon_out << cim.v_norm * (lift_cache * sin(cim.gamma_com) + drag_cache * cos(cim.gamma_com)),
-                             cim.v_norm * (lift_cache * cos(cim.gamma_com) - drag_cache * sin(cim.gamma_com)),
+    cim.regressor_lon_out << cim.v_norm * cim.v_norm * (lift_cache * sin(cim.gamma_com) + drag_cache * cos(cim.gamma_com)),
+                             cim.v_norm * cim.v_norm * (lift_cache * cos(cim.gamma_com) - drag_cache * sin(cim.gamma_com)),
                              G;
     cim.augmented_regressor_lon_out << cim.F_baseline_lon_out,
                                        cim.regressor_lon_out;
@@ -520,12 +557,124 @@ void mrac_long_lat::compute_outerloop_longitudinal()
 // Function to compute the theta_cmd for the longitudinal controller's inner loop
 void mrac_long_lat::compute_theta_cmd_longitudinal()
 {
-    
+    // Cache the forces needed to compute \theta_cmd
+    double fx = cim.F_lon_out(0);
+    double fz = cim.F_lon_out(1);
+    double mg = MASS * G;
+    double ex = cip.epsilon_x_lon_ol;
+    double ez = cip.epsilon_z_lon_ol;
+
+    // Function block to find the \theta_cmd such that we do not point the nose down
+    if ((abs(fx) > ex) && (-fz + mg > ez))
+    {
+        cim.theta_cmd = atan2(fz, fx);
+        cim.theta_cmd_regime = 1;
+    }
+    else if((abs(fx) > ex) && (-fz + mg <= -ez))
+    {
+        cim.theta_cmd = atan2(abs(fz), fx);
+        cim.theta_cmd_regime = 2;
+    }
+    else if ((abs(fx) > ex) && (abs(mg - fz) < ez))
+    {
+        cim.theta_cmd = atan2(abs(fz), fx);
+        cim.theta_cmd_regime = 3;
+    }
+    else if ((abs(fx) <= ex) && (-fz + mg >= ez))
+    {
+        cim.theta_cmd = atan2(abs(fz), fx);
+        cim.theta_cmd_regime = 4;
+    }
+    else if ((abs(fx) <= ex) && (-mg + fz > ez))
+    {
+        cim.theta_cmd = PIHALF;
+        cim.theta_cmd_regime = 5;
+    }
+    else if ((abs(fx) <= ex) && (abs(fz - mg) <= ez)) 
+    {
+        cim.theta_cmd = PIHALF;
+        cim.theta_cmd_regime = 6;
+    }
+
+    // Compute the internal state for desired pitch rate
+    cim.internal_state_theta_cmd_filter << A_filter_pitch_ref * csm.state_theta_cmd_filter
+                                         + B_filter_pitch_ref * cim.theta_cmd;
+
+    // Compute the desired pitch rate
+    cim.theta_cmd_dot = C_filter_pitch_ref * csm.state_theta_cmd_filter;
+
+    // Compute the internal state for the desired pitch acceleration
+    cim.internal_state_theta_cmd_d_filter << A_filter_pitch_dot_ref * csm.state_theta_cmd_d_filter
+                                           + B_filter_pitch_dot_ref * cim.theta_cmd_dot;
+
+    // Compute the desired pitch acceleration
+    cim.theta_cmd_ddot = C_filter_pitch_dot_ref * csm.state_theta_cmd_d_filter;  
 }
 
 // Function to comptue the innerloop of the longitudnal controller
 void mrac_long_lat::compute_innerloop_longitudinal()
 {
+    // Load the state vector [\theta, \dot{\theta}]
+    cim.x_lon_in << cim.pitch, dim.x_hat_2l_mrad_dot(4);
+
+    // Cache the I_y value
+    double Iy = inertia_matrix_b(1,1);
+
+    // Compute the error
+    cim.e_lon_in_theta << csm.x_ref_lon_in(0) - cim.x_lon_in(0);
+    cim.e_lon_in_theta_dot << csm.x_ref_lon_in(0) - cim.x_lon_in(1);
+
+    // Compute the longitudinal orientation error between the reference model and the user defined trajectory
+    cim.e_ref_lon_in << csm.x_ref_lon_in(0) - cim.theta_cmd;
+
+    // Compute the reference command input [reference model - user_defined_trajectory]
+    cim.r_cmd_lon_in = Iy * (- cip.Ki_cmd_lon_il * csm.e_ref_lon_in_I(0,0)   // Integral term
+                             + cip.Kp_cmd_lon_il * cim.theta_cmd             // Proportional term
+                             + cip.Kd_cmd_lon_il * cim.theta_cmd_dot         // Derivative term
+                             + cim.theta_cmd_ddot);                          // Feedforward term
+
+    // Compute the reference model
+    cim.x_ref_lon_in_dot << cip.A_ref_lon_il * csm.x_ref_lon_in
+                          + cip.B_ref_lon_il * cim.r_cmd_lon_in;
+
+    // Compute the aerodynamic inversion term - NEEDS CHECKING
+    auto lift_cache = DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * (ComputeCL(cim.alpha_up) + ComputeCL(cim.alpha_lw));
+    auto drag_cache = DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * (ComputeCD(cim.alpha_up) + ComputeCD(cim.alpha_lw));
+    auto moment_cache = DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * LX * (ComputeCM(cim.alpha_up) + ComputeCM(cim.alpha_lw));
+    cim.M_inv_lon_in = moment_cache - 2 * LZ * (drag_cache * cos(cim.alpha_com) + lift_cache * sin(cim.alpha_com));
+
+    // Compute the baseline control input
+    cim.M_baseline_lon_in = Iy * (- cip.Kp_lon_il * cim.e_lon_in_theta          // Proportional term
+                                  - cip.Kd_lon_il * cim.e_lon_in_theta_dot      // Derivative term
+                                  - cip.Ki_lon_il * csm.e_lon_in_I(0,0)         // Integral term
+                                  + cim.x_ref_lon_in_dot(1)                     // Feedforward term
+                                  + cim.M_inv_lon_in);                          // Aerodynamic inversion term
+
+    // Compute the augmented regressor vector
+    cim.regressor_lon_in << cim.v_norm * cim.v_norm * ( (ComputeCL(cim.alpha_up) + ComputeCL(cim.alpha_lw)) 
+                                                        * sin(cim.alpha_com) 
+                                                        + (ComputeCD(cim.alpha_up) + ComputeCD(cim.alpha_lw)) 
+                                                        * cos(cim.alpha_com) ),
+                            cim.v_norm * cim.v_norm * (ComputeCM(cim.alpha_up) + ComputeCM(cim.alpha_lw));
+    cim.augmented_regressor_lon_in << cim.M_baseline_lon_in,
+                                      cim.regressor_lon_in;                            
+
+    // Cache the tranpose of the tracking error * P * B
+    Eigen::Matrix<double, 2, 1> e_total;
+    e_total << cim.e_lon_in_theta, cim.e_lon_in_theta_dot;
+    auto e_transpose_p_b = e_total.transpose() * cip.P_long_il * cip.B_lon_il;
+
+    // Computing the scalar value output from the dead-zone modification modulation function
+
+
+    // Adaptive laws
+
+    // Projection operator - Ball
+
+    // Adaptive control law
+
+    // Compute the total baseline + adaptive control input
+
     
 }
 
@@ -574,15 +723,32 @@ void mrac_long_lat::run(const double time_step_rk4_)
     // 2. Compute the outerloop for the longitudinal controller
     compute_outerloop_longitudinal();
 
-    // 3. Do the integration
-    rk54.do_step(boost::bind(&mrac_long_lat::model, this, bph::_1, bph::_2, bph::_3),
-                 y, cim.t, time_step_rk4_);
+    // 3. Compute the innerloop commands for the longitudinal controller
+    compute_theta_cmd_longitudinal();
 
+    // 4. Compute the innerloop for the longitudinal controller
+    compute_innerloop_longitudinal();
+
+    // 5. Compute the total thrust T_hat
+
+    // 6. Compute the longitudinal control inputs T_upper and T_lower
+
+    // 7. Compute the outerloop for the lateral controller
+
+    // 8. Compute the innerloop commands for the lateral controller
+
+    // 9. Compute the innerloop for the lateral controller
+
+    // 10. Compute the normalized thrust - Final Step
     // PLACEHOLDER TO GIVE RANDOM INPUTS
     control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
     control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
     control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
+
+    // 11. Do the integration
+    rk54.do_step(boost::bind(&mrac_long_lat::model, this, bph::_1, bph::_2, bph::_3),
+                 y, cim.t, time_step_rk4_);
 
     // Capture the time after the execution of the controller
     cim.alg_end_time = std::chrono::high_resolution_clock::now();

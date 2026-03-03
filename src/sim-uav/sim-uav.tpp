@@ -1179,6 +1179,32 @@ void simuav<nop>::ConfigureUAVTailSitterWingAeroCenters(int wing_id,
         this->GetUAVAerodynamics().wing_aero_lift_forces.push_back(lift_force);
         this->GetUAVAerodynamics().wing_aero_drag_forces.push_back(drag_force);
     }
+
+    // ------------------------------------------------------------------------
+    // STEP 3 – Resize aerodynamic data vectors to match number of centers
+    // ------------------------------------------------------------------------
+    auto& aero = this->GetUAVAerodynamics();
+    const std::size_t num_centers = aero.aerodynamic_center_frames.size();
+
+    if (aero.wing_aero_drag.size() != num_centers) {
+        aero.wing_aero_drag.resize(num_centers, 0.0);
+    }
+
+    if (aero.wing_aero_lift.size() != num_centers) {
+        aero.wing_aero_lift.resize(num_centers, 0.0);
+    }
+
+    if (aero.alpha.size() != num_centers) {
+        aero.alpha.resize(num_centers, 0.0);
+    }
+
+    if (aero.CL.size() != num_centers) {
+        aero.CL.resize(num_centers, 0.0);
+    }
+
+    if (aero.CD.size() != num_centers) {
+        aero.CD.resize(num_centers, 0.0);
+    }
 }
 
 
@@ -1648,16 +1674,6 @@ void simuav<nop>::SetUAVTailSitterWingLiftDrag()
                              ? (aero.aerofoil_span * aero.aerofoil_chord / static_cast<double>(num_centers))
                              : 0.0;                             
 
-    // Resize aerodynamic force storage to match the number of aerodynamic centers.
-    // Each entry will later store [drag; lift] for one aerodynamic center.
-    if (aero.wing_aero_drag.size() != num_centers) {
-        aero.wing_aero_drag.resize(num_centers, 0.0);
-    }
-
-    if (aero.wing_aero_lift.size() != num_centers) {
-        aero.wing_aero_lift.resize(num_centers, 0.0);
-    }
-
     // --------------------------------------------------------------------------------------------
     // STEP 1 – Get NED frame pose and rotation in the absolute (Chrono) frame
     //   - ned_abs: pose of the inertial NED frame with respect to Chrono's global frame.
@@ -1728,25 +1744,19 @@ void simuav<nop>::SetUAVTailSitterWingLiftDrag()
         // STEP 2.7 – Find the angle of attack of each aerodynamic center
         //   - \alpha = atan2(vel_body.z(), vel_body.x())
         // ----------------------------------------------------------------------------------------
-        double alpha = atan2(vel_body.z(), vel_body.x());
-
-        std::cout << "ALPHA [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << alpha << std::endl;
+        aero.alpha[i] = atan2(vel_body.z(), vel_body.x());
 
         // ----------------------------------------------------------------------------------------
         // STEP 2.8 – Find the coefficeint of lift of each aerodynamic center
         //   - CL = ComputeCL(alpha)
         // ----------------------------------------------------------------------------------------
-        double CL = this->ComputeCL(alpha);
-
-        std::cout << "CL [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << CL << std::endl;
+        aero.CL[i] = this->ComputeCL(aero.alpha[i]);
 
         // ----------------------------------------------------------------------------------------
         // STEP 2.9 – Find the coefficeint of drag of each aerodynamic center
         //   - CD = ComputeCD(alpha)
         // ----------------------------------------------------------------------------------------
-        double CD = this->ComputeCD(alpha);
-
-        std::cout << "CD [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << CD << std::endl;
+        aero.CD[i] = this->ComputeCD(aero.alpha[i]);
 
         // ----------------------------------------------------------------------------------------
         // STEP 3.0 – Compute the lift and drag forces 
@@ -1782,11 +1792,8 @@ void simuav<nop>::SetUAVTailSitterWingLiftDrag()
         // Dynamic pressure at this segment [N/m^2]
         const double q_dyn = 0.5 * aero.air_density * V_mag_sq;
 
-        aero.wing_aero_drag[i] = q_dyn * S_per_seg * CD;  // Drag force magnitude
-        aero.wing_aero_lift[i] = q_dyn * S_per_seg * CL;  // Lift force magnitude
-
-        std::cout << "LIFT FORCE [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << aero.wing_aero_lift[i] << std::endl;
-        std::cout << "DRAG FORCE [" << aero.aerodynamic_center_frames[i]->GetName() << "] :" << aero.wing_aero_drag[i] << std::endl;
+        aero.wing_aero_drag[i] = q_dyn * S_per_seg * aero.CD[i];  // Drag force magnitude
+        aero.wing_aero_lift[i] = q_dyn * S_per_seg * aero.CL[i];  // Lift force magnitude
 
         // ----------------------------------------------------------------------------------------
         // STEP 4.0 – Apply the forces due to aerodynamic interaction

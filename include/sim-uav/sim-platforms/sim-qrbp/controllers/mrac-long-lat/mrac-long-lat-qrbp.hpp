@@ -66,7 +66,7 @@ struct controller_internal_parameters {
     Eigen::Matrix<double, 2, 2> Kd_lon_ol;                         // Baseline derivative gains for the longitudinal outerloop
     Eigen::Matrix<double, 2, 2> Ki_lon_ol;                         // Baseline integral gains for the longitudinal outerloop
     Eigen::Matrix<double, 4, 4> Q_lon_ol;                          // Lyapunov weighting matrix for the longitudinal outerloop
-    Eigen::Matrix<double, 4, 4> P_long_ol;                         // SOlutaion matrix to the continuous Lyapunov eqn for longitudinal outerloop
+    Eigen::Matrix<double, 4, 4> P_long_ol;                         // Solutaion matrix to the continuous Lyapunov eqn for longitudinal outerloop
     Eigen::Matrix<double, 4, 2> B_lon_ol;                          // B matrix for the longitudinal outerloop
     Eigen::Matrix<double, 4, 4> Gamma_x_lon_ol;   	               // Adaptive gain for state feedback parameters
     Eigen::Matrix<double, 2, 2> Gamma_r_lon_ol;   	               // Adaptive gain for command tracking parameters
@@ -85,6 +85,20 @@ struct controller_internal_parameters {
     double projection_x_max_Theta_lon_out; 	                       // Longitudinal outerloop Projection limit for Theta_hat
     double projection_epsilon_Theta_lon_out; 	                   // Longitudinal outerloop Projection tolerance for Theta_hat
     bool use_projection_operator_lon_out;                          // Longitudinal outerloop boolean for switching on/off the projection operator
+    Eigen::Matrix<double, 2, 1> B_lon_il;                          // B matrix for the longitudinal innerloop
+    Eigen::Matrix<double, 2, 2> A_ref_lon_il;                      // A ref for the longitudinal innerloop
+    Eigen::Matrix<double, 2, 1> B_ref_lon_il;                      // B ref for the longitudinal innerloop
+    double Kp_refmod_lon_il;                                       // Proportional gains for the long il ref model
+    double Kd_refmod_lon_il;                                       // Derivative gains for the long il ref model
+    double Kp_cmd_lon_il;                                          // Proportional gains for the reference command
+    double Kd_cmd_lon_il;                                          // Derivative gains for the reference command
+    double Ki_cmd_lon_il;                                          // Integral gains for the reference command
+    double Kp_lon_il;                                              // Baseline propertional gains for the longitudinal innerloop
+    double Ki_lon_il;                                              // Baseline integral gains for the longitudinal innerloop
+    double Kd_lon_il;                                              // Baseline derivative gains for the longitudinal innerloop
+    Eigen::Matrix<double, 2, 2> P_long_il;                         // Solutaion matrix to the continuous Lyapunov eqn for longitudinal innerloop
+    Eigen::Matrix<double, 2, 2> Q_lon_il;                          // Lyapunov weighting matrix for the longitudinal innerloop
+    
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
@@ -95,6 +109,11 @@ struct controller_integrated_state_members {
     Eigen::Matrix<double, 4, 2> K_hat_x_lon_out;                   // Longitudinal outerloop adaptive gain after integration
     Eigen::Matrix<double, 2, 2> K_hat_r_lon_out;                   // Longitudinal outerloop adaptive gain after integration
     Eigen::Matrix<double, 5, 2> Theta_hat_lon_out;                 // Longitudinal outerloop adaptive gain after integration
+    Eigen::Matrix<double, 2, 1> state_theta_cmd_filter;            // States for filter
+    Eigen::Matrix<double, 2, 1> state_theta_cmd_d_filter;          // States for filter
+    Eigen::Matrix<double, 2, 1> x_ref_lon_in;                      // Longitudinal outerloop reference model
+    Eigen::Matrix<double, 1, 1> e_ref_lon_in_I;                    // Longitudinal innerloop reference model error
+    Eigen::Matrix<double, 1, 1> e_lon_in_I;                        // Longitudinal innerloop orientation error
 };
 
 // Structure for all internal members of the controller
@@ -155,6 +174,23 @@ struct controller_internal_members {
     bool proj_op_activated_K_hat_x_lon_out;                        // Boolean to record projection operator activation for K_hat_x_lon_out
     bool proj_op_activated_K_hat_r_lon_out;                        // Boolean to record projection operator activation for K_hat_r_lon_out
     bool proj_op_activated_Theta_hat_lon_out;                      // Boolean to record projection operator activation for Theta_hat_lon_out
+    int theta_cmd_regime;                                          // Longitudinal innerloop theta_cmd regime
+    double theta_cmd;                                              // Longitudinal innerloop theta_cmd
+    double theta_cmd_dot;                                          // Longitudinal innerloop theta_cmd dot
+    double theta_cmd_ddot;                                         // Longitudinal innerloop theta_cmd_ddot
+    Eigen::Matrix<double, 2, 1> internal_state_theta_cmd_filter;   // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_theta_cmd_d_filter; // Internal States for filter
+    Eigen::Matrix<double, 2, 1> x_lon_in;                          // Longitudinal innerloop states
+    Eigen::Matrix<double, 1, 1> e_lon_in_theta;                    // Longitudinal innerloop error in theta
+    Eigen::Matrix<double, 1, 1> e_lon_in_theta_dot;                // Longitudinal innerloop error in theta_dot
+    Eigen::Matrix<double, 1, 1> e_ref_lon_in;                      // Longitudinal innerloop reference model error
+    double r_cmd_lon_in;                                           // Longitudinal innerloop reference command
+    Eigen::Matrix<double, 2, 1> x_ref_lon_in_dot;                  // Longitudinal outerloop reference model
+    double M_inv_lon_in;                                           // Longitudinal innerloop aerodynamic inversion term
+    double M_baseline_lon_in;                                      // Longitudinal innerloop baseline control input
+    double M_adaptive_lon_in;                                      // Longitudinal innerloop adaptive control input
+    Eigen::Matrix<double, 2, 1> regressor_lon_in;                  // Longitudinal innerloop regressor vector
+    Eigen::Matrix<double, 3, 1> augmented_regressor_lon_in;        // Longitudinal innerloop augmented regressor vector
 };
 
 // Structue for all parameter members of the differentiator - I am using the 2L version. 
