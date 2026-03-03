@@ -1,4 +1,111 @@
 {
+  "LONGITUDINAL_OL": {
+    "Kp_refmod_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [8.0, 0.0],
+        [0.0, 9.0]
+      ]
+    },
+    "Kd_refmod_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1.0, 0.0],
+        [0.0, 2.5]
+      ]
+    },
+    "Kp_cmd_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [8.0, 0.0],
+        [0.0, 9.0]
+      ]
+    },
+    "Kd_cmd_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1.0, 0.0],
+        [0.0, 2.5]
+      ]
+    },
+    "Ki_cmd_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [0.1, 0.0],
+        [0.0, 0.8]
+      ]
+    },
+    "Kp_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [18.48,  0.0],
+        [  0.0, 34.8]
+      ]
+    },
+    "Ki_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1.8, 0.0],
+        [0.0, 3.0]
+      ]
+    },
+    "Kd_lon_ol" : {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [9.5,  0.0],
+        [0.0, 12.6]
+      ]
+    },
+    "Q_lon_ol": {
+      "scaling_coef": 0.5,
+      "matrix" : [
+        [1.2, 0.0,   0.0, 0.0],
+        [0.0, 1.2,   0.0, 0.0],
+        [0.0, 0.0, 0.437, 0.0],
+        [0.0, 0.0,   0.0, 1.3]
+      ]
+    },
+    "Gamma_x_lon_ol" : {
+      "scaling_coef": 10.0,
+      "matrix": [
+        [0.05,    0.0,   0.0,   0.0],
+        [ 0.0, 0.0625,   0.0,   0.0],
+        [ 0.0,    0.0, 0.025,   0.0],
+        [ 0.0,    0.0,   0.0, 0.015]
+      ]
+    },
+    "Gamma_r_lon_ol" : {
+      "scaling_coef": 0.01,
+      "matrix" : [
+        [1.0, 0.0],
+        [0.0, 0.1]
+      ]
+    },
+    "Gamma_Theta_lon_ol" :{
+      "scaling_coef": 0.01,
+      "matrix": [
+        [1.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    "epsilon_x_lon_ol": 1,
+    "epsilon_z_lon_ol": 16,
+    "use_projection_operator_lon_out": true,
+    "dead_zone_delta_lon_out": 0.5,
+    "dead_zone_e0_lon_out": 0.15,
+    "sigma_x_lon_out" : 0.5,
+    "sigma_r_lon_out" : 0.5,
+    "sigma_Theta_lon_out" : 0.5,    
+    "projection_x_max_x_lon_out" : 0.0225,
+    "projection_epsilon_x_lon_out": 0.04,
+    "projection_x_max_r_lon_out": 0.0225,
+    "projection_epsilon_r_lon_out": 0.04,
+    "projection_x_max_Theta_lon_out": 0.0225,
+    "projection_epsilon_Theta_lon_out": 0.04
+  },
   "DIFFERENTIATOR": {
     "C_differentiator": {
       "scaling_coef": 1,

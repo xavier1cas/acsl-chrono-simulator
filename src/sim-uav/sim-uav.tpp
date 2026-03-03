@@ -1325,8 +1325,18 @@ m_states simuav<nop>::GetUAVStateData()
     // --- Angular velocity (in UAV local frame) ---
     m_state.ovel = GetUAVChassis().body->GetAngVelLocal();
 
+    // --- Angular velocity (in Biplane local frame) ---
+    m_state.ovel_bp.x() = -1.0 * m_state.ovel.z();
+    m_state.ovel_bp.y() = m_state.ovel.y();
+    m_state.ovel_bp.z() = m_state.ovel.x();
+
     // --- Angular acceleration (in UAV local frame) ---
     m_state.oacc = GetUAVChassis().body->GetAngAccLocal();
+
+    // --- Angular acceleration (in Biplane local frame) ---
+    m_state.oacc_bp.x() = -1.0 * m_state.oacc.z();
+    m_state.oacc_bp.y() = m_state.oacc.y();
+    m_state.oacc_bp.z() = m_state.oacc.x();
 
     // --- Forces acting on the body in the Inertial frame (NED) ---
     m_state.muI = ::_shared_::_transformations_::GetNEDPosFromChrono(GetUAVChassis().body->GetAppliedForce());

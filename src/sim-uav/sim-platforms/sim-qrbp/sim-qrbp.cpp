@@ -68,7 +68,7 @@ void simqrbp::ConfigureQRBPChassis()
     //                                            chrono::ChQuaternion<>(1,0,0,0)); 
 
     chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0163151142227842,0.0,0.017016814810521),
-                                               chrono::ChQuaternion<>(1,0,0,0));                                                
+                                               chrono::ChQuaternion<>(1,0,0,0)); 
 
     // Configure the name of the visualization obj file ---------------------------------------------------------------
     chassis_properties.vis_obj_name = "body_3_1.obj";
@@ -565,11 +565,11 @@ void simqrbp::ConfigureQRBPAerodynamics()
     GetUAVAerodynamics().aerofoil_chord = 0.12;
 
     // Lower Wing                                      
-    ConfigureUAVTailSitterWingAeroCenters(1, 10, chrono::ChVector3d(0.0859162968652246,0.2702797625509060,0.0350554117109310 ), 
+    ConfigureUAVTailSitterWingAeroCenters(1, 1, chrono::ChVector3d(0.0859162968652246,0.2702797625509060,0.0350554117109310 ), 
                                                  chrono::ChVector3d(0.0859162968652246,-0.2297202374490940,0.0350554117109310 ));
 
     // Upper Wing
-    ConfigureUAVTailSitterWingAeroCenters(2, 10, chrono::ChVector3d(-0.1078837031347774,0.2702797625509060,0.0350554117109310 ), 
+    ConfigureUAVTailSitterWingAeroCenters(2, 1, chrono::ChVector3d(-0.1078837031347774,0.2702797625509060,0.0350554117109310 ), 
                                                  chrono::ChVector3d(-0.1078837031347774,-0.2297202374490940,0.0350554117109310 ));
 
 }

@@ -324,7 +324,9 @@ struct m_states {
     chrono::ChQuaterniond quat;
     chrono::ChQuaterniond quat_bp;
     chrono::ChVector3d ovel;
+    chrono::ChVector3d ovel_bp;
     chrono::ChVector3d oacc;
+    chrono::ChVector3d oacc_bp;
     chrono::ChVector3d muI;
     chrono::ChVector3d muJ;
     chrono::ChVector3d tauJ;
@@ -345,7 +347,9 @@ struct m_states {
             << quat.e0() << ", " << quat.e1() << ", " << quat.e2() << ", " << quat.e3() << ", "
             << quat_bp.e0() << ", " << quat_bp.e1() << ", " << quat_bp.e2() << ", " << quat_bp.e3() << ", "
             << ovel.x() << ", " << ovel.y() << ", " << ovel.z() << ", "
+            << ovel_bp.x() << ", " << ovel_bp.y() << ", " << ovel_bp.z() << ", "
             << oacc.x() << ", " << oacc.y() << ", " << oacc.z() << ", "
+            << oacc_bp.x() << ", " << oacc_bp.y() << ", " << oacc_bp.z() << ", "
             << muI.x() << ", " << muI.y() << ", " << muI.z() << ", "
             << muJ.x() << ", " << muJ.y() << ", " << muJ.z() << ", "
             << tauJ.x() << ", " << tauJ.y() << ", " << tauJ.z() << ", ";

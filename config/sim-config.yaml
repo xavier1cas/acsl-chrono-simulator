@@ -46,7 +46,9 @@ mode:
   # Set to true to run in SOFTWARE-IN-THE-LOOP / HARDWARE-IN-THE-LOOP mode
   # Set to false to run in MODEL-IN-THE-LOOP mode
   enable_flightstack_loop: false
-
+  # Set to true to use the biplane frame in control computation
+  # Set to false to use the quadcopter frame in control computation
+  enable_biplane_frame_data: true
 
 # ============================================================================
 # DEBUGGING toggles
@@ -97,9 +99,9 @@ aerodynamics:
 controller:
   qrbp:
     pid_omega: false
-    mrac_omega: true
+    mrac_omega: false
     mrac_observer: false
-    mrac_long_lat: false
+    mrac_long_lat: true
   x8copter: 
     pid: false
     mrac: false

@@ -39,6 +39,7 @@
 
 #include "sim-control-base.hpp"     // Include for the base class of a controller defined in the simualtor
 #include "qrbp-parameter-file.hpp"  // Include for the hardcoded qrbp parameters that are common for all controllers
+#include "sim-aerofoil.hpp"         // Include file for the aerofoil coeff computations
 
 namespace _acsl_
 {
@@ -54,12 +55,46 @@ constexpr int NSI = 43;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
-
+    Eigen::Matrix<double, 2, 2> Kp_refmod_lon_ol;                  // Proportional gains for the long ol ref model
+    Eigen::Matrix<double, 2, 2> Kd_refmod_lon_ol;                  // Derivative gains for the long ol ref model
+    Eigen::Matrix<double, 4, 4> A_ref_lon_ol;                      // A ref for the longitudinal outerloop 
+    Eigen::Matrix<double, 4, 2> B_ref_lon_ol;                      // B ref for the longitudinal outerloop
+    Eigen::Matrix<double, 2, 2> Kp_cmd_lon_ol;                     // Proportional gains for the reference command
+    Eigen::Matrix<double, 2, 2> Kd_cmd_lon_ol;                     // Derivative gains for the reference command
+    Eigen::Matrix<double, 2, 2> Ki_cmd_lon_ol;                     // Integral gains for the reference command 
+    Eigen::Matrix<double, 2, 2> Kp_lon_ol;                         // Baseline proportional gains for the longitudinal outerloop
+    Eigen::Matrix<double, 2, 2> Kd_lon_ol;                         // Baseline derivative gains for the longitudinal outerloop
+    Eigen::Matrix<double, 2, 2> Ki_lon_ol;                         // Baseline integral gains for the longitudinal outerloop
+    Eigen::Matrix<double, 4, 4> Q_lon_ol;                          // Lyapunov weighting matrix for the longitudinal outerloop
+    Eigen::Matrix<double, 4, 4> P_long_ol;                         // SOlutaion matrix to the continuous Lyapunov eqn for longitudinal outerloop
+    Eigen::Matrix<double, 4, 2> B_lon_ol;                          // B matrix for the longitudinal outerloop
+    Eigen::Matrix<double, 4, 4> Gamma_x_lon_ol;   	               // Adaptive gain for state feedback parameters
+    Eigen::Matrix<double, 2, 2> Gamma_r_lon_ol;   	               // Adaptive gain for command tracking parameters
+    Eigen::Matrix<double, 5, 5> Gamma_Theta_lon_ol;                // Adaptive gain for dynamic parameter regression
+    double epsilon_x_lon_ol;                                       // Parameter to determine theta_cmd
+    double epsilon_z_lon_ol;                                       // Parameter to determine theta_cmd
+    double dead_zone_delta_lon_out;                                // Longitudinal outerloop deadzone delta radius 
+    double dead_zone_e0_lon_out;                                   // Longitudinal outerloop deadzone error tolerance
+    double sigma_x_lon_out;                	                       // Longitudinal outerloop E-mod gain for x (states)
+    double sigma_r_lon_out;                	                       // Longitudinal outerloop E-mod gain for r (commands)
+    double sigma_Theta_lon_out;            	                       // Longitudinal outerloop E-mod gain for Theta (parameters)
+    double projection_x_max_x_lon_out;                             // Longitudinal outerloop Projection limit for Kx_hat
+    double projection_epsilon_x_lon_out;   	                       // Longitudinal outerloop Projection tolerance for Kx_hat
+    double projection_x_max_r_lon_out;     	                       // Longitudinal outerloop Projection limit for Kr_hat
+    double projection_epsilon_r_lon_out;   	                       // Longitudinal outerloop Projection tolerance for Kr_hat
+    double projection_x_max_Theta_lon_out; 	                       // Longitudinal outerloop Projection limit for Theta_hat
+    double projection_epsilon_Theta_lon_out; 	                   // Longitudinal outerloop Projection tolerance for Theta_hat
+    bool use_projection_operator_lon_out;                          // Longitudinal outerloop boolean for switching on/off the projection operator
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
 struct controller_integrated_state_members {
-    
+    Eigen::Matrix<double, 4, 1> x_ref_lon_out;                     // Longitudinal outerloop reference model
+    Eigen::Matrix<double, 2, 1> e_ref_lon_out_I;                   // Longitudinal outerloop reference model error
+    Eigen::Matrix<double, 2, 1> e_lon_out_I;                       // Longitudinal outerloop position error
+    Eigen::Matrix<double, 4, 2> K_hat_x_lon_out;                   // Longitudinal outerloop adaptive gain after integration
+    Eigen::Matrix<double, 2, 2> K_hat_r_lon_out;                   // Longitudinal outerloop adaptive gain after integration
+    Eigen::Matrix<double, 5, 2> Theta_hat_lon_out;                 // Longitudinal outerloop adaptive gain after integration
 };
 
 // Structure for all internal members of the controller
@@ -74,6 +109,13 @@ struct controller_internal_members {
     double vx;                                                     // Velocity in x
     double vy;                                                     // Velocity in y
     double vz;                                                     // Velocity in z
+    Eigen::Matrix<double, 3, 1> v_I;                               // Velocity in I
+    Eigen::Matrix<double, 3, 1> v_J;                               // Velocity in J
+    double v_norm;                                                 // Norm of the translational velocities
+    double alpha_up;                                               // Angle of attack for the upper wing
+    double alpha_lw;                                               // Angle of attack for the lower wing
+    double alpha_com;                                              // Angle of attack for the center of mass
+    double gamma_com;                                              // Flight path angle for the center of mass
     Eigen::Quaterniond q;                                          // Quaternion
     double roll;                                                   // Roll
     double pitch;                                                  // Pitch
@@ -84,11 +126,35 @@ struct controller_internal_members {
     double roll_rate;                                              // Roll rate
     double pitch_rate;                                             // Pitch rate
     double yaw_rate;                                               // Yaw rate
+    Eigen::Matrix<double, 3, 1> r_user;                            // User-defined position
+    Eigen::Matrix<double, 3, 1> v_user;                            // User-defined velocity
+    Eigen::Matrix<double, 3, 1> a_user;                            // User-defined acceleration
+    Eigen::Matrix<double, 2, 1> r_user_lon_out;                    // Longitudinal outerloop user-defined position
+    Eigen::Matrix<double, 2, 1> v_user_lon_out;                    // Longitudinal outerloop user-defined velocity
+    Eigen::Matrix<double, 2, 1> a_user_lon_out;                    // Longitudinal outerloop user-defined acceleration
     Eigen::Matrix<double, 3, 3> R_I_J;                             // Rotation from inertial to body
     Eigen::Matrix<double, 3, 3> R_J_I;                             // Rotation from body to inertial    
     Eigen::Matrix<double, 3, 3> Jacobian_inv;                      // Inverse of Jacobian Matrix
     Eigen::Matrix<double, 3, 1> omega_rot;                         // Angular velocities
-    Eigen::Matrix<double, 3, 1> eta_rot_rate_real;                 // Euler angle rates computed using the Jacobian inv
+    Eigen::Matrix<double, 4, 1> x_lon_out;                         // Longitudinal outerloop states
+    Eigen::Matrix<double, 4, 1> x_ref_lon_out_dot;                 // Longitudinal outerloop reference model
+    Eigen::Matrix<double, 2, 1> e_lon_out_pos;                     // Longitudinal outerloop error in position
+    Eigen::Matrix<double, 2, 1> e_lon_out_vel;                     // Longitudinal outerloop error in velocity
+    Eigen::Matrix<double, 2, 1> e_ref_lon_out;                     // Longitudinal outerloop reference model error
+    Eigen::Matrix<double, 2, 1> r_cmd_lon_out;                     // Longitudinal outerloop reference command
+    Eigen::Matrix<double, 2, 1> F_baseline_lon_out;                // Longitudinal outerloop baseline control input
+    Eigen::Matrix<double, 2, 1> F_adaptive_lon_out;                // Longitudinal outerloop adaptive control input
+    Eigen::Matrix<double, 2, 1> F_lon_out;                         // Longitudinal outerloop total control input
+    Eigen::Matrix<double, 2, 1> F_inv_lon_out;                     // Longitudinal outerloop aerodynamic inversion term
+    Eigen::Matrix<double, 3, 1> regressor_lon_out;                 // Longitudinal outerloop regressor vector
+    Eigen::Matrix<double, 5, 1> augmented_regressor_lon_out;       // Longitudinal outerloop augmented regressor vector
+    double dead_zone_value_lon_out;                                // Longitudinal outerloop deadzone modulation function value
+    Eigen::Matrix<double, 4, 2> K_hat_x_lon_out_dot;               // Longitudinal outerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 2, 2> K_hat_r_lon_out_dot;               // Longitudinal outerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 5, 2> Theta_hat_lon_out_dot;             // Longitudinal outerloop adaptive gain to be integrated 
+    bool proj_op_activated_K_hat_x_lon_out;                        // Boolean to record projection operator activation for K_hat_x_lon_out
+    bool proj_op_activated_K_hat_r_lon_out;                        // Boolean to record projection operator activation for K_hat_r_lon_out
+    bool proj_op_activated_Theta_hat_lon_out;                      // Boolean to record projection operator activation for Theta_hat_lon_out
 };
 
 // Structue for all parameter members of the differentiator - I am using the 2L version. 
@@ -158,7 +224,8 @@ struct differentiator_internal_members
 //   - Inherits base routines and actuator interface from controller_base.
 //   - Inherits base routines from blackbox to setup the logging.
 // =========================================================================================================
-class mrac_long_lat : public ::_acsl_::_control_::controller_base, public ::_acsl_::_logger_::blackbox
+class mrac_long_lat : public ::_acsl_::_control_::controller_base, public ::_acsl_::_logger_::blackbox,
+                      public ::_acsl_::_uav_::_aerofoil_::simairfoil
 {
 public:
     // -------------------------------------------------------------------------

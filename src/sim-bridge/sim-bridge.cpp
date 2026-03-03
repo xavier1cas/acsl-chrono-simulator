@@ -102,6 +102,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // STEP 4 – Extract simulation mode and debuging settings
     // ------------------------------------------------------------------------
     this->efsl = config_file["mode"]["enable_flightstack_loop"].as_bool();
+    this->enable_biplane_frame_data = config_file["mode"]["enable_biplane_frame_data"].as_bool();
     this->log2file = config_file["debug"]["log_physics"].as_bool();
     this->log2terminal = config_file["debug"]["terminal"].as_bool();
     this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
@@ -525,24 +526,47 @@ void simbridge::UpdatePhysicsSystem()
     //          loaded in. THEN apply model in the loop control.
     // ------------------------------------------------------------------------
     if (!this->GetSimMode() && !this->developer_mode) {
-        this->m_ctrl->update(m_state.time, 
-                            m_state.pos.x(),
-                            m_state.pos.y(),
-                            m_state.pos.z(),
-                            m_state.vel.x(),
-                            m_state.vel.y(),
-                            m_state.vel.z(),
-                            m_state.quat.e0(),
-                            m_state.quat.e1(),
-                            m_state.quat.e2(),
-                            m_state.quat.e3(),
-                            m_state.eul.x(),
-                            m_state.eul.y(),
-                            m_state.eul.z(),
-                            m_state.ovel.x(),
-                            m_state.ovel.y(),
-                            m_state.ovel.z() );
-                                    
+        // If using the NED frame of reference (-z body inplane with the prop's axis)
+        if (!this->enable_biplane_frame_data) {
+            this->m_ctrl->update(m_state.time, 
+                                 m_state.pos.x(),
+                                 m_state.pos.y(),
+                                 m_state.pos.z(),
+                                 m_state.vel.x(),
+                                 m_state.vel.y(),
+                                 m_state.vel.z(),
+                                 m_state.quat.e0(),
+                                 m_state.quat.e1(),
+                                 m_state.quat.e2(),
+                                 m_state.quat.e3(),
+                                 m_state.eul.x(),
+                                 m_state.eul.y(),
+                                 m_state.eul.z(),
+                                 m_state.ovel.x(),
+                                 m_state.ovel.y(),
+                                 m_state.ovel.z() );
+        }
+        else {
+            this->m_ctrl->update(m_state.time,
+                                 m_state.pos.x(),
+                                 m_state.pos.y(),
+                                 m_state.pos.z(),
+                                 m_state.vel.x(),
+                                 m_state.vel.y(),
+                                 m_state.vel.z(),
+                                 m_state.quat_bp.e0(),
+                                 m_state.quat_bp.e1(),
+                                 m_state.quat_bp.e2(),
+                                 m_state.quat_bp.e3(),
+                                 m_state.eul_bp.x(),
+                                 m_state.eul_bp.y(),
+                                 m_state.eul_bp.z(),
+                                 m_state.ovel_bp.x(),
+                                 m_state.ovel_bp.y(),
+                                 m_state.ovel_bp.z() );
+        }
+
+                                        
         this->m_ctrl->run(this->m_sys.GetPhyConfig().StepSize);
         
         this->UpdateControlAction();
@@ -582,6 +606,10 @@ void simbridge::UpdatePhysicsSystem()
             << m_state.ovel.x() << ", "
             << m_state.ovel.y() << ", "
             << m_state.ovel.z() << "\n" << color_reset
+            << color_label << "UAV ANGULAR VELOCITY IN BIPLANE FRAME: " << color_value
+            << m_state.ovel_bp.x() << ", "
+            << m_state.ovel_bp.y() << ", "
+            << m_state.ovel_bp.z() << "\n" << color_reset
             << color_label << "UAV FORCES IN NED FRAME [I]: " << color_value
             << m_state.muI.x() << ", "
             << m_state.muI.y() << ", "
@@ -758,7 +786,9 @@ void simbridge::ConfigureHeaders()
         "_q0", "_q1", "_q2", "_q3",
         "_q0_bp", "_q1_bp", "_q2_bp", "_q3_bp",
         "_wx", "_wy", "_wz",
+        "_wx_bp", "_wy_bp", "_wz_bp",
         "_alphx", "_alphy", "_alphz",
+        "_alphx_bp", "_alphy_bp", "_alphz_bp",
         "_muIx", "_muIy", "_muIz",
         "_muJx", "_muJy", "_muJz",
         "_tauJx", "_tauJy", "_tau_Jz"

@@ -195,12 +195,13 @@ private:
     const std::string sim_config_filename = "../config/sim-config.yaml";
 
     // ------------------------------------------------------------------------
-    // Boolean for telling the system if it's in HIL/SIL mode
+    // Boolean for telling the system what to do
     // ------------------------------------------------------------------------
-    bool efsl;                     // <- Stands for enable flightstack loop.
-    bool enable_wing_aerodynamics; // <- Stands for enable wing aerodynamics.
-    bool enable_chassis_drag;      // <- Stands for enable chassis drag.
-
+    bool efsl;                          // <- Stands for enable flightstack loop.
+    bool enable_wing_aerodynamics;      // <- Stands for enable wing aerodynamics.
+    bool enable_chassis_drag;           // <- Stands for enable chassis drag.
+    bool enable_biplane_frame_data;     // <- Use Biplane frame data.
+    
     // ------------------------------------------------------------------------
     // Boolean for telling the system it's debugging configuration
     // ------------------------------------------------------------------------
