@@ -79,7 +79,7 @@ inline constexpr double SQRT2_OVER_2 = 0.7071067;
 // Vehicle and Environment Defines
 inline constexpr double LX = 0.097509;                                        // dist to motor along x^J              [m]
 inline constexpr double LY = 0.110688;                                        // dist to motor along y^J              [m]
-inline constexpr double LZ = ;   // NEEDS CHANGING                         // dist to the aero center of the wings [m]
+inline constexpr double LZ = 0.04137335;                                      // dist to the aero center of the wings [m]
 inline constexpr double LZ_S = 0.038779;                                      // dist to aero center of stabs         [m]
 inline constexpr double SPAN_W = 0.50;                                        // span of wings                        [m]
 inline constexpr double CHORD_W = 0.12;                                       // chord of wings                       [m]

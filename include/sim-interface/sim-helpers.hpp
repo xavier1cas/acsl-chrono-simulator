@@ -215,6 +215,14 @@ namespace _conversions_
 double rad2deg(double rad);
 
 /**
+ * @brief Converts degrees to radians.
+ * @param rad Angle in degrees
+ * @return Equivalent angle in radians
+ */
+double deg2rad(double deg);
+
+
+/**
  * @brief Convert a boolean value to "true" or "false".
  *
  * @param value Boolean value to convert.

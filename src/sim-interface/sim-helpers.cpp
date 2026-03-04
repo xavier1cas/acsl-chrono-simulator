@@ -200,6 +200,13 @@ double rad2deg(double rad)
     return rad * 180.0 / chrono::CH_PI;
 }
 
+// Converts degrees to radians, works with any arithmetic double.
+double deg2rad(double degrees)
+{
+    // Use Chrono's value for pi for consistency with the simulation environment
+    return degrees * chrono::CH_PI / 180.0;
+}
+
 // Converts boolean values to "true" or "false" strings for logging purposes.
 std::string bool2string(bool value) {
     return value ? "true" : "false";

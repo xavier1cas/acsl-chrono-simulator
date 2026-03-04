@@ -51,7 +51,7 @@ namespace _mrac_long_lat_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 43;
+constexpr int NSI = 86;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -98,6 +98,22 @@ struct controller_internal_parameters {
     double Kd_lon_il;                                              // Baseline derivative gains for the longitudinal innerloop
     Eigen::Matrix<double, 2, 2> P_long_il;                         // Solutaion matrix to the continuous Lyapunov eqn for longitudinal innerloop
     Eigen::Matrix<double, 2, 2> Q_lon_il;                          // Lyapunov weighting matrix for the longitudinal innerloop
+    Eigen::Matrix<double, 2, 2> Gamma_x_lon_il;   	               // Adaptive gain for state feedback parameters
+    Eigen::Matrix<double, 1, 1> Gamma_r_lon_il;   	               // Adaptive gain for command tracking parameters
+    Eigen::Matrix<double, 3, 3> Gamma_Theta_lon_il;                // Adaptive gain for dynamic parameter regression
+    double theta_max;                                              // Maximum allowable error in computing \hat{T} for the longitudinal controller
+    bool use_projection_operator_lon_il;                           // Longitudinal innerloop boolean for switching on/off the projection operator
+    double dead_zone_delta_lon_il;                                 // Longitudinal innerloop deadzone delta radius
+    double dead_zone_e0_lon_il;                                    // Longitudinal innerloop deadzone error tolerance
+    double sigma_x_lon_il;                	                       // Longitudinal innerloop E-mod gain for x (states)
+    double sigma_r_lon_il;                	                       // Longitudinal innerloop E-mod gain for r (commands)
+    double sigma_Theta_lon_il;              	                   // Longitudinal innerloop E-mod gain for Theta (parameters)
+    double projection_x_max_x_lon_il;                              // Longitudinal innerloop Projection limit for Kx_hat
+    double projection_epsilon_x_lon_il;   	                       // Longitudinal innerloop Projection tolerance for Kx_hat
+    double projection_x_max_r_lon_il;     	                       // Longitudinal innerloop Projection limit for Kr_hat
+    double projection_epsilon_r_lon_il;  	                       // Longitudinal innerloop Projection tolerance for Kr_hat
+    double projection_x_max_Theta_lon_il; 	                       // Longitudinal innerloop Projection limit for Theta_hat
+    double projection_epsilon_Theta_lon_il; 	                   // Longitudinal innerloop Projection tolerance for Theta_hat
     
 };
 
@@ -114,6 +130,9 @@ struct controller_integrated_state_members {
     Eigen::Matrix<double, 2, 1> x_ref_lon_in;                      // Longitudinal outerloop reference model
     Eigen::Matrix<double, 1, 1> e_ref_lon_in_I;                    // Longitudinal innerloop reference model error
     Eigen::Matrix<double, 1, 1> e_lon_in_I;                        // Longitudinal innerloop orientation error
+    Eigen::Matrix<double, 2, 1> K_hat_x_lon_in;                    // Longitudinal innerloop adaptive gain after integration
+    Eigen::Matrix<double, 1, 1> K_hat_r_lon_in;                    // Longitudinal innerloop adaptive gain after integration
+    Eigen::Matrix<double, 3, 1> Theta_hat_lon_in;                  // Longitudinal innerloop adaptive gain after integration
 };
 
 // Structure for all internal members of the controller
@@ -186,11 +205,25 @@ struct controller_internal_members {
     Eigen::Matrix<double, 1, 1> e_ref_lon_in;                      // Longitudinal innerloop reference model error
     double r_cmd_lon_in;                                           // Longitudinal innerloop reference command
     Eigen::Matrix<double, 2, 1> x_ref_lon_in_dot;                  // Longitudinal outerloop reference model
-    double M_inv_lon_in;                                           // Longitudinal innerloop aerodynamic inversion term
-    double M_baseline_lon_in;                                      // Longitudinal innerloop baseline control input
-    double M_adaptive_lon_in;                                      // Longitudinal innerloop adaptive control input
+    Eigen::Matrix<double, 1, 1> M_lon_in;                      // Longitudinal innerloop aerodynamic inversion term
+    Eigen::Matrix<double, 1, 1> M_inv_lon_in;                      // Longitudinal innerloop aerodynamic inversion term
+    Eigen::Matrix<double, 1, 1> M_baseline_lon_in;                 // Longitudinal innerloop baseline control input
+    Eigen::Matrix<double, 1, 1> M_adaptive_lon_in;                 // Longitudinal innerloop adaptive control input
     Eigen::Matrix<double, 2, 1> regressor_lon_in;                  // Longitudinal innerloop regressor vector
     Eigen::Matrix<double, 3, 1> augmented_regressor_lon_in;        // Longitudinal innerloop augmented regressor vector
+    double dead_zone_value_lon_in;                                 // Longitudinal innerloop deadzone modulation function value
+    Eigen::Matrix<double, 2, 1> K_hat_x_lon_in_dot;                // Longitudinal innerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 1, 1> K_hat_r_lon_in_dot;                // Longitudinal innerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 3, 1> Theta_hat_lon_in_dot;              // Longitudinal innerloop adaptive gain to be integrated
+    bool proj_op_activated_K_hat_x_lon_in;                         // Boolean to record projection operator activation for K_hat_x_lon_in
+    bool proj_op_activated_K_hat_r_lon_in;                         // Boolean to record projection operator activation for K_hat_r_lon_in
+    bool proj_op_activated_Theta_hat_lon_in;                       // Boolean to record projection operator activation for Theta_hat_lon_in
+    double T_hat;                                                  // Total ideal thrust force for the longitudinal control
+    int T_hat_regime;                                              // Regime for T_hat computation
+    double T_upper;                                                // Thrust for the motors on the upper wing [2, 4]
+    int T_upper_regime;                                            // Regime for T_upper computation
+    double T_lower;                                                // Thrust for the motors on the lower wing [1, 3]
+    int T_lower_regime;                                            // Regime for T_lower computation
 };
 
 // Structue for all parameter members of the differentiator - I am using the 2L version. 
