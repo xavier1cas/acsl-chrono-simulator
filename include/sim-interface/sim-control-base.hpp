@@ -100,7 +100,9 @@ public:
     //   - Stores a reference to the external simlog logger for use across control routines.
     // -------------------------------------------------------------------------------------------------
     controller_base(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
-        : m_logger(logger), m_traj(trajectory), control_input(Eigen::Matrix<float, 8, 1>::Zero())
+        : m_logger(logger), m_traj(trajectory), 
+          control_input(Eigen::Matrix<float, 8, 1>::Zero()), 
+          com_u(Eigen::Matrix<double, 4, 1>::Zero())
     {}
 
     // -------------------------------------------------------------------------------------------------
@@ -183,12 +185,30 @@ public:
     float get_t7() const { return control_input(6); }
     float get_t8() const { return control_input(7); }
 
+    // -------------------------------------------------------------------------------------------------
+    // Torque and moment Getter Functions
+    //   - Returns commanded thrust at com, mx, my, mz torques at com
+    //   - Useful for debugging control allocation and tuning control parameters.
+    // 
+    // Fixed size for any configuration as it has the sim treat it as a rigid body
+    // -------------------------------------------------------------------------------------------------
+    double get_u1() const { return com_u(0); }
+    double get_u2() const { return com_u(1); }
+    double get_u3() const { return com_u(2); }
+    double get_u4() const { return com_u(3); }
+
 protected:
     // -------------------------------------------------------------------------------------------------
     // Control input vector storing actuator thrusts [size 8].
     //   - Written by derived controller logic; read by simulation system.
     // -------------------------------------------------------------------------------------------------
     Eigen::Matrix<float, 8, 1> control_input;
+
+    // -------------------------------------------------------------------------------------------------
+    // Control input vector storing the thrust, mx, my, mz at the COM [size 4 (always fixed)]
+    //   - Written by derived controller logic; read by simulation system.
+    // -------------------------------------------------------------------------------------------------
+    Eigen::Matrix<double, 4, 1> com_u;
 
     // -------------------------------------------------------------------------------------------------
     // Reference to simlog logger instance.

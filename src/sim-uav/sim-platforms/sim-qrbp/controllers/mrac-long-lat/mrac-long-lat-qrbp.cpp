@@ -1278,7 +1278,25 @@ void mrac_long_lat::compute_normalized_thrusts()
     // Cache the mixer matrix
     Eigen::Matrix<double, 4, 4> mixer_matrix;
     
-    // CODE THIS PLEASE GIRI - GIRI
+    mixer_matrix(0, 0) = 0.0;
+    mixer_matrix(0, 1) = 0.5;
+    mixer_matrix(0, 2) = 1.0 / (4.0 * CT_MOTOR);
+    mixer_matrix(0, 3) = - 1.0 / (4.0 * LY);
+
+    mixer_matrix(1, 0) = 0.5;
+    mixer_matrix(1, 1) = 0.0;
+    mixer_matrix(1, 2) = 1.0 / (4.0 * CT_MOTOR);
+    mixer_matrix(1, 3) = 1.0 / (4.0 * LY);
+
+    mixer_matrix(2, 0) = 0.0;
+    mixer_matrix(2, 1) = 0.5;
+    mixer_matrix(2, 2) = - 1.0 / (4.0 * CT_MOTOR);
+    mixer_matrix(2, 3) = 1.0 / (4.0 * LY);
+
+    mixer_matrix(3, 0) = 0.5;
+    mixer_matrix(3, 1) = 0.0;
+    mixer_matrix(3, 2) = - 1.0 / (4.0 * CT_MOTOR);
+    mixer_matrix(3, 3) = - 1.0 / (4.0 * LY);
 
     // Cache the total control input vector u = [T_upper T_lower Mx Mz]^{\rm T}
     Eigen::Matrix<double, 4, 1> u;
@@ -1286,6 +1304,15 @@ void mrac_long_lat::compute_normalized_thrusts()
 
     // Compute the individual thrusts in Newtons
     cim.Thrust << mixer_matrix * u;
+
+    // Saturate each element of the Thrust vector between MIN_THRUST and MAX_THRUST
+    cim.Sat_Thrust = (cim.Thrust.cwiseMin(MAX_THRUST).cwiseMax(MIN_THRUST));
+
+    // Compute the final control inputs
+    control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(0));
+    control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(1));
+    control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(2));
+    control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(3));
 }
 
 // Function that is called in sim-bridge.cpp
@@ -1319,11 +1346,7 @@ void mrac_long_lat::run(const double time_step_rk4_)
     compute_innerloop_lateral();
 
     // 10. Compute the normalized thrust - Final Step
-    // PLACEHOLDER TO GIVE RANDOM INPUTS
-    control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
-    control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
-    control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
-    control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, 0.0);
+    compute_normalized_thrusts();
 
     // 11. Do the integration
     rk54.do_step(boost::bind(&mrac_long_lat::model, this, bph::_1, bph::_2, bph::_3),
@@ -1371,6 +1394,17 @@ void mrac_long_lat::ConfigureHeaders()
         << "x_hat 2l mrad dot phi dot, "
         << "x_hat 2l mrad dot theta dot, "
         << "x_hat 2l mrad dot psi dot, "
+        << "x_pos [m], "
+        << "z_pos [m], "
+        << "x_vel [m/s], "
+        << "z_vel [m/s], "
+        << "x_ref [m], "
+        << "z_ref [m], "
+        << "vx_ref [m/s], "
+        << "vz_ref [m/s], "
+        << "r_cmd_lon_out_x, "
+        << "r_cmd_lon_out_z, "
+        
         ;
     
     try {

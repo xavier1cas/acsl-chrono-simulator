@@ -1,0 +1,17 @@
+name: takeoff
+codebase: cpp
+alpha_factor: 1.0
+numsamples: 200
+tstep: 0.01
+hover_time: 2.0
+set_yaw_zero: true
+waypoints:
+  - x: 0.100163
+    y: 0.188855
+    z: 0.199879
+    time: 0.0
+  - x: 0.100163
+    y: 0.188855
+    z: -0.8001
+    time: 8.0
+  

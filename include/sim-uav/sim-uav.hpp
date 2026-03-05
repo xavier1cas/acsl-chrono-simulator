@@ -158,6 +158,10 @@ namespace _motor_dir_ {
 //   vis_obj_name              - Filename of the visualization mesh (.obj).
 //   collision                 - List of collision shapes with their associated frames.
 //   biplane_frame             - Marker frame for the biplane reference (is always on).
+//   com_thrust                - Thrust force applied to the center of mass.
+//   com_Mx                    - Moment about the NED x axis applied to the center of mass.
+//   com_My                    - Moment about the NED y axis applied to the center of mass.
+//   com_Mz                    - Moment about the NED z axis applied to the center of mass.
 // ------------------------------------------------------------------------------------------------------------
 struct chassisstruct {
     std::shared_ptr<chrono::ChBodyAuxRef> body;
@@ -169,7 +173,11 @@ struct chassisstruct {
     chrono::ChFramed COM;
     std::string vis_obj_name;
     std::vector<_acsl_::_uav_::CollisionShapeFrame> collision;
-    std::shared_ptr<chrono::ChMarker> biplane_frame;    
+    std::shared_ptr<chrono::ChMarker> biplane_frame; 
+    std::shared_ptr<chrono::ChForce> com_thrust;
+    std::shared_ptr<chrono::ChForce> com_Mx;
+    std::shared_ptr<chrono::ChForce> com_My;
+    std::shared_ptr<chrono::ChForce> com_Mz;
 };
 
 
@@ -566,6 +574,9 @@ public:
     // Function to set the normalized thrust setpoint for the UAV
     virtual void SetThrustSetPoint(size_t idx, double thrustSP) = 0;
 
+    // Function to set the thrust, mx, my, mz at the com of the UAV
+    virtual void SetControlInputAtCOM(double u1, double u2, double u3, double u4);
+
     // Function to compute and apply the aerodynamic chassis drag force
     virtual void SetChassisDrag() = 0;
 
@@ -731,6 +742,8 @@ public:
     void SetActuator(size_t idx, double thrust, double torque, double rpm) override;
 
     void SetThrustSetPoint(size_t idx, double thrustSP) override;
+
+    void SetControlInputAtCOM(double u1, double u2, double u3, double u4) override;
 
     void SetChassisDrag() override;
 

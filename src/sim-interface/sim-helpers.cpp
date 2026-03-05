@@ -212,6 +212,68 @@ std::string bool2string(bool value) {
     return value ? "true" : "false";
 }
 
+// Converts quaternion to euler via 321 rotation
+chrono::ChVector3d QuaternionToEulerAnglesRPY_321(const chrono::ChQuaterniond& q)
+{
+    chrono::ChVector3d euler;
+
+    // Chrono stores quaternion as (e0, e1, e2, e3) = (w, x, y, z)
+    double a = q.e0();
+    double b = q.e1();
+    double c = q.e2();
+    double d = q.e3();
+
+    // Precompute products
+    double aa = a * a;
+    double ab = a * b;
+    double ac = a * c;
+    double ad = a * d;
+    double bb = b * b;
+    double bc = b * c;
+    double bd = b * d;
+    double cc = c * c;
+    double cd = c * d;
+    double dd = d * d;
+
+    // DCM elements for 3–2–1 extraction
+    double dcm00 = aa + bb - cc - dd;
+    double dcm02 = 2.0 * (ac + bd);
+    double dcm10 = 2.0 * (bc + ad);
+    double dcm12 = 2.0 * (cd - ab);
+    double dcm20 = 2.0 * (bd - ac);
+    double dcm21 = 2.0 * (ab + cd);
+    double dcm22 = aa - bb - cc + dd;
+
+    // Clamp dcm20 to [-1, 1] to avoid domain errors in asin
+    if (dcm20 < -1.0)
+        dcm20 = -1.0;
+    if (dcm20 > 1.0)
+        dcm20 = 1.0;
+
+    // Pitch
+    double pitch = std::asin(-dcm20);
+
+    double roll;
+    double yaw;
+
+    // Gimbal lock handling
+    if (std::fabs(pitch - M_PI / 2.0) < 1.0e-3) {
+        roll = 0.0;
+        yaw  = std::atan2(dcm12, dcm02);
+    } else if (std::fabs(pitch + M_PI / 2.0) < 1.0e-3) {
+        roll = 0.0;
+        yaw  = std::atan2(-dcm12, -dcm02);
+    } else {
+        roll = std::atan2(dcm21, dcm22);
+        yaw  = std::atan2(dcm10, dcm00);
+    }
+
+    euler.x() = roll;
+    euler.y() = pitch;
+    euler.z() = yaw;
+
+    return euler;
+}
 
 } // namespace _conversions_
 
@@ -465,22 +527,38 @@ std::shared_ptr<chrono::ChVisualShapeLine> createNurbsVisual(
     int order,
     const chrono::ChColor& color)
 {
-    // NOTE: No need to convert each NED point to Chrono's coordinate system as these
-    //       assets will be introduced as a visualshape attached to the NED Frame's
-    //       auxiliary body which is already pre-rotated.
-    
-    // Create and initialize the NURBS curve with converted points
+    // If only two points are given, insert (order+1) midpoints between them
+    std::vector<chrono::ChVector3d> cps;
+    cps.reserve(std::max<std::size_t>(controlpoints.size(), 2));
+
+    if (controlpoints.size() == 2) {
+        const auto& p0 = controlpoints[0];
+        const auto& p1 = controlpoints[1];
+
+        int N = order + 1;  // number of interior points
+        cps.push_back(p0);
+        for (int k = 1; k <= N; ++k) {
+            double s = static_cast<double>(k) / static_cast<double>(N + 1);
+            chrono::ChVector3d pk = (1.0 - s) * p0 + s * p1;
+            cps.push_back(pk);
+        }
+        cps.push_back(p1);
+    } else {
+        cps = controlpoints;  // use as-is for >= 3 points
+    }
+
+    // Create and initialize the NURBS curve with processed points
     auto nurbs = chrono_types::make_shared<chrono::ChLineNurbs>();
-    nurbs->Setup(order, controlpoints);
+    nurbs->Setup(order, cps);
 
     // Wrap in visual asset
     auto nurbsasset = chrono_types::make_shared<chrono::ChVisualShapeLine>();
     nurbsasset->SetLineGeometry(nurbs);
     nurbsasset->SetColor(color);
 
-    // Return the visual asset for adding to a body for visualization
     return nurbsasset;
 }
+
 
 // Creates a frame using lines for visualization of the markers.
 void createMarkerFrameVisual(chrono::ChMarker& marker, double len, double thk) {

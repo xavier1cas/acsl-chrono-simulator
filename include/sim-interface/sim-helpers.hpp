@@ -230,6 +230,20 @@ double deg2rad(double deg);
  */
 std::string bool2string(bool value);
 
+/**
+ * @brief Compute roll–pitch–yaw Euler angles from a unit quaternion
+ *        using a 3–2–1 (Z–Y–X) rotation sequence.
+ *
+ * The returned vector is ordered as:
+ *   x = roll  (about X)
+ *   y = pitch (about Y)
+ *   z = yaw   (about Z)
+ *
+ * @param q Unit quaternion (Chrono convention: e0=w, e1=x, e2=y, e3=z)
+ * @return chrono::ChVector3d containing [roll, pitch, yaw] in radians.
+ */
+chrono::ChVector3d QuaternionToEulerAnglesRPY_321(const chrono::ChQuaterniond& q);
+
 } // namespace _conversions_
 
 // ============================================================================================================
@@ -331,6 +345,7 @@ std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(const chrono::ChVector3d
                                                         const chrono::ChVector3d& p2,
                                                         int n);
 
+                                                        
 
 } // namespace _compute_
 

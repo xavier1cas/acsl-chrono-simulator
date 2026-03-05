@@ -257,7 +257,58 @@ void simuav<nop>::InitiateUAVChassis()
     // Finally add these forces to the body frame
     chassis.body->AddForce(aerodynamics.chassis_drag_force_x);
     chassis.body->AddForce(aerodynamics.chassis_drag_force_y);
-    chassis.body->AddForce(aerodynamics.chassis_drag_force_z);    
+    chassis.body->AddForce(aerodynamics.chassis_drag_force_z);
+
+    // ------------------------------------------------------------------------
+    // STEP 2.3 - Create and attach the total thrust force, Mx, My, Mz to COM
+    // ------------------------------------------------------------------------
+    // Thrust force at Center of Mass
+    chassis.com_thrust = chrono_types::make_shared<chrono::ChForce>();      // Initiate the thrust force
+    chassis.com_thrust->SetName("com_thrust");                              // Set the name as COM thrust
+    chassis.com_thrust->SetBody(chassis.body.get());                        // Thrust is applied to the chassis
+    chassis.com_thrust->SetMode(chrono::ChForce::ForceType::FORCE);         // Thrust is a force
+    chassis.com_thrust->SetFrame(chrono::ChForce::ReferenceFrame::BODY);    // It is applied in the body frame
+    chassis.com_thrust->SetRelDir(chrono::ChVector3d(0,0,-1));              // It is applied in the -ve z (NED)
+
+    // thrust is applied at the COM
+    chassis.com_thrust->SetVrelpoint(rel_pos_COM);
+
+    // Add the force to the body frame
+    chassis.body->AddForce(chassis.com_thrust);
+
+    // Moment about x at the Center of Mass
+    // Initiate the torque forces
+    chassis.com_Mx = chrono_types::make_shared<chrono::ChForce>();
+    chassis.com_My = chrono_types::make_shared<chrono::ChForce>();
+    chassis.com_Mz = chrono_types::make_shared<chrono::ChForce>();
+    // Set the name as com_m<>
+    chassis.com_Mx->SetName("com_mx");
+    chassis.com_My->SetName("com_my");
+    chassis.com_Mz->SetName("com_mz");
+    // Moment is applied to the chassis
+    chassis.com_Mx->SetBody(chassis.body.get());
+    chassis.com_My->SetBody(chassis.body.get());
+    chassis.com_Mz->SetBody(chassis.body.get());
+    // Moment is a troque
+    chassis.com_Mx->SetMode(chrono::ChForce::ForceType::TORQUE);
+    chassis.com_My->SetMode(chrono::ChForce::ForceType::TORQUE);
+    chassis.com_Mz->SetMode(chrono::ChForce::ForceType::TORQUE);
+    // It is applied in the body frame
+    chassis.com_Mx->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
+    chassis.com_My->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
+    chassis.com_Mz->SetFrame(chrono::ChForce::ReferenceFrame::BODY);
+    // Set the direction of the positive moment
+    chassis.com_Mx->SetRelDir(chrono::ChVector3d(1,0,0));
+    chassis.com_My->SetRelDir(chrono::ChVector3d(0,1,0));
+    chassis.com_Mz->SetRelDir(chrono::ChVector3d(0,0,1));
+    // Moments are applied at the COM
+    chassis.com_Mx->SetVrelpoint(rel_pos_COM);
+    chassis.com_My->SetVrelpoint(rel_pos_COM);
+    chassis.com_Mz->SetVrelpoint(rel_pos_COM);
+    // Add the torques to the body frame
+    chassis.body->AddForce(chassis.com_Mx);
+    chassis.body->AddForce(chassis.com_My);
+    chassis.body->AddForce(chassis.com_Mz);
 
     // ------------------------------------------------------------------------
     // STEP 3 – Load and attach a visual mesh for the chassis
@@ -1342,11 +1393,13 @@ m_states simuav<nop>::GetUAVStateData()
     m_state.quat_bp = uav_biplane_ned.GetRot();
 
     // Euler angles from quaternion (XYZ Cardan convention)
-    m_state.eul = m_state.quat.GetCardanAnglesXYZ();
+    // m_state.eul = m_state.quat.GetCardanAnglesXYZ();
+    m_state.eul = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat);
 
     // Euler angles from quaternion (XYZ Cardan convention)
-    auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
-    m_state.eul_bp = ::_shared_::_compute_::RegularizeCardanXYZ(eul_bp_raw);
+    // auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
+    auto eul_bp_raw = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat_bp);
+    m_state.eul_bp = ::_shared_::_compute_::RegularizeCardanXYZ(eul_bp_raw);    
 
     // --- Angular velocity (in UAV local frame) ---
     m_state.ovel = GetUAVChassis().body->GetAngVelLocal();
@@ -1544,6 +1597,31 @@ void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
 
     // Set the values
     this->SetActuator(idx, thrust, torque, rps);
+}
+
+// =========================================================================================================
+// SetControlInputAtCOM(u1, u2, u3, u4)
+// 
+// Purpose:
+//   Sets the thrust, torques control inputs at the center of mass
+//
+// Parameters:
+// u1 - total thrust
+// u2 - moment about x axis (NED) body frame
+// u3 - moment about y axis (NED) body frame
+// u4 - moment about z axis (NED) body frame
+// 
+// Notes:
+//   - The forces are automatically setup during the chassis configuration/initiation functions.
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::SetControlInputAtCOM(double u1, double u2, double u3, double u4)
+{
+    // Set the force and torque setpoints
+    this->GetUAVChassis().com_thrust->SetMforce(u1);
+    this->GetUAVChassis().com_Mx->SetMforce(u2);
+    this->GetUAVChassis().com_My->SetMforce(u3);
+    this->GetUAVChassis().com_Mz->SetMforce(u4);
 }
 
 // =========================================================================================================
