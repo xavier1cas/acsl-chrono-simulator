@@ -51,7 +51,7 @@ namespace _mrac_long_lat_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 86;
+constexpr int NSI = 113;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -85,6 +85,7 @@ struct controller_internal_parameters {
     double projection_x_max_Theta_lon_out; 	                       // Longitudinal outerloop Projection limit for Theta_hat
     double projection_epsilon_Theta_lon_out; 	                   // Longitudinal outerloop Projection tolerance for Theta_hat
     bool use_projection_operator_lon_out;                          // Longitudinal outerloop boolean for switching on/off the projection operator
+    
     Eigen::Matrix<double, 2, 1> B_lon_il;                          // B matrix for the longitudinal innerloop
     Eigen::Matrix<double, 2, 2> A_ref_lon_il;                      // A ref for the longitudinal innerloop
     Eigen::Matrix<double, 2, 1> B_ref_lon_il;                      // B ref for the longitudinal innerloop
@@ -101,7 +102,6 @@ struct controller_internal_parameters {
     Eigen::Matrix<double, 2, 2> Gamma_x_lon_il;   	               // Adaptive gain for state feedback parameters
     Eigen::Matrix<double, 1, 1> Gamma_r_lon_il;   	               // Adaptive gain for command tracking parameters
     Eigen::Matrix<double, 3, 3> Gamma_Theta_lon_il;                // Adaptive gain for dynamic parameter regression
-    double theta_max;                                              // Maximum allowable error in computing \hat{T} for the longitudinal controller
     bool use_projection_operator_lon_il;                           // Longitudinal innerloop boolean for switching on/off the projection operator
     double dead_zone_delta_lon_il;                                 // Longitudinal innerloop deadzone delta radius
     double dead_zone_e0_lon_il;                                    // Longitudinal innerloop deadzone error tolerance
@@ -114,7 +114,64 @@ struct controller_internal_parameters {
     double projection_epsilon_r_lon_il;  	                       // Longitudinal innerloop Projection tolerance for Kr_hat
     double projection_x_max_Theta_lon_il; 	                       // Longitudinal innerloop Projection limit for Theta_hat
     double projection_epsilon_Theta_lon_il; 	                   // Longitudinal innerloop Projection tolerance for Theta_hat
+
+    double theta_max;                                              // Maximum allowable error in computing \hat{T} for the longitudinal controller
     
+    double Kp_refmod_lat_ol;                                       // Proportional gains for the lateral outerloop reference model
+    double Kd_refmod_lat_ol;                                       // Derivative gains for the lateral outerloop reference model       
+    double Kp_cmd_lat_ol;                                          // Proportional gains for the lateral outerloop reference command
+    double Kd_cmd_lat_ol;                                          // Derivative gains for the lateral outerloop reference command
+    double Ki_cmd_lat_ol;                                          // Integral gains for the lateral outerloop reference command               
+    double Kp_lat_ol;                                              // Baseline proportional gains for the lateral outerloop
+    double Ki_lat_ol;                                              // Baseline integral gains for the lateral outerloop
+    double Kd_lat_ol;                                              // Baseline derivative gains for the lateral outerloop  
+    Eigen::Matrix<double, 2, 2> A_ref_lat_ol;                      // A ref for the lateral outerloop
+    Eigen::Matrix<double, 2, 1> B_ref_lat_ol;                      // B ref for the lateral outerloop
+    Eigen::Matrix<double, 2, 1> B_lat_ol;                          // B matrix for the lateral outerloop    
+    Eigen::Matrix<double, 2, 2> Q_lat_ol;                          // Lyapunov weighting matrix for the lateral outerloop
+    Eigen::Matrix<double, 2, 2> P_lat_ol;                          // Solutaion matrix to the continuous Lyapunov eqn for the lateral outerloop
+    bool use_projection_operator_lat_ol;                           // Lateral outerloop boolean for switching on/off the projection operator
+    double dead_zone_delta_lat_ol;                                 // Lateral outerloop deadzone delta radius
+    double dead_zone_e0_lat_ol;                                    // Lateral outerloop deadzone error tolerance
+    double sigma_x_lat_ol;                	                       // Lateral outerloop E-mod gain for x (states)
+    double sigma_r_lat_ol;                	                       // Lateral outerloop E-mod gain for r (commands)
+    double sigma_Theta_lat_ol;              	                   // Lateral outerloop E-mod gain for Theta (parameters)
+    double projection_x_max_x_lat_ol;                              // Lateral outerloop Projection limit for Kx_hat
+    double projection_epsilon_x_lat_ol;   	                       // Lateral outerloop Projection tolerance for Kx_hat
+    double projection_x_max_r_lat_ol;     	                       // Lateral outerloop Projection limit for Kr_hat
+    double projection_epsilon_r_lat_ol;  	                       // Lateral outerloop Projection tolerance for Kr_hat
+    double projection_x_max_Theta_lat_ol; 	                       // Lateral outerloop Projection limit for Theta_hat
+    double projection_epsilon_Theta_lat_ol; 	                   // Lateral outerloop Projection tolerance for Theta_hat
+    Eigen::Matrix<double, 2, 2> Gamma_x_lat_ol;   	               // Adaptive gain for state feedback parameters for the lateral outerloop
+    Eigen::Matrix<double, 1, 1> Gamma_r_lat_ol;                    // Adaptive gain for command tracking parameters for the lateral outerloop
+    Eigen::Matrix<double, 2, 2> Gamma_Theta_lat_ol;                // Adaptive gain for dynamic parameter regression for the lateral outerloop
+
+    Eigen::Matrix<double, 2, 2> B_lat_il;                          // B matrix for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> A_ref_lat_il;                      // A ref for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> B_ref_lat_il;                      // B ref for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> Kp_refmod_lat_il;                  // Proportional gains for the lat il ref model
+    Eigen::Matrix<double, 2, 2> Kp_cmd_lat_il;                     // Proportional gains for the reference command
+    Eigen::Matrix<double, 2, 2> Ki_cmd_lat_il;                     // Integral gains for the reference command 
+    Eigen::Matrix<double, 2, 2> Kp_lat_il;                         // Baseline proportional gains for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> Kd_lat_il;                         // Baseline derivative gains for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> Ki_lat_il;                         // Baseline integral gains for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> Q_lat_il;                          // Lyapunov weighting matrix for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> P_lat_il;                          // Solutaion matrix to the continuous Lyapunov eqn for the lateral innerloop
+    Eigen::Matrix<double, 2, 2> Gamma_x_lat_il;   	               // Adaptive gain for state feedback parameters
+    Eigen::Matrix<double, 2, 2> Gamma_r_lat_il;   	               // Adaptive gain for command tracking parameters
+    Eigen::Matrix<double, 4, 4> Gamma_Theta_lat_il;                // Adaptive gain for dynamic parameter regression
+    bool use_projection_operator_lat_il;                           // Lateral innerloop boolean for switching on/off the projection operator
+    double dead_zone_delta_lat_il;                                 // Lateral innerloop deadzone delta radius
+    double dead_zone_e0_lat_il;                                    // Lateral innerloop deadzone error tolerance
+    double sigma_x_lat_il;                	                       // Lateral innerloop E-mod gain for x (states)
+    double sigma_r_lat_il;                	                       // Lateral innerloop E-mod gain for r (commands)
+    double sigma_Theta_lat_il;              	                   // Lateral innerloop E-mod gain for Theta (parameters)
+    double projection_x_max_x_lat_il;                              // Lateral innerloop Projection limit for Kx_hat
+    double projection_epsilon_x_lat_il;   	                       // Lateral innerloop Projection tolerance for Kx_hat
+    double projection_x_max_r_lat_il;     	                       // Lateral innerloop Projection limit for Kr_hat
+    double projection_epsilon_r_lat_il;  	                       // Lateral innerloop Projection tolerance for Kr_hat
+    double projection_x_max_Theta_lat_il; 	                       // Lateral innerloop Projection limit for Theta_hat
+    double projection_epsilon_Theta_lat_il; 	                   // Lateral innerloop Projection tolerance for Theta_hat
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
@@ -125,14 +182,34 @@ struct controller_integrated_state_members {
     Eigen::Matrix<double, 4, 2> K_hat_x_lon_out;                   // Longitudinal outerloop adaptive gain after integration
     Eigen::Matrix<double, 2, 2> K_hat_r_lon_out;                   // Longitudinal outerloop adaptive gain after integration
     Eigen::Matrix<double, 5, 2> Theta_hat_lon_out;                 // Longitudinal outerloop adaptive gain after integration
+    
     Eigen::Matrix<double, 2, 1> state_theta_cmd_filter;            // States for filter
     Eigen::Matrix<double, 2, 1> state_theta_cmd_d_filter;          // States for filter
+    
     Eigen::Matrix<double, 2, 1> x_ref_lon_in;                      // Longitudinal outerloop reference model
     Eigen::Matrix<double, 1, 1> e_ref_lon_in_I;                    // Longitudinal innerloop reference model error
     Eigen::Matrix<double, 1, 1> e_lon_in_I;                        // Longitudinal innerloop orientation error
     Eigen::Matrix<double, 2, 1> K_hat_x_lon_in;                    // Longitudinal innerloop adaptive gain after integration
     Eigen::Matrix<double, 1, 1> K_hat_r_lon_in;                    // Longitudinal innerloop adaptive gain after integration
     Eigen::Matrix<double, 3, 1> Theta_hat_lon_in;                  // Longitudinal innerloop adaptive gain after integration
+    
+    Eigen::Matrix<double, 2, 1> x_ref_lat_out;                     // Lateral outerloop reference model
+    Eigen::Matrix<double, 1, 1> e_ref_lat_out_I;                   // Lateral outerloop reference model error
+    Eigen::Matrix<double, 1, 1> e_lat_out_I;                       // Lateral outerloop position error
+    Eigen::Matrix<double, 2, 1> K_hat_x_lat_out;                   // Lateral outerloop adaptive gain after integration
+    Eigen::Matrix<double, 1, 1> K_hat_r_lat_out;                   // Lateral outerloop adaptive gain after integration
+    Eigen::Matrix<double, 2, 1> Theta_hat_lat_out;                 // Lateral outerloop adaptive gain after integration
+
+    Eigen::Matrix<double, 2, 1> state_psi_cmd_filter;              // States for filter
+    Eigen::Matrix<double, 2, 1> state_wx_cmd_filter;               // States for filter
+    Eigen::Matrix<double, 2, 1> state_wz_cmd_filter;               // States for filter
+
+    Eigen::Matrix<double, 2, 1> x_ref_lat_in;                      // Lateral innerloop reference model
+    Eigen::Matrix<double, 2, 1> e_lat_in_orientation_I;            // Lateral innerloop error in orientation
+    Eigen::Matrix<double, 2, 1> e_ref_lat_in_I;                    // Lateral innerloop reference model error
+    Eigen::Matrix<double, 2, 2> K_hat_x_lat_in;                    // Lateral innerloop adaptive gain after integration
+    Eigen::Matrix<double, 2, 2> K_hat_r_lat_in;                    // Lateral innerloop adaptive gain after integration
+    Eigen::Matrix<double, 4, 2> Theta_hat_lat_in;                  // Lateral innerloop adaptive gain after integration
 };
 
 // Structure for all internal members of the controller
@@ -172,8 +249,9 @@ struct controller_internal_members {
     Eigen::Matrix<double, 2, 1> a_user_lon_out;                    // Longitudinal outerloop user-defined acceleration
     Eigen::Matrix<double, 3, 3> R_I_J;                             // Rotation from inertial to body
     Eigen::Matrix<double, 3, 3> R_J_I;                             // Rotation from body to inertial    
-    Eigen::Matrix<double, 3, 3> Jacobian_inv;                      // Inverse of Jacobian Matrix
+    Eigen::Matrix<double, 3, 3> Jacobian;                          // Jacobian Matrix
     Eigen::Matrix<double, 3, 1> omega_rot;                         // Angular velocities
+ 
     Eigen::Matrix<double, 4, 1> x_lon_out;                         // Longitudinal outerloop states
     Eigen::Matrix<double, 4, 1> x_ref_lon_out_dot;                 // Longitudinal outerloop reference model
     Eigen::Matrix<double, 2, 1> e_lon_out_pos;                     // Longitudinal outerloop error in position
@@ -193,19 +271,21 @@ struct controller_internal_members {
     bool proj_op_activated_K_hat_x_lon_out;                        // Boolean to record projection operator activation for K_hat_x_lon_out
     bool proj_op_activated_K_hat_r_lon_out;                        // Boolean to record projection operator activation for K_hat_r_lon_out
     bool proj_op_activated_Theta_hat_lon_out;                      // Boolean to record projection operator activation for Theta_hat_lon_out
+   
     int theta_cmd_regime;                                          // Longitudinal innerloop theta_cmd regime
     double theta_cmd;                                              // Longitudinal innerloop theta_cmd
     double theta_cmd_dot;                                          // Longitudinal innerloop theta_cmd dot
     double theta_cmd_ddot;                                         // Longitudinal innerloop theta_cmd_ddot
     Eigen::Matrix<double, 2, 1> internal_state_theta_cmd_filter;   // Internal States for filter
     Eigen::Matrix<double, 2, 1> internal_state_theta_cmd_d_filter; // Internal States for filter
+   
     Eigen::Matrix<double, 2, 1> x_lon_in;                          // Longitudinal innerloop states
     Eigen::Matrix<double, 1, 1> e_lon_in_theta;                    // Longitudinal innerloop error in theta
     Eigen::Matrix<double, 1, 1> e_lon_in_theta_dot;                // Longitudinal innerloop error in theta_dot
     Eigen::Matrix<double, 1, 1> e_ref_lon_in;                      // Longitudinal innerloop reference model error
     double r_cmd_lon_in;                                           // Longitudinal innerloop reference command
     Eigen::Matrix<double, 2, 1> x_ref_lon_in_dot;                  // Longitudinal outerloop reference model
-    Eigen::Matrix<double, 1, 1> M_lon_in;                      // Longitudinal innerloop aerodynamic inversion term
+    Eigen::Matrix<double, 1, 1> M_lon_in;                          // Longitudinal innerloop total control input
     Eigen::Matrix<double, 1, 1> M_inv_lon_in;                      // Longitudinal innerloop aerodynamic inversion term
     Eigen::Matrix<double, 1, 1> M_baseline_lon_in;                 // Longitudinal innerloop baseline control input
     Eigen::Matrix<double, 1, 1> M_adaptive_lon_in;                 // Longitudinal innerloop adaptive control input
@@ -218,12 +298,69 @@ struct controller_internal_members {
     bool proj_op_activated_K_hat_x_lon_in;                         // Boolean to record projection operator activation for K_hat_x_lon_in
     bool proj_op_activated_K_hat_r_lon_in;                         // Boolean to record projection operator activation for K_hat_r_lon_in
     bool proj_op_activated_Theta_hat_lon_in;                       // Boolean to record projection operator activation for Theta_hat_lon_in
+   
     double T_hat;                                                  // Total ideal thrust force for the longitudinal control
     int T_hat_regime;                                              // Regime for T_hat computation
     double T_upper;                                                // Thrust for the motors on the upper wing [2, 4]
     int T_upper_regime;                                            // Regime for T_upper computation
     double T_lower;                                                // Thrust for the motors on the lower wing [1, 3]
     int T_lower_regime;                                            // Regime for T_lower computation
+   
+    Eigen::Matrix<double, 2, 1> x_lat_out;                         // Lateral outerloop states
+    Eigen::Matrix<double, 2, 1> x_ref_lat_out_dot;                 // Lateral outerloop reference model
+    Eigen::Matrix<double, 1, 1> e_lat_out_pos;                     // Lateral outerloop error in position
+    Eigen::Matrix<double, 1, 1> e_lat_out_vel;                     // Lateral outerloop error in velocity
+    Eigen::Matrix<double, 1, 1> e_ref_lat_out;                     // Lateral outerloop reference model error
+    double r_cmd_lat_out;                                          // Lateral outerloop reference command
+    double F_inv_lat_out;                                          // Lateral outerloop aerodynamic inversion term
+    double F_baseline_lat_out;                                     // Lateral outerloop baseline control input
+    Eigen::Matrix<double, 1, 1> F_adaptive_lat_out;                // Lateral outerloop adaptive control input
+    double F_lat_out;                                              // Lateral outerloop total control input
+    double regressor_lat_out;                                      // Lateral outerloop regressor vector
+    Eigen::Matrix<double, 2, 1> augmented_regressor_lat_out;       // Lateral outerloop augmented regressor vector
+    double dead_zone_value_lat_out;                                // Lateral outerloop deadzone modulation function value
+    Eigen::Matrix<double, 2, 1> K_hat_x_lat_out_dot;               // Lateral outerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 1, 1> K_hat_r_lat_out_dot;               // Lateral outerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 2, 1> Theta_hat_lat_out_dot;             // Lateral outerloop adaptive gain to be integrated
+    bool proj_op_activated_K_hat_x_lat_out;                        // Boolean to record projection operator activation for K_hat_x_lat_out
+    bool proj_op_activated_K_hat_r_lat_out;                        // Boolean to record projection operator activation for K_hat_r_lat_out
+    bool proj_op_activated_Theta_hat_lat_out;                      // Boolean to record projection operator activation for Theta_hat_lat_out
+
+    Eigen::Matrix<double, 3, 1> Tilde_F;                           // Forces rotated to the current body frame
+    Eigen::Matrix<double, 3, 1> Hat_F;                             // Estimated virtual force control inputs in the inertial frame
+    double psi_cmd;                                                // Lateral innerloop psi_cmd
+    double psi_cmd_dot;                                            // Lateral innerloop psi_cmd_dot
+    double wz_cmd;                                                 // Lateral innerloop wz_cmd
+    double wz_cmd_dot;                                             // Lateral innerloop wz_cmd_dot
+    double phi_cmd;                                                // Lateral innerloop phi_cmd
+    double phi_cmd_dot;                                            // Lateral innerloop phi_cmd_dot
+    double wx_cmd;                                                 // Lateral innerloop wx_cmd
+    double wx_cmd_dot;                                             // Lateral innerloop wx_cmd_dot
+    Eigen::Matrix<double, 2, 1> internal_state_psi_cmd_filter;     // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_wx_cmd_filter;      // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_wz_cmd_filter;      // Internal States for filter
+
+    Eigen::Matrix<double, 2, 1> x_lat_in;                          // Lateral innerloop states
+    Eigen::Matrix<double, 2, 1> x_ref_lat_in_dot;                  // Lateral innerloop reference model
+    Eigen::Matrix<double, 2, 1> e_lat_in_orientation;              // Lateral innerloop error in orientation
+    Eigen::Matrix<double, 2, 1> e_lat_in_angular_vel;              // Lateral innerloop error in angular velocity
+    Eigen::Matrix<double, 2, 1> e_ref_lat_in;                      // Lateral innerloop reference model error
+    Eigen::Matrix<double, 2, 1> r_cmd_lat_in;                      // Lateral innerloop reference command
+    Eigen::Matrix<double, 2, 1> M_baseline_lat_in;                 // Lateral innerloop baseline control input
+    Eigen::Matrix<double, 2, 1> M_adaptive_lat_in;                 // Lateral innerloop adaptive control input
+    Eigen::Matrix<double, 2, 1> M_lat_in;                          // Lateral innerloop total control input
+    Eigen::Matrix<double, 2, 1> regressor_lat_in;                  // Lateral innerloop regressor vector
+    Eigen::Matrix<double, 4, 1> augmented_regressor_lat_in;        // Lateral innerloop augmented regressor vector
+    double dead_zone_value_lat_in;                                 // Lateral innerloop deadzone modulation function value
+    Eigen::Matrix<double, 2, 2> K_hat_x_lat_in_dot;                // Lateral innerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 2, 2> K_hat_r_lat_in_dot;                // Lateral innerloop adaptive gain to be integrated
+    Eigen::Matrix<double, 4, 2> Theta_hat_lat_in_dot;              // Lateral innerloop adaptive gain to be integrated
+    bool proj_op_activated_K_hat_x_lat_in;                         // Boolean to record projection operator activation for K_hat_x_lat_in
+    bool proj_op_activated_K_hat_r_lat_in;                         // Boolean to record projection operator activation for K_hat_r_lat_in
+    bool proj_op_activated_Theta_hat_lat_in;                       // Boolean to record projection operator activation for Theta_hat_lat_in
+   
+    Eigen::Matrix<double, 4, 1> Thrust;                            // Thrust in Newtons for motors 1 - 4
+    Eigen::Matrix<double, 4, 1> Sat_Thrust;                        // Saturated thrurst in Newtons for motors 1 - 4
 };
 
 // Structue for all parameter members of the differentiator - I am using the 2L version. 

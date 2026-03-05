@@ -123,6 +123,8 @@ void mrac_long_lat::read_params(const std::string& jsonFile)
     cip.projection_epsilon_r_lon_out = j["LONGITUDINAL_OL"]["projection_epsilon_r_lon_out"];
     cip.projection_x_max_Theta_lon_out = j["LONGITUDINAL_OL"]["projection_x_max_Theta_lon_out"];
     cip.projection_epsilon_Theta_lon_out = j["LONGITUDINAL_OL"]["projection_epsilon_Theta_lon_out"];
+
+    // Longitudinal Innerloop parameters
     cip.Kp_refmod_lon_il = j["LONGITUDINAL_IL"]["Kp_refmod_lon_il"];
     cip.Kd_refmod_lon_il = j["LONGITUDINAL_IL"]["Kd_refmod_lon_il"];
     cip.Kp_cmd_lon_il = j["LONGITUDINAL_IL"]["Kp_cmd_lon_il"];
@@ -148,6 +150,57 @@ void mrac_long_lat::read_params(const std::string& jsonFile)
     cip.projection_epsilon_r_lon_il = j["LONGITUDINAL_IL"]["projection_epsilon_r_lon_il"];
     cip.projection_x_max_Theta_lon_il = j["LONGITUDINAL_IL"]["projection_x_max_Theta_lon_il"];
     cip.projection_epsilon_Theta_lon_il = j["LONGITUDINAL_IL"]["projection_epsilon_Theta_lon_il"];
+
+    // Lateral Outerloop parameters
+    cip.Kp_refmod_lat_ol = j["LATERAL_OL"]["Kp_refmod_lat_ol"];
+    cip.Kd_refmod_lat_ol = j["LATERAL_OL"]["Kd_refmod_lat_ol"];
+    cip.Kp_cmd_lat_ol = j["LATERAL_OL"]["Kp_cmd_lat_ol"];
+    cip.Kd_cmd_lat_ol = j["LATERAL_OL"]["Kd_cmd_lat_ol"];
+    cip.Ki_cmd_lat_ol = j["LATERAL_OL"]["Ki_cmd_lat_ol"];
+    cip.Kp_lat_ol = j["LATERAL_OL"]["Kp_lat_ol"];
+    cip.Kd_lat_ol = j["LATERAL_OL"]["Kd_lat_ol"];
+    cip.Ki_lat_ol = j["LATERAL_OL"]["Ki_lat_ol"];
+    cip.Q_lat_ol = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_OL"]["Q_lat_ol"], 2, 2);
+    cip.Gamma_x_lat_ol = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_OL"]["Gamma_x_lat_ol"], 2, 2);
+    cip.Gamma_r_lat_ol = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_OL"]["Gamma_r_lat_ol"], 1, 1);
+    cip.Gamma_Theta_lat_ol = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_OL"]["Gamma_Theta_lat_ol"], 2, 2);
+    cip.use_projection_operator_lat_ol = j["LATERAL_OL"]["use_projection_operator_lat_ol"];
+    cip.dead_zone_delta_lat_ol = j["LATERAL_OL"]["dead_zone_delta_lat_ol"];
+    cip.dead_zone_e0_lat_ol = j["LATERAL_OL"]["dead_zone_e0_lat_ol"];
+    cip.sigma_x_lat_ol = j["LATERAL_OL"]["sigma_x_lat_ol"];
+    cip.sigma_r_lat_ol = j["LATERAL_OL"]["sigma_r_lat_ol"];
+    cip.sigma_Theta_lat_ol = j["LATERAL_OL"]["sigma_Theta_lat_ol"];
+    cip.projection_x_max_x_lat_ol = j["LATERAL_OL"]["projection_x_max_x_lat_ol"];
+    cip.projection_epsilon_x_lat_ol = j["LATERAL_OL"]["projection_epsilon_x_lat_ol"];
+    cip.projection_x_max_r_lat_ol = j["LATERAL_OL"]["projection_x_max_r_lat_ol"];
+    cip.projection_epsilon_r_lat_ol = j["LATERAL_OL"]["projection_epsilon_r_lat_ol"];
+    cip.projection_x_max_Theta_lat_ol = j["LATERAL_OL"]["projection_x_max_Theta_lat_ol"];
+    cip.projection_epsilon_Theta_lat_ol = j["LATERAL_OL"]["projection_epsilon_Theta_lat_ol"];
+
+    // Lateral Innerloop parameters
+    cip.Kp_refmod_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Kp_refmod_lat_il"], 2, 2);
+    cip.Kp_cmd_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Kp_cmd_lat_il"], 2, 2);
+    cip.Ki_cmd_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Ki_cmd_lat_il"], 2, 2);
+    cip.Kp_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Kp_lat_il"], 2, 2);
+    cip.Kd_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Kd_lat_il"], 2, 2);
+    cip.Ki_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Ki_lat_il"], 2, 2);
+    cip.Q_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Q_lat_il"], 2, 2);
+    cip.Gamma_x_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Gamma_x_lat_il"], 2, 2);
+    cip.Gamma_r_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Gamma_r_lat_il"], 2, 2);
+    cip.Gamma_Theta_lat_il = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["LATERAL_IL"]["Gamma_Theta_lat_il"], 4, 4);
+    cip.use_projection_operator_lat_il = j["LATERAL_IL"]["use_projection_operator_lat_il"];
+    cip.dead_zone_delta_lat_il = j["LATERAL_IL"]["dead_zone_delta_lat_il"];
+    cip.dead_zone_e0_lat_il = j["LATERAL_IL"]["dead_zone_e0_lat_il"];
+    cip.sigma_x_lat_il = j["LATERAL_IL"]["sigma_x_lat_il"];
+    cip.sigma_r_lat_il = j["LATERAL_IL"]["sigma_r_lat_il"];
+    cip.sigma_Theta_lat_il = j["LATERAL_IL"]["sigma_Theta_lat_il"];
+    cip.projection_x_max_x_lat_il = j["LATERAL_IL"]["projection_x_max_x_lat_il"];
+    cip.projection_epsilon_x_lat_il = j["LATERAL_IL"]["projection_epsilon_x_lat_il"];
+    cip.projection_x_max_r_lat_il = j["LATERAL_IL"]["projection_x_max_r_lat_il"];
+    cip.projection_epsilon_r_lat_il = j["LATERAL_IL"]["projection_epsilon_r_lat_il"];
+    cip.projection_x_max_Theta_lat_il = j["LATERAL_IL"]["projection_x_max_Theta_lat_il"];
+    cip.projection_epsilon_Theta_lat_il = j["LATERAL_IL"]["projection_epsilon_Theta_lat_il"];
+
 }
 
 // Implementing virtual functios from controller_base
@@ -218,7 +271,35 @@ void mrac_long_lat::init(){
     // Initialize to zero the 2x1 matrix and set the bottom 1x1 block as follows
 	cip.B_lon_il << 0, 1;
 
+    // DISPLAY A DEBUG MESSAGE
+    _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR LONGITUDINAL INNERLOOP");
 
+    // Set the lateral outerloop parameters
+    cip.A_ref_lat_ol(0,0) = 0.0;
+    cip.A_ref_lat_ol(0,1) = 1.0;
+    cip.A_ref_lat_ol(1,0) = -cip.Kp_refmod_lat_ol;
+    cip.A_ref_lat_ol(1,1) = -cip.Kd_refmod_lat_ol;
+
+    cip.B_ref_lat_ol(0,0) = 0.0;
+    cip.B_ref_lat_ol(1,0) = (1.0/MASS);
+
+    // Solve the continuous Lyapunov equation to compute P_lat_ol
+    cip.P_lat_ol = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_lat_ol, cip.Q_lat_ol);
+
+    cip.B_lat_ol << 0, 1;
+
+    // DISPLAY A DEBUG MESSAGE
+    _message_::SIMULATOR_INFO("[SIMCTL]: INITIAL PARAMETERS COMPUTED FOR LATERAL OUTERLOOP");
+
+    // Set the lateral innerloop parameters
+    cip.A_ref_lat_il << -cip.Kp_refmod_lat_il;
+
+    cip.B_ref_lat_il << Eigen::Matrix2d::Identity();
+
+    // Solve the continuous Lyapunov equation to compute P_lat_il
+    cip.P_lat_il = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_lat_il, cip.Q_lat_il);
+
+    cip.B_lat_il << Eigen::Matrix2d::Identity();
     
 }
 
@@ -317,8 +398,11 @@ void mrac_long_lat::update(double time,
         dim.first_run_differentiator = true;
     }
 
-    // 9. Compute the angular rates from angular velocity --------------------------------
+    // 9. Load the angular velocity vector -----------------------------------------
     cim.omega_rot << cim.w_x, cim.w_y, cim.w_z;
+
+    // 10. Compute the Jacobian that rotates angular rates to angular velocities ---
+    cim.Jacobian << ::_shared_::_transformations_::jacobianMatrix(roll, pitch);
     
 
 }
@@ -351,6 +435,25 @@ void mrac_long_lat::assign_from_rk4()
     ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_lon_in, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_lon_in, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_lon_in, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.x_ref_lat_out, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_ref_lat_out_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_lat_out_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_lat_out, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_lat_out, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_lat_out, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_psi_cmd_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_wx_cmd_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_wz_cmd_filter, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.x_ref_lat_in, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_lat_in_orientation_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_ref_lat_in_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_lat_in, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_lat_in, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_lat_in, y, index);
+
 }
 
 // Model function for integration
@@ -381,6 +484,26 @@ void mrac_long_lat::model(const _control_::rk4_array<double, NSI> &y, _control_:
     ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_lon_in_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_lon_in_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_lon_in_dot, dy, index);   
+
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.x_ref_lat_out_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_ref_lat_out, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_lat_out_pos, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_lat_out_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_lat_out_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_lat_out_dot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_psi_cmd_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_wx_cmd_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_wz_cmd_filter, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.x_ref_lat_in_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_lat_in_orientation, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_ref_lat_in, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_lat_in_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_lat_in_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_lat_in_dot, dy, index);  
+    
+
 }
 
 // Function to compute the differentiator
@@ -477,7 +600,7 @@ void mrac_long_lat::compute_outerloop_longitudinal()
     cim.e_ref_lon_out << csm.x_ref_lon_out.head<2>() - cim.r_user_lon_out;
 
     // Compute the reference command input [reference model - user_defined_trajectory]
-    cim.r_cmd_lon_out << MASS * (-cip.Ki_cmd_lon_ol * csm.e_ref_lon_out_I   // Integral term
+    cim.r_cmd_lon_out << MASS * (- cip.Ki_cmd_lon_ol * csm.e_ref_lon_out_I  // Integral term
                                  + cip.Kp_cmd_lon_ol * cim.r_user_lon_out   // Proportional term
                                  + cip.Kd_cmd_lon_ol * cim.v_user_lon_out   // Derivative term
                                  + cim.a_user_lon_out);                     // Feedforward term
@@ -509,7 +632,7 @@ void mrac_long_lat::compute_outerloop_longitudinal()
     // Cache the transpose of the tracking error * P * B
     Eigen::Matrix<double, 4, 1> e_total;
     e_total << cim.e_lon_out_pos, cim.e_lon_out_vel;
-    auto e_transpose_p_b = e_total.transpose() * cip.P_long_ol * cip.B_lon_ol;           
+    auto e_transpose_p_b = e_total.transpose() * cip.P_long_ol * cip.B_lon_ol;     
     
     // Computing the scalar value output from the dead-zone modification modulation function 
     cim.dead_zone_value_lon_out = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(e_total.transpose(),
@@ -807,65 +930,362 @@ void mrac_long_lat::compute_T_upper_T_lower()
 
     // Compute T_upper
     if ( (T_hat < My_lz) && (My > 0) ) {
+        cim.T_upper = 0.0;
         cim.T_upper_regime = 1;
     }
     else if ( (T_hat < - My_lz) && (My < 0) ) {
+        cim.T_upper = -My_lz;
         cim.T_upper_regime = 2;
     }
     else if ( (T_hat >= abs(My_lz)) && (abs(theta_diff) <= theta_max) ) {
+        cim.T_upper = T_hat_2 - My_lz_2;
         cim.T_upper_regime = 3;
     }
     else if ( (T_hat >= abs(My_lz)) && (theta_diff > theta_max) ) {
+        cim.T_upper = 0.0;
         cim.T_upper_regime = 4;
     }
     else if ( (T_hat >= abs(My_lz)) && (theta_diff < -theta_max) ) {
+        cim.T_upper = abs(My_lz);
         cim.T_upper_regime = 5;
     }
     
     // Compute T_lower
     if ( (T_hat < My_lz) && (My > 0) ) {
+        cim.T_lower = My_lz;
         cim.T_lower_regime = 1;
     }
     else if ( (T_hat < - My_lz) && (My < 0) ) {
+        cim.T_lower = 0.0;
         cim.T_lower_regime = 2;
     }
     else if ( (T_hat >= abs(My_lz)) && (abs(theta_diff) <= theta_max) ) {
+        cim.T_lower = T_hat_2 + My_lz_2;
         cim.T_lower_regime = 3;
     }
     else if ( (T_hat >= abs(My_lz)) && (theta_diff > theta_max) ) {
+        cim.T_lower = abs(My_lz);
         cim.T_lower_regime = 4;
     }
     else if ( (T_hat >= abs(My_lz)) && (theta_diff < -theta_max) ) {
+        cim.T_lower = 0.0;
         cim.T_lower_regime = 5;
     }
-
-    std::cout << "T UPPER REGIME: " << cim.T_upper_regime << std::endl;
-    std::cout << "T LOWER REGIME: " << cim.T_lower_regime << std::endl;
 
 }
 
 // Function to compute the outerloop of the lateral controller
 void mrac_long_lat::compute_outerloop_lateral()
 {
-    
+    // Load the state vector 
+    cim.x_lat_out << cim.y, cim.vy;
+
+    // Compute the error 
+    cim.e_lat_out_pos << csm.x_ref_lat_out(0) - cim.x_lat_out(0);
+    cim.e_lat_out_vel << csm.x_ref_lat_out(1) - cim.x_lat_out(1); 
+
+    // Compute the lateral position error between the reference model and the user defined trajectory
+    cim.e_ref_lat_out << csm.x_ref_lat_out(0) - cim.r_user(1);
+
+    // Compute the reference command input [reference model - user_defined_trajectory]
+    cim.r_cmd_lat_out = MASS * (- cip.Ki_cmd_lat_ol * csm.e_ref_lat_out_I(0,0)  // Integral term
+                                 + cip.Kp_cmd_lat_ol * cim.r_user(1)            // Proportional term
+                                 + cip.Kd_cmd_lat_ol * cim.v_user(1)            // Derivative term
+                                 + cim.a_user(1));                              // Feedforward term
+
+    // Compute the reference model
+    cim.x_ref_lat_out_dot << cip.A_ref_lat_ol * csm.x_ref_lat_out
+                           + cip.B_ref_lat_ol * cim.r_cmd_lat_out;     
+                           
+    // Compute the aerodynamic inversion term
+    auto lift_cahce = DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * (ComputeCL(cim.alpha_up) + ComputeCL(cim.alpha_lw));
+    auto drag_cache = DYN_PRESS_COEFF_W * cim.v_norm * cim.v_norm * (ComputeCD(cim.alpha_up) + ComputeCD(cim.alpha_lw));
+    cim.F_inv_lat_out = - drag_cache * (cim.R_J_I(1,0) * cos(cim.alpha_com) 
+                                      + cim.R_J_I(1,2) * sin(cim.alpha_com))
+                        - lift_cahce * (cim.R_J_I(1,0) * sin(cim.alpha_com) 
+                                      - cim.R_J_I(1,2) * cos(cim.alpha_com));
+
+    // Compute the baseline control input
+    cim.F_baseline_lat_out = MASS * (- cip.Kp_lat_ol * cim.e_lat_out_pos(0,0)    // Proportional term
+                                     - cip.Kd_lat_ol * cim.e_lat_out_vel(0,0)    // Derivative term
+                                     - cip.Ki_lat_ol * csm.e_lat_out_I(0,0)      // Integral term
+                                     + cim.x_ref_lat_out_dot(1)                  // Feedforward term
+                                     + cim.F_inv_lat_out);                       // Aerodynamic inversion term
+
+    // Compute the augmented regressor vector
+    cim.regressor_lat_out = cim.F_inv_lat_out / DYN_PRESS_COEFF_W;
+    cim.augmented_regressor_lat_out << cim.F_baseline_lat_out,
+                                       cim.regressor_lat_out;
+
+    // Cache the transpose of the tracking error * P * B
+    Eigen::Matrix<double, 2, 1> e_total;
+    e_total << cim.e_lat_out_pos, cim.e_lat_out_vel;
+    auto e_transpose_p_b = e_total.transpose() * cip.P_lat_ol * cip.B_lat_ol;
+
+    // Computing the scalar value output from the dead-zone modification modulation function
+    cim.dead_zone_value_lat_out = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(e_total.transpose(),
+                                                                                              cip.dead_zone_delta_lat_ol,
+                                                                                              cip.dead_zone_e0_lat_ol);
+
+    // Adaptive laws
+    cim.K_hat_x_lat_out_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_x_lat_ol,
+                                                                                   cim.dead_zone_value_lat_out,
+                                                                                   cim.x_lat_out,
+                                                                                   e_transpose_p_b,
+                                                                                   cip.sigma_x_lat_ol,
+                                                                                   csm.K_hat_x_lat_out);
+
+    cim.K_hat_r_lat_out_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_r_lat_ol,
+                                                                                   cim.dead_zone_value_lat_out,
+                                                                                   cim.r_cmd_lat_out,
+                                                                                   e_transpose_p_b,
+                                                                                   cip.sigma_r_lat_ol,
+                                                                                   csm.K_hat_r_lat_out);
+                                                                                   
+    cim.Theta_hat_lat_out_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(cip.Gamma_Theta_lat_ol,
+                                                                                     cim.dead_zone_value_lat_out,
+                                                                                     cim.augmented_regressor_lat_out,
+                                                                                     e_transpose_p_b,
+                                                                                     cip.sigma_Theta_lat_ol,
+                                                                                     csm.Theta_hat_lat_out);
+
+    // Projection operator - Ball
+    if (cip.use_projection_operator_lat_ol)
+    {
+        // Projection operator K_hat_x_lat_out
+        ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_lat_out)> proj_op_output_K_hat_x_lat_out = 
+            ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_lat_out,
+                                                                        cim.K_hat_x_lat_out_dot,
+                                                                        cip.projection_x_max_x_lat_ol,
+                                                                        cip.projection_epsilon_x_lat_ol);
+
+        cim.K_hat_x_lat_out_dot = proj_op_output_K_hat_x_lat_out.projected_matrix;
+        cim.proj_op_activated_K_hat_x_lat_out = proj_op_output_K_hat_x_lat_out.projection_operator_activated;
+        
+        // Projection operator K_hat_r_lat_out
+        ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_lat_out)> proj_op_output_K_hat_r_lat_out = 
+            ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_r_lat_out,
+                                                                        cim.K_hat_r_lat_out_dot,
+                                                                        cip.projection_x_max_r_lat_ol,
+                                                                        cip.projection_epsilon_r_lat_ol);
+
+        cim.K_hat_r_lat_out_dot = proj_op_output_K_hat_r_lat_out.projected_matrix;
+        cim.proj_op_activated_K_hat_r_lat_out = proj_op_output_K_hat_r_lat_out.projection_operator_activated;   
+        
+        // Projection operator Theta_hat_lat_out
+        ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_lat_out)> proj_op_output_Theta_hat_lat_out = 
+            ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.Theta_hat_lat_out,
+                                                                        cim.Theta_hat_lat_out_dot,
+                                                                        cip.projection_x_max_Theta_lat_ol,
+                                                                        cip.projection_epsilon_Theta_lat_ol);
+
+        cim.Theta_hat_lat_out_dot = proj_op_output_Theta_hat_lat_out.projected_matrix;
+        cim.proj_op_activated_Theta_hat_lat_out = proj_op_output_Theta_hat_lat_out.projection_operator_activated;                                                                        
+    }
+
+     // Adaptive control law
+    cim.F_adaptive_lat_out << csm.K_hat_x_lat_out.transpose() * cim.x_lat_out
+                            + csm.K_hat_r_lat_out.transpose() * cim.r_cmd_lat_out
+                            - csm.Theta_hat_lat_out.transpose() * cim.augmented_regressor_lat_out;
+
+    // Compute the total baseline + adaptive control input
+    cim.F_lat_out = cim.F_baseline_lat_out + cim.F_adaptive_lat_out(0,0);   
 }
 
 // Function to compute the roll and pitch commands for the lateral controller's inner loop
 void mrac_long_lat::compute_roll_pitch_cmd_lateral()
 {
+    // NOTE: We are using the roll filter params for yaw and yaw filter params for roll, this is because
+    //       the filters were tuned for the NED frame of reference, and roll and yaw essentially "flip" in
+    //       the biplane frame of reference.
+
+    // Load up the Force vector
+    cim.Hat_F << cim.F_lon_out(0), cim.F_lat_out, cim.F_lon_out(1);
     
+    // Compute the forces in the body frame
+    cim.Tilde_F = cim.R_I_J * cim.Hat_F;
+
+    // Cache the values
+    double tilde_fy = cim.Tilde_F(1);
+    double tilde_T = cim.Tilde_F.norm();
+    double r1 = tilde_fy / tilde_T;
+
+    // Compute psi_cmd
+    cim.psi_cmd = atan2(r1, sqrt(1 - r1*r1));
+
+    // Compute phi_cmd - We always want to keep the body roll at the origin
+    cim.phi_cmd = 0.0;
+
+    // Compute the internal state for yaw rate
+    cim.internal_state_psi_cmd_filter << A_filter_roll_ref * csm.state_psi_cmd_filter
+                                       + B_filter_roll_ref * cim.psi_cmd;
+
+    // Compute the desired yaw rate
+    cim.phi_cmd_dot = C_filter_roll_ref * csm.state_psi_cmd_filter;               
+    
+    // Compute the desired roll rate
+    cim.phi_cmd_dot = 0.0;
+
+    // Compute the desired p_cmd and r_cmd
+    Eigen::Matrix<double, 2, 1> p_cmd_r_cmd_vector;
+    Eigen::Matrix<double, 2, 2> reduced_J_matrix;
+    Eigen::Matrix<double, 2, 1> phi_dot_cmd_psi_dot_cmd_vector;
+    Eigen::Matrix<double, 2, 1> nonlinearity_vector;
+
+    phi_dot_cmd_psi_dot_cmd_vector << cim.phi_cmd_dot,  cim.psi_cmd_dot;
+    nonlinearity_vector << 0, sin(cim.roll) * cim.x_lon_in(1);
+    reduced_J_matrix << 1.0,                -sin(cim.pitch),
+                        0.0, cos(cim.pitch) * cos(cim.roll);
+    p_cmd_r_cmd_vector << reduced_J_matrix * phi_dot_cmd_psi_dot_cmd_vector - nonlinearity_vector;  
+    
+    // Assign p_cmd and r_cmd
+    cim.wx_cmd = p_cmd_r_cmd_vector(0);
+    cim.wz_cmd = p_cmd_r_cmd_vector(1);
+
+    // Compute the internal state for \dot{p}_cmd an \dot{r}_cmd
+    cim.internal_state_wx_cmd_filter << A_filter_yaw_dot_ref * csm.state_wx_cmd_filter
+                                      + B_filter_yaw_dot_ref * cim.wx_cmd;
+
+    cim.internal_state_wz_cmd_filter << A_filter_roll_dot_ref * csm.state_wz_cmd_filter
+                                      + B_filter_roll_dot_ref * cim.wz_cmd;
+                                      
+    // Compute the desired angular acceleration
+    cim.wx_cmd_dot = C_filter_yaw_dot_ref * csm.state_wx_cmd_filter;
+    cim.wz_cmd_dot = C_filter_roll_dot_ref * csm.state_wz_cmd_filter;
+
 }
 
 // Function to compute the innerloop of the lateral controller
 void mrac_long_lat::compute_innerloop_lateral()
 {
+    // Load the state vector
+    cim.x_lat_in << cim.w_x, cim.w_z;
+
+    // Compute the error in orientation [actual - desired]
+    cim.e_lat_in_orientation(0) = cim.roll - cim.phi_cmd;
+    cim.e_lat_in_orientation(1) = cim.yaw - cim.psi_cmd;
+
+    // Compute the error in angular velocity
+    cim.e_lat_in_angular_vel << cim.x_lat_in - csm.x_ref_lat_in;
+
+    // Compute the error between the angular velocity reference model and the desired angular velocity
+    cim.e_ref_lat_in(0) = csm.x_ref_lat_in(0) - cim.wx_cmd;
+    cim.e_ref_lat_in(0) = csm.x_ref_lat_in(1) - cim.wz_cmd;
+
+    // Compute the reference command input [reference model - user_defined_trajectory]
+    Eigen::Matrix<double, 2, 1> w_cmd;
+    Eigen::Matrix<double, 2, 1> w_cmd_dot;
+    w_cmd << cim.wx_cmd, cim.wz_cmd;
+    w_cmd_dot << cim.wx_cmd_dot, cim.wz_cmd_dot;
+    cim.r_cmd_lat_in << cip.Kp_cmd_lat_il * w_cmd - cip.Ki_cmd_lat_il * csm.e_ref_lat_in_I + w_cmd_dot;
+
+    // Compute the reference model
+    cim.x_ref_lat_in_dot << cip.A_ref_lat_il * csm.x_ref_lat_in + cip.B_ref_lat_il * cim.r_cmd_lat_in;
+
+    // Baseline Control input
+    Eigen::Matrix<double, 2, 2> inertia_matrix;
+    inertia_matrix(0,0) = inertia_matrix_b(0,0);
+    inertia_matrix(1,1) = inertia_matrix_b(2,2);
+    inertia_matrix(0,1) = 0.0;
+    inertia_matrix(1,0) = 0.0;
+    cim.M_baseline_lat_in << inertia_matrix * (- cip.Kp_lat_il * cim.e_lat_in_orientation       // Proportional term
+                                               - cip.Kd_lat_il * cim.e_lat_in_angular_vel       // Derivative term
+                                               - cip.Ki_lat_il * csm.e_lat_in_orientation_I     // Integral term
+                                               + cim.x_ref_lat_in_dot);
+
+    // Compute the augmented regressor vector    
+    cim.regressor_lat_in << cim.w_x * cim.w_y,
+                            cim.w_z * cim.w_y;
+    cim.augmented_regressor_lat_in << cim.M_baseline_lat_in,
+                                      cim.regressor_lat_in;
+                                      
+    // Cache the transpose of the tracking error * P * B
+    auto e_transpose_p_b = cim.e_lat_in_angular_vel.transpose() * cip.P_lat_il * cip.B_lat_il;
     
+    // Computing the scalar value output from the dead-zone modification modulation function
+    cim.dead_zone_value_lat_in = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(cim.e_lat_in_angular_vel.transpose(),
+                                                                                             cip.dead_zone_delta_lat_il,
+                                                                                             cip.dead_zone_e0_lat_il);
+
+    // Adaptive laws
+    cim.K_hat_x_lat_in_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_x_lat_il,
+                                                                                   cim.dead_zone_value_lat_in,
+                                                                                   cim.x_lat_in,
+                                                                                   e_transpose_p_b,
+                                                                                   cip.sigma_x_lat_il,
+                                                                                   csm.K_hat_x_lat_in);
+
+    cim.K_hat_r_lat_in_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_r_lat_il,
+                                                                                   cim.dead_zone_value_lat_in,
+                                                                                   cim.r_cmd_lat_in,
+                                                                                   e_transpose_p_b,
+                                                                                   cip.sigma_r_lat_il,
+                                                                                   csm.K_hat_r_lat_in);
+
+    cim.Theta_hat_lat_in_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(cip.Gamma_Theta_lat_il,
+                                                                                    cim.dead_zone_value_lat_in,
+                                                                                    cim.augmented_regressor_lat_in,
+                                                                                    e_transpose_p_b,
+                                                                                    cip.sigma_Theta_lat_il,
+                                                                                    csm.Theta_hat_lat_in);
+
+    // Projection operator - Ball
+    if (cip.use_projection_operator_lat_il)
+    {
+        // Projection operator K_hat_x_lat_in
+        ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_lat_in)> proj_op_output_K_hat_x_lat_in = 
+            ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_lat_in,
+                                                                        cim.K_hat_x_lat_in_dot,
+                                                                        cip.projection_x_max_x_lat_il,
+                                                                        cip.projection_epsilon_x_lat_il);
+
+        cim.K_hat_x_lat_in_dot = proj_op_output_K_hat_x_lat_in.projected_matrix;
+        cim.proj_op_activated_K_hat_x_lat_in = proj_op_output_K_hat_x_lat_in.projection_operator_activated;
+        
+        // Projection operator K_hat_r_lat_in
+        ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_lat_in)> proj_op_output_K_hat_r_lat_in = 
+            ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_r_lat_in,
+                                                                        cim.K_hat_r_lat_in_dot,
+                                                                        cip.projection_x_max_r_lat_il,
+                                                                        cip.projection_epsilon_r_lat_il);
+
+        cim.K_hat_r_lat_in_dot = proj_op_output_K_hat_r_lat_in.projected_matrix;
+        cim.proj_op_activated_K_hat_r_lat_in = proj_op_output_K_hat_r_lat_in.projection_operator_activated;   
+        
+        // Projection operator Theta_hat_lon_in
+        ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_lat_in)> proj_op_output_Theta_hat_lat_in = 
+            ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.Theta_hat_lat_in,
+                                                                        cim.Theta_hat_lat_in_dot,
+                                                                        cip.projection_x_max_Theta_lat_il,
+                                                                        cip.projection_epsilon_Theta_lat_il);
+
+        cim.Theta_hat_lat_in_dot = proj_op_output_Theta_hat_lat_in.projected_matrix;
+        cim.proj_op_activated_Theta_hat_lat_in = proj_op_output_Theta_hat_lat_in.projection_operator_activated;   
+    }
+
+    // Adaptive control law
+    cim.M_adaptive_lat_in << csm.K_hat_x_lat_in.transpose() * cim.x_lat_in
+                           + csm.K_hat_r_lat_in.transpose() * cim.r_cmd_lat_in
+                           - csm.Theta_hat_lat_in.transpose() * cim.augmented_regressor_lat_in;
+
+    // Compute the total baseline + adaptive control input
+    cim.M_lat_in << cim.M_baseline_lat_in + cim.M_adaptive_lat_in;
 }
 
 // Function to compute the normalied thrusts
 void mrac_long_lat::compute_normalized_thrusts()
 {
+    // Cache the mixer matrix
+    Eigen::Matrix<double, 4, 4> mixer_matrix;
     
+    // CODE THIS PLEASE GIRI - GIRI
+
+    // Cache the total control input vector u = [T_upper T_lower Mx Mz]^{\rm T}
+    Eigen::Matrix<double, 4, 1> u;
+    u << cim.T_upper, cim.T_lower, cim.M_lat_in(0), cim.M_lat_in(1);
+
+    // Compute the individual thrusts in Newtons
+    cim.Thrust << mixer_matrix * u;
 }
 
 // Function that is called in sim-bridge.cpp
@@ -890,10 +1310,13 @@ void mrac_long_lat::run(const double time_step_rk4_)
     compute_T_upper_T_lower();
 
     // 7. Compute the outerloop for the lateral controller
+    compute_outerloop_lateral();
 
     // 8. Compute the innerloop commands for the lateral controller
+    compute_roll_pitch_cmd_lateral();
 
     // 9. Compute the innerloop for the lateral controller
+    compute_innerloop_lateral();
 
     // 10. Compute the normalized thrust - Final Step
     // PLACEHOLDER TO GIVE RANDOM INPUTS
