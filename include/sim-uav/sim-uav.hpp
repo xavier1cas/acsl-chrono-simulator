@@ -575,7 +575,7 @@ public:
     virtual void SetThrustSetPoint(size_t idx, double thrustSP) = 0;
 
     // Function to set the thrust, mx, my, mz at the com of the UAV
-    virtual void SetControlInputAtCOM(double u1, double u2, double u3, double u4);
+    virtual void SetControlInputAtCOM(double u1, double u2, double u3, double u4) = 0;
 
     // Function to compute and apply the aerodynamic chassis drag force
     virtual void SetChassisDrag() = 0;

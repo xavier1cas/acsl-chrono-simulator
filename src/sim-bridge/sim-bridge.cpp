@@ -108,6 +108,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
     this->sim_stop_time = static_cast<double>(config_file["debug"]["sim_stop_time"].as_float()); 
     this->developer_mode = config_file["debug"]["developer_mode"].as_bool();
+    this->treat_as_rigid_body = config_file["debug"]["treat_as_rigid_body"].as_bool();
 
     // ------------------------------------------------------------------------
     // STEP 4.1 – Extrack the aerodynamic mode and debugging settings
@@ -255,6 +256,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     _message_::SIMULATOR_INFO("[SIMBRG]:  - LOG PHYSICS STATES TO FILE: "   + ::_shared_::_conversions_::bool2string(log2file));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - SIMULATION HARD DEBUG STOP: "   + ::_shared_::_conversions_::bool2string(sim_debug_stop));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - SIMULATION STOP TIME (s): "     + std::to_string(sim_stop_time));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - TREAT UAV AS RIGID BODY: "      + ::_shared_::_conversions_::bool2string(treat_as_rigid_body));
 
 }
 
@@ -408,64 +410,74 @@ void simbridge::UpdateVisualizationSystem()
 //     physics simulation or perform real-time synchronization.
 // =====================================================================================================================
 void simbridge::UpdateControlAction() {
-    int propCount = m_uav->GetPropCount();
-    switch (propCount) {
-        case 1: // Single-prop
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            break;
-        case 2: // Twin-prop
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            break;
-        case 3: // Tricopters
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-            break;
-        case 4: // Quadcopters
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-            break;
-        case 5: // Weird-stuff-I-guess
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-            break;
-        case 6: // Hexacopters
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-            m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
-            break;
-        case 7: // Weirder-stuff-I-think
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-            m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
-            m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
-            break;
-        case 8: // Octocopters
-            m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-            m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-            m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-            m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-            m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-            m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
-            m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
-            m_uav->SetThrustSetPoint(8, m_ctrl->get_t8());
-            break;
-        default:
-            _message_::SIMULATOR_ERROR("[SIMBRG]: ONLY 1-8 ACTUATORS SUPPORTED. YOU HAVE" 
-                                       "ASKED FOR SOMETHING I CANNOT GIVE YOU - GIRI");
-            break;
+    
+    // If the body is to be treated as a rigid body, then
+    if (this->treat_as_rigid_body) {
+        m_uav->SetControlInputAtCOM(m_ctrl->get_u1(),
+                                    m_ctrl->get_u2(),
+                                    m_ctrl->get_u3(),
+                                    m_ctrl->get_u4());
+    }    
+    else {
+        int propCount = m_uav->GetPropCount();
+        switch (propCount) {
+            case 1: // Single-prop
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                break;
+            case 2: // Twin-prop
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                break;
+            case 3: // Tricopters
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+                break;
+            case 4: // Quadcopters
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+                break;
+            case 5: // Weird-stuff-I-guess
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+                break;
+            case 6: // Hexacopters
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+                m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+                break;
+            case 7: // Weirder-stuff-I-think
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+                m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+                m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
+                break;
+            case 8: // Octocopters
+                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+                m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+                m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
+                m_uav->SetThrustSetPoint(8, m_ctrl->get_t8());
+                break;
+            default:
+                _message_::SIMULATOR_ERROR("[SIMBRG]: ONLY 1-8 ACTUATORS SUPPORTED. YOU HAVE" 
+                                        "ASKED FOR SOMETHING I CANNOT GIVE YOU - GIRI");
+                break;
+        }
     }
 }
 

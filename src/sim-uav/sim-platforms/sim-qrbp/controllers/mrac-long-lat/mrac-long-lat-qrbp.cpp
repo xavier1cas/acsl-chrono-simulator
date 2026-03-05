@@ -1275,6 +1275,9 @@ void mrac_long_lat::compute_innerloop_lateral()
 // Function to compute the normalied thrusts
 void mrac_long_lat::compute_normalized_thrusts()
 {
+    // Set the control forces directly to com
+    this->com_u << cim.T_hat, cim.M_lat_in(1), cim.M_lon_in(0), cim.M_lat_in(0);
+
     // Cache the mixer matrix
     Eigen::Matrix<double, 4, 4> mixer_matrix;
     
