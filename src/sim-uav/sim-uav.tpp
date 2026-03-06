@@ -1393,13 +1393,14 @@ m_states simuav<nop>::GetUAVStateData()
     m_state.quat_bp = uav_biplane_ned.GetRot();
 
     // Euler angles from quaternion (XYZ Cardan convention)
-    // m_state.eul = m_state.quat.GetCardanAnglesXYZ();
-    m_state.eul = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat);
+    m_state.eul = m_state.quat.GetCardanAnglesXYZ();
+    // m_state.eul = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat);
 
-    // Euler angles from quaternion (XYZ Cardan convention)
-    // auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
-    auto eul_bp_raw = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat_bp);
-    m_state.eul_bp = ::_shared_::_compute_::RegularizeCardanXYZ(eul_bp_raw);    
+    // Euler angles from quaternion (XYZ Cardan convention) -  Nasty fix
+    auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
+    // auto eul_bp_raw = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat_bp);
+    // m_state.eul_bp = ::_shared_::_compute_::RegularizeCardanXYZ(eul_bp_raw, m_state.eul);
+    m_state.eul_bp = eul_bp_raw;
 
     // --- Angular velocity (in UAV local frame) ---
     m_state.ovel = GetUAVChassis().body->GetAngVelLocal();

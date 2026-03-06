@@ -91,8 +91,8 @@
         [0.0, 0.0, 0.0, 0.0, 1.0]
       ]
     },
-    "epsilon_x_lon_ol": 1,
-    "epsilon_z_lon_ol": 16,
+    "epsilon_x_lon_ol": 10,
+    "epsilon_z_lon_ol": 30,
     
     "use_projection_operator_lon_out": true,
     
@@ -153,7 +153,7 @@
       ]
     },
 
-    "theta_max": 5.0,
+    "theta_max": 20,
 
     "use_projection_operator_lon_il": true,
 

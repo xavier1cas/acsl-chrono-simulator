@@ -1,6 +1,6 @@
 name: fto
 codebase: cpp
-alpha_factor: 0.3365
+alpha_factor: 0.35
 numsamples: 200
 tstep: 0.01
 hover_time: 2.0
@@ -23,11 +23,11 @@ waypoints:
     z: -1.1
     time: 1.75
   - x: 13.0
-    y: 0.0
+    y: -3.0
     z: -1.7
     time: 6.2
   - x: 20.0
-    y: 0.0
+    y: -5.0
     z: -2.2
     time: 4.0
   

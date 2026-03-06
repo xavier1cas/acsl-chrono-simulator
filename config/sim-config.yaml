@@ -48,7 +48,7 @@ mode:
   enable_flightstack_loop: false
   # Set to true to use the biplane frame in control computation
   # Set to false to use the quadcopter frame in control computation
-  enable_biplane_frame_data: false
+  enable_biplane_frame_data: true
 
 # ============================================================================
 # DEBUGGING toggles
@@ -61,12 +61,12 @@ debug:
   # Set to true if you want to stop the simulation at a given time (in seconds)
   sim_debug_stop: false
   # Set the value at which you want the simulation to stop (in seconds)
-  sim_stop_time: 1.0
+  sim_stop_time: 2.89
   # Set the value to true if you want the system to import model and not run 
   # anything else
   developer_mode: false
   # Set the value to true if you want to use u1-u4 instead of thrusts 
-  treat_as_rigid_body: true
+  treat_as_rigid_body: false
 
 # ============================================================================
 # UAV Platform Selection
@@ -88,9 +88,9 @@ platform:
 # ============================================================================
 aerodynamics:
   # Set to true to import the chassis drag aerodynamics
-  chassis_drag: true
+  chassis_drag: false
   # Set to true to import the wing aerodynamics
-  wing_aero: true
+  wing_aero: false
 
 # ============================================================================
 # CONTROLLER Selection
