@@ -244,6 +244,31 @@ std::string bool2string(bool value);
  */
 chrono::ChVector3d QuaternionToEulerAnglesRPY_321(const chrono::ChQuaterniond& q);
 
+/**
+ * @brief Compute roll–pitch–yaw-like Euler angles from a unit quaternion
+ *        using an internal 2–3–1 (Y–Z–X) rotation sequence.
+ *
+ * The quaternion is first converted to 2–3–1 Euler angles
+ * (rotation about Y, then Z, then X). These angles are then
+ * mapped into a 3–2–1-style roll–pitch–yaw triplet for
+ * plotting and logging:
+ *
+ *   x = roll_321_like  (about body X; from 2–3–1 gamma)
+ *   y = pitch_321_like (about body Y; from 2–3–1 beta)
+ *   z = yaw_321_like   (about body Z; from 2–3–1 alpha)
+ *
+ * This representation is intended to remain well-behaved
+ * near pitch ≈ 90 deg where a pure 3–2–1 parametrization
+ * suffers from gimbal lock.
+ *
+ * @param q Unit quaternion (Chrono convention: e0 = w, e1 = x, e2 = y, e3 = z).
+ * @return chrono::ChVector3d containing [roll_321_like, pitch_321_like,
+ *         yaw_321_like] in radians.
+ */
+chrono::ChVector3d QuaternionToEulerAnglesRPY_321_from231(
+    const chrono::ChQuaterniond& q);
+
+
 } // namespace _conversions_
 
 // ============================================================================================================

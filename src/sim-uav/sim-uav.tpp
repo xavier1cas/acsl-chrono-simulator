@@ -1397,8 +1397,8 @@ m_states simuav<nop>::GetUAVStateData()
     // m_state.eul = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat);
 
     // Euler angles from quaternion (XYZ Cardan convention) -  Nasty fix
-    auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
-    // auto eul_bp_raw = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321(m_state.quat_bp);
+    // auto eul_bp_raw = m_state.quat_bp.GetCardanAnglesXYZ();
+    auto eul_bp_raw = ::_shared_::_conversions_::QuaternionToEulerAnglesRPY_321_from231(m_state.quat_bp);
     // m_state.eul_bp = ::_shared_::_compute_::RegularizeCardanXYZ(eul_bp_raw, m_state.eul);
     m_state.eul_bp = eul_bp_raw;
 

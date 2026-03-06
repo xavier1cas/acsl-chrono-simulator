@@ -275,6 +275,81 @@ chrono::ChVector3d QuaternionToEulerAnglesRPY_321(const chrono::ChQuaterniond& q
     return euler;
 }
 
+// Quaternion -> Euler via 2-3-1 (Y-Z-X) sequence,
+// then mapped into roll/pitch/yaw slots as if 3-2-1.
+chrono::ChVector3d QuaternionToEulerAnglesRPY_321_from231(const chrono::ChQuaterniond& q)
+{
+    // Output will be: x=roll_321_like, y=pitch_321_like, z=yaw_321_like
+    chrono::ChVector3d euler_rpy;
+
+    // Chrono quaternion: (e0,e1,e2,e3) = (w,x,y,z)
+    double a = q.e0();
+    double b = q.e1();
+    double c = q.e2();
+    double d = q.e3();
+
+    // Precompute products
+    double aa = a * a;
+    double ab = a * b;
+    double ac = a * c;
+    double ad = a * d;
+    double bb = b * b;
+    double bc = b * c;
+    double bd = b * d;
+    double cc = c * c;
+    double cd = c * d;
+    double dd = d * d;
+
+    // Full DCM (body -> inertial) from quaternion
+    double dcm00 = aa + bb - cc - dd;
+    double dcm01 = 2.0 * (bc - ad);
+    double dcm02 = 2.0 * (ac + bd);
+
+    double dcm10 = 2.0 * (bc + ad);
+    double dcm11 = aa - bb + cc - dd;
+    double dcm12 = 2.0 * (cd - ab);
+
+    double dcm20 = 2.0 * (bd - ac);
+    double dcm21 = 2.0 * (ab + cd);
+    double dcm22 = aa - bb - cc + dd;
+
+    // --- 2-3-1 (Y-Z-X) extraction ---
+    // Angles: alpha about 2, beta about 3, gamma about 1
+    // Using a consistent set: beta = asin(-C21)
+    double s = -dcm21;
+    if (s < -1.0) s = -1.0;
+    if (s >  1.0) s =  1.0;
+
+    double beta  = std::asin(s);    // middle (3-axis) angle
+    double alpha, gamma;
+
+    // Gimbal lock around |beta| = 90 deg
+    if (std::fabs(beta - M_PI / 2.0) < 1.0e-3) {
+        gamma = 0.0;
+        alpha = std::atan2(dcm20, dcm22);
+    } else if (std::fabs(beta + M_PI / 2.0) < 1.0e-3) {
+        gamma = 0.0;
+        alpha = std::atan2(-dcm20, -dcm22);
+    } else {
+        alpha = std::atan2(dcm20, dcm22);   // rotation about axis-2
+        gamma = std::atan2(dcm01, dcm11);   // rotation about axis-1
+    }
+
+    // Map 2-3-1 angles into 3-2-1-style roll/pitch/yaw slots for plotting:
+    //   roll_321_like  <- gamma (about body-1)
+    //   pitch_321_like <- beta  (about body-3)
+    //   yaw_321_like   <- alpha (about body-2)
+    double roll_321_like  = gamma;
+    double pitch_321_like = -1.0 * alpha;
+    double yaw_321_like   = -1.0 * beta;
+
+    euler_rpy.x() = roll_321_like;
+    euler_rpy.y() = pitch_321_like;
+    euler_rpy.z() = yaw_321_like;
+    return euler_rpy;
+}
+
+
 } // namespace _conversions_
 
 

@@ -52,10 +52,12 @@ solver:
   PSOR: true
   
   # Solver iteration settings - Maximum solver iterations per timestep
-  MaxIterations: 1000 
+  # NOTE: Depends on CPU architecture, you might have to increase this if
+  #       you repeatedly encounter nan values in the states.
+  MaxIterations: 10000
   
   # Warm start option — speeds up convergence by using previous solutions
-  EnableWarmStart: true
+  EnableWarmStart: false
 
   # Step size - Size of each iteration step
   StepSize: 5e-3
