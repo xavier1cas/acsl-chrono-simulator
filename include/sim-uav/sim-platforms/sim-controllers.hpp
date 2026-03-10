@@ -75,6 +75,7 @@
 #include "mrac-omega-qrbp.hpp"
 #include "mrac-observer-qrbp.hpp"
 #include "mrac-long-lat-qrbp.hpp"
+#include "pid-quaternion-qrbp.hpp"
 // #include "pid-x8copter.hpp"
 // #include "mrac-x8copter.hpp"
 // #include "pid-acslquad.hpp"
@@ -131,6 +132,7 @@ struct controllers
         bool mrac_omega{};      // MRAC omega controller for QRBP
         bool mrac_observer{};   // MRAC omega controller with adaptive observer
         bool mrac_long_lat{};   // MRAC longitudinal/lateral controller for QRBP
+        bool pid_quaternion{};  // PID with quaternion control for QRBP
     } qrbp;
 
     // -------------------------------------------------------------------------
@@ -168,6 +170,7 @@ struct controllers
             {"qrbp", "mrac_omega", qrbp.mrac_omega},
             {"qrbp", "mrac_observer", qrbp.mrac_observer},
             {"qrbp", "mrac_long_lat", qrbp.mrac_long_lat},
+            {"qrbp", "pid_quaternion", qrbp.pid_quaternion},
             {"x8copter", "pid", x8copter.pid},
             {"x8copter", "mrac", x8copter.mrac},
             {"x8copter", "tlmrac", x8copter.tlmrac},
@@ -227,6 +230,10 @@ struct controllers
         else if (active.first == "qrbp" && active.second == "mrac_long_lat") {
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC LONGITUDINAL/LATERAL CONTROLLER TO QRBP");
             return std::make_unique< ::_acsl_::_qrbp_::_mrac_long_lat_::mrac_long_lat >(logger, trajectory);
+        }
+        else if (active.first == "qrbp" && active.second == "pid_quaternion") {
+            return std::make_unique< ::_acsl_::_qrbp_::_pid_quaternion_::pid_quaternion >(logger, trajectory);
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING PID QUATERNION CONTROLLER TO QRBP");
         }
         // [Add more else if branches for other controllers as needed]
         // e.g., x8copter and acslquad controllers
