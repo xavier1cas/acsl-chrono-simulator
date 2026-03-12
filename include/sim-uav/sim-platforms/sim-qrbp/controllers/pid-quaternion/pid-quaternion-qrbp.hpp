@@ -54,16 +54,21 @@ constexpr int NSI = 16;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
-    Eigen::Matrix<double, 3, 3> Kp_tran; // Proportional Gains for the translational control
-    Eigen::Matrix<double, 3, 3> Ki_tran; // Integral Gains for the translational control
-    Eigen::Matrix<double, 3, 3> Kd_tran; // Derivative Gains for the translational control
-    Eigen::Matrix<double, 3, 3> Kp_att;  // Proportional Gains for the rotational control
-    Eigen::Matrix<double, 3, 3> Kd_att;  // Derivative Gains for the rotational control
+    Eigen::Matrix<double, 3, 3> Kp_tran;            // Proportional Gains for the translational control
+    Eigen::Matrix<double, 3, 3> Ki_tran;            // Integral Gains for the translational control
+    Eigen::Matrix<double, 3, 3> Kd_tran;            // Derivative Gains for the translational control
+    Eigen::Matrix<double, 3, 3> Kp_att;             // Proportional Gains for the rotational control
+    Eigen::Matrix<double, 3, 3> Kd_att;             // Derivative Gains for the rotational control
+    Eigen::Matrix<double, 2, 2> A_filter_Qd;        // Differentiator A matrix for q_d
+    Eigen::Matrix<double, 2, 1> B_filter_Qd;        // Differentiator B matrix for q_d
+    Eigen::Matrix<double, 1, 2> C_filter_Qd;        // Differentiator C matrix for q_d
+    Eigen::Matrix<double, 2, 2> A_filter_omega_d;   // Differentiator A matrix for omega_d
+    Eigen::Matrix<double, 2, 1> B_filter_omega_d;   // Differentiator B matrix for omega_d
+    Eigen::Matrix<double, 1, 2> C_filter_omega_d;   // Differentiator C matrix for omega_d
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
 struct controller_integrated_state_members {
-    Eigen::Matrix<double, 3, 1> e_tran_pos_I;           // Translational integral error
     Eigen::Matrix<double, 2, 1> state_q_d0_filter;      // States for filter
     Eigen::Matrix<double, 2, 1> state_q_d1_filter;      // States for filter
     Eigen::Matrix<double, 2, 1> state_q_d2_filter;      // States for filter
@@ -71,6 +76,7 @@ struct controller_integrated_state_members {
     Eigen::Matrix<double, 2, 1> state_omega_x_d_filter; // States for filter
     Eigen::Matrix<double, 2, 1> state_omega_y_d_filter; // States for filter
     Eigen::Matrix<double, 2, 1> state_omega_z_d_filter; // States for filter
+    Eigen::Matrix<double, 3, 1> e_tran_pos_I;           // Translational integral error
 };
 
 // Structure for all the internal members of the controller
@@ -80,6 +86,7 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 1> r_dot_user;                        // Translational user veloctiy command
     Eigen::Matrix<double, 3, 1> r_ddot_user;                       // Translational user acceleration command 
     double psi_user;                                               // Rotational command for psi
+    double psi_user_unwrapped;                                     // Rotational command for psi without the -pi to pi jumps but as a continuous signal
     Eigen::Matrix<double, 3, 1> x_tran_pos;                        // Translational position
     Eigen::Matrix<double, 3, 1> x_tran_vel;                        // Translational velocity
     Eigen::Matrix<double, 3, 1> e_tran_pos;                        // Translational error in position
@@ -107,7 +114,11 @@ struct controller_internal_members {
 
     Eigen::Quaterniond q;                                          // Quaternion
     Eigen::Matrix<double, 3, 1> omega;                             // Angular velocity
-
+    Eigen::Quaterniond q_e;                                        // Error Quaternion
+    Eigen::Matrix<double, 3, 1> q_e_vec;                           // Error Quaternion vector used in the baseline 
+    Eigen::Matrix<double, 3, 1> omega_e;                           // Error in the angular velocities
+     Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input 
+    Eigen::Matrix<double, 3, 1> tau_rot;                           // Rotational Control action
 
     Eigen::Matrix<double, 4, 1> u;                                 // [thrust; mx; my; mz]
     Eigen::Matrix<double, 4, 1> Thrust;                            // Newtons
@@ -232,6 +243,9 @@ private:
 
     // Define the internal integrated state members of the controller
     ::_acsl_::_qrbp_::_pid_quaternion_::controller_integrated_state_members csm; 
+
+    // Member to unwrap the heading for heading command
+    ::_shared_::_compute_::SimplePsiUnwrapState psiState;
 
 private:
     // -------------------------------------------------------------------------

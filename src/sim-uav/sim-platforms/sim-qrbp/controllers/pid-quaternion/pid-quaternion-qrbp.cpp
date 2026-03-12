@@ -78,6 +78,14 @@ void pid_quaternion::read_params(const std::string& jsonFile)
     cip.Kp_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KP_rotational"], 3, 3);
     cip.Kd_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KD_rotational"], 3, 3);
 
+    // Differentiator matrices
+    cip.A_filter_Qd = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_Qd"], 2, 2);
+    cip.B_filter_Qd = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["B_filter_Qd"], 2, 1);
+    cip.C_filter_Qd = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["C_filter_Qd"], 1, 2);
+    cip.A_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_omega_d"], 2, 2);
+    cip.B_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["B_filter_omega_d"], 2, 1);
+    cip.C_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["C_filter_omega_d"], 1, 2);
+
 }
 
 // Implementing virutal functions from controller_base
@@ -133,6 +141,7 @@ void pid_quaternion::update(double time,
     cim.r_dot_user = m_traj.GetVelocity();
     cim.r_ddot_user = m_traj.GetAcceleration();   
     cim.psi_user = m_traj.GetEulerAngle()(2);
+    cim.psi_user_unwrapped = ::_shared_::_compute_::unwrapPsiSimple(cim.psi_user, this->psiState);
 
     // 3. Capture the time before the execution of the controller ------------------
     cim.alg_start_time = std::chrono::high_resolution_clock::now();
@@ -194,8 +203,12 @@ void pid_quaternion::compute_u1_q_d()
 {
 	// Compute the desired quaternion
     cim.f_d = cim.mu_tran_I.norm();
+    
+    // Assign the thrust setpoint to the control vector
+    cim.u(0) = cim.f_d;
 
     // Compute the desired axis for the thrust in a computation safe way
+    // In problems of practical interest \min{\| f_d \|} = MASS * GRAVITY.
     if (cim.f_d > 1e-6) {
         cim.f_d_hat_I = cim.mu_tran_I / cim.f_d;
     }
@@ -204,6 +217,87 @@ void pid_quaternion::compute_u1_q_d()
         cim.f_d_hat_I << 0.0, 0.0, 1.0;
     }
 
+    cim.q_align = ::_shared_::_compute_::qFromTwoVectors(e3_basis, -cim.f_d_hat_I);
+
+    // Geodesic sign choice for the shortest rotation
+    // Dot product in ℝ⁴ (w, x, y, z)
+    double dot_q = cim.q.vec().dot(cim.q_align.vec()) + cim.q.w() * cim.q_align.w();
+
+    // If dot < 0, flip q_align; otherwise keep as is
+    cim.q_align_star = (dot_q < 0.0)
+        ? Eigen::Quaterniond(-cim.q_align.w(),
+                             -cim.q_align.x(),
+                             -cim.q_align.y(),
+                             -cim.q_align.z())
+        : cim.q_align;
+
+    // Construct the yaw quaternion - NEEDS FIXING IN THEORY
+    Eigen::AngleAxisd yaw_aa(0.0, Eigen::Vector3d::UnitZ());
+    cim.q_yaw = Eigen::Quaterniond(yaw_aa);
+
+    // Finally construct the desired orientaiton quaternion
+    cim.q_d = cim.q_yaw * cim.q_align_star;
+
+    // Normalize to guard against numerical drift
+    cim.q_d.normalize();
+
+    // Fill up the filter dynamics for integration
+    cim.internal_state_q_d0_filter << cip.A_filter_Qd * csm.state_q_d0_filter
+                                    + cip.B_filter_Qd * cim.q_d.w();
+
+    cim.internal_state_q_d1_filter << cip.A_filter_Qd * csm.state_q_d1_filter
+                                    + cip.B_filter_Qd * cim.q_d.x();
+                                    
+    cim.internal_state_q_d2_filter << cip.A_filter_Qd * csm.state_q_d2_filter
+                                    + cip.B_filter_Qd * cim.q_d.y();                                    
+
+    cim.internal_state_q_d3_filter << cip.A_filter_Qd * csm.state_q_d3_filter
+                                    + cip.B_filter_Qd * cim.q_d.z();  
+                                    
+    // Reconstruct the raw differentiated signal
+    cim.q_signal_dot = Eigen::Quaterniond(cip.C_filter_Qd * csm.state_q_d0_filter,
+                                          cip.C_filter_Qd * csm.state_q_d1_filter,
+                                          cip.C_filter_Qd * csm.state_q_d2_filter,
+                                          cip.C_filter_Qd * csm.state_q_d3_filter);
+
+    // Enforce the orthogonality condition
+    // Cache the projection q_d^T q_signal_dot
+    double proj = cim.q_d.w() * cim.q_signal_dot.w()
+                + cim.q_d.vec().dot(cim.q_signal_dot.vec());
+
+    // q_d_dot = q_signal_dot - proj * q_d;
+    cim.q_d_dot.w() = cim.q_signal_dot.w() - proj * cim.q_d.w();
+    cim.q_d_dot.vec() = cim.q_signal_dot.vec() - proj * cim.q_d.vec();
+
+    // Compute desired angular velocity ω_d from q and q_d_dot
+    // q_conj = [ q0; -qv ] - Split into scalar and vector parts 
+    Eigen::Quaterniond q_conj = cim.q.conjugate();
+
+    const double a0           = q_conj.w();
+    const Eigen::Vector3d av  = q_conj.vec();
+    const double b0           = cim.q_d_dot.w();
+    const Eigen::Vector3d bv  = cim.q_d_dot.vec();
+
+    Eigen::Vector3d v = a0 * bv
+                      + b0 * av
+                      + av.cross(bv);
+
+    cim.omega_d = 2.0 * v;
+
+    // Fill up the filter dynamics for integration
+    cim.internal_state_omega_x_d_filter << cip.A_filter_omega_d * csm.state_omega_x_d_filter
+                                         + cip.B_filter_omega_d * cim.omega_d(0);
+
+    cim.internal_state_omega_y_d_filter << cip.A_filter_omega_d * csm.state_omega_y_d_filter
+                                         + cip.B_filter_omega_d * cim.omega_d(1);
+                                         
+    cim.internal_state_omega_z_d_filter << cip.A_filter_omega_d * csm.state_omega_z_d_filter
+                                         + cip.B_filter_omega_d * cim.omega_d(2);
+
+    // Reconstruct the differetiated desired angular acceleration
+    cim.alpha_d = Eigen::Matrix<double, 3, 1>(cip.C_filter_omega_d * csm.state_omega_x_d_filter,
+                                              cip.C_filter_omega_d * csm.state_omega_y_d_filter,
+                                              cip.C_filter_omega_d * csm.state_omega_z_d_filter);
 
 }
 
@@ -211,7 +305,47 @@ void pid_quaternion::compute_u1_q_d()
 // Compute the rotational control
 void pid_quaternion::compute_rotational_control()
 {
-                                           
+    // Quaternion error: q_e = q_d ⊗ q*
+    Eigen::Quaterniond q_conj = cim.q.conjugate();   // q*
+    Eigen::Quaterniond q_e    = cim.q_d * q_conj;    // q_d ⊗ q*
+
+    // Unwinding:
+    // q_e = [1; 0; 0; 0] - [sign(q_e(1))*q_e(1); q_e(2:4)]
+    double s = (q_e.w() >= 0.0) ? 1.0 : -1.0;        // sign(q_e(1))
+
+    double q0_mod          = s * q_e.w();
+    Eigen::Vector3d qv_mod = q_e.vec();
+
+    // Final unwound quaternion error stored in cim.q_e
+    cim.q_e = Eigen::Quaterniond(
+        1.0 - q0_mod,        // scalar part
+        -qv_mod.x(),
+        -qv_mod.y(),
+        -qv_mod.z());
+
+    // Normalize to guard against numerical drift
+    cim.q_e.normalize();        
+
+    // Assign the vector parts of q_e
+    cim.q_e_vec << cim.q_e.x(), cim.q_e.y(), cim.q_e.z();
+
+    // Compute the angular velocity error
+    cim.omega_e << cim.omega - cim.omega_d;
+
+    // Compute the baseline control input
+    cim.tau_rot_baseline << inertia_matrix_q * ( - cip.Kp_att * cim.q_e_vec 
+                                                 - cip.Kd_att * cim.omega_e
+                                                 + cim.alpha_d);
+
+    // Compute with dynamic inversion without aerodynamics
+    cim.tau_rot << cim.tau_rot_baseline 
+                   + cim.omega.cross(inertia_matrix_q * cim.omega);
+
+    // Assign the control inputs
+    cim.u(1) = cim.tau_rot(0);
+    cim.u(2) = cim.tau_rot(1);
+    cim.u(3) = cim.tau_rot(2); 
+                                               
 }
 
 // Function to compute the normalized thrusts

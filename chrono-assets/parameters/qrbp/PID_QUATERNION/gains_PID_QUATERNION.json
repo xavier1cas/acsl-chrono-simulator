@@ -29,15 +29,55 @@
       "matrix": [
         [10.0,  0.0,  0.0],
         [ 0.0, 10.0,  0.0],
-        [ 0.0,  0.0, 10.0]
+        [ 0.0, 0.0,  10.0]
       ]
     },
     "KD_rotational": {
       "scaling_coef": 1.0,
       "matrix": [
-        [5.0, 0.0,  0.0],
-        [0.0, 5.0,  0.0],
-        [0.0, 0.0, 13.0]
+        [20.0, 0.0,  0.0],
+        [0.0, 20.0,  0.0],
+        [0.0, 0.0,  20.0]
+      ]
+    },
+    "A_filter_Qd": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [-72, -1600],
+        [  1,     0]
+      ]
+    },
+    "B_filter_Qd": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1],
+        [0]
+      ]      
+    },
+    "C_filter_Qd": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1600, 0]
+      ]
+    },
+    "A_filter_omega_d": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [-50, -2500],
+        [  1,     0]
+      ]
+    },
+    "B_filter_omega_d": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1],
+        [0]
+      ]
+    },
+    "C_filter_omega_d": {
+      "scaling_coef": 0.15,
+      "matrix": [
+        [2500, 0]
       ]
     }
   }

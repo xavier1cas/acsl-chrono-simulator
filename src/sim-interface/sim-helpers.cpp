@@ -504,6 +504,57 @@ std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(
     return mids;
 }
 
+Eigen::Quaterniond qFromTwoVectors(const Eigen::Vector3d& u_in,
+                                   const Eigen::Vector3d& v_in)
+{
+    // u = u / norm(u);
+    Eigen::Vector3d u = u_in.normalized();
+
+    // v = v / norm(v);
+    Eigen::Vector3d v = v_in.normalized();
+
+    // c = dot(u, v);
+    double c = u.dot(v);
+
+    // If c < -1 + 1e-10: nearly opposite vectors (angle ≈ pi)
+    if (c < -1.0 + 1e-10) {
+        // MATLAB: axis = null(u.'); pick any axis ⟂ u
+        // Here we construct such an axis via cross product with a basis vector.
+        Eigen::Vector3d axis = u.cross(Eigen::Vector3d::UnitX());
+        if (axis.squaredNorm() < 1e-6) {
+            // If u is (almost) parallel to x, use y instead.
+            axis = u.cross(Eigen::Vector3d::UnitY());
+        }
+        axis.normalize();
+
+        // q = qFromAxisAngle(axis, pi);
+        // Use Eigen's AngleAxisd to build a 180-degree rotation quaternion.
+        Eigen::AngleAxisd aa(M_PI, axis);
+        Eigen::Quaterniond q(aa);
+        q.normalize();  // should already be unit, but keep for robustness
+        return q;
+    }
+
+    // w = cross(u, v);
+    Eigen::Vector3d w = u.cross(v);
+
+    // q0 = 1 + c;
+    double q0 = 1.0 + c;
+
+    // qv = w;  q = [q0; qv];
+    Eigen::Quaterniond q(q0, w.x(), w.y(), w.z());
+
+    // Normalize q safely (like the MATLAB code)
+    double nq = q.norm();
+    if (nq < 1e-8) {
+        // q = [1;0;0;0]; identity quaternion
+        q = Eigen::Quaterniond::Identity();
+    } else {
+        q.normalize();
+    }
+
+    return q;
+}
 
 
 } // namespace _compute_

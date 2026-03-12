@@ -370,7 +370,48 @@ std::vector<chrono::ChVector3d> ComputeSegmentMidpoints(const chrono::ChVector3d
                                                         const chrono::ChVector3d& p2,
                                                         int n);
 
-                                                        
+/**
+ * @brief Construct a quaternion that rotates one vector into another.
+ *
+ * This matches the MATLAB function:
+ *     function q = qFromTwoVectors(u, v)
+ *         u = u / norm(u);
+ *         v = v / norm(v);
+ *         c = dot(u,v);
+ *         if c < -1 + 1e-10
+ *             axis = null(u.');          % pick any axis ⟂ u
+ *             axis = axis(:,1) / norm(axis(:,1));
+ *             q = qFromAxisAngle(axis, pi);
+ *             return;
+ *         end
+ *         w = cross(u,v);
+ *         q0 = 1 + c;
+ *         qv = w;
+ *         q = [q0; qv];
+ *         % Normalize q safely
+ *         nq = norm(q);
+ *         if nq < 1e-8
+ *             q = [1;0;0;0];
+ *         else
+ *             q = q / nq;
+ *         end
+ *     end
+ *
+ * The implementation:
+ * - Normalizes u and v.
+ * - Detects the nearly-opposite case (u·v ≈ -1) and explicitly builds a
+ *   180-degree rotation around any axis orthogonal to u using Eigen::AngleAxisd.
+ * - Otherwise uses the cross/dot formula q = [1 + u·v; u × v].
+ * - Safely normalizes the quaternion and falls back to identity if the norm
+ *   is extremely small.
+ *
+ * @param u_in  3D source vector.
+ * @param v_in  3D target vector.
+ * @return Eigen::Quaterniond  Unit quaternion that rotates u_in into v_in.
+ */
+Eigen::Quaterniond qFromTwoVectors(const Eigen::Vector3d& u_in,
+                                   const Eigen::Vector3d& v_in);
+                                                   
 
 } // namespace _compute_
 
