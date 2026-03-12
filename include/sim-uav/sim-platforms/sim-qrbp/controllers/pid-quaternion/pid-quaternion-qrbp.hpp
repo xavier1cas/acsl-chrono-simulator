@@ -92,8 +92,11 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 1> e_tran_pos;                        // Translational error in position
     Eigen::Matrix<double, 3, 1> e_tran_vel;                        // Translational error in velocity
     Eigen::Matrix<double, 3, 1> mu_tran_baseline;                  // Baseline control input
-    Eigen::Matrix<double, 3, 1> mu_tran_I;                         // Virtual control action in the in inertial frame
+    Eigen::Matrix<double, 3, 1> mu_tran_I;                         // Virtual control action in the inertial frame
+    Eigen::Matrix<double, 3, 1> mu_tran_J;                         // Virtual control action in the body frame
     
+    Eigen::Matrix<double, 3, 3> Rji;                               // Rotation matrix from the body to the inertial frame
+    Eigen::Matrix<double, 3, 3> Rij;                               // Rotation matrix from the inertial to the body frame
     double f_d;                                                    // Desired total thrust force
     Eigen::Matrix<double, 3, 1> f_d_hat_I;                         // Desired axis of the thrust
     Eigen::Quaterniond q_align;                                    // Desired alignment quaternion
@@ -117,7 +120,7 @@ struct controller_internal_members {
     Eigen::Quaterniond q_e;                                        // Error Quaternion
     Eigen::Matrix<double, 3, 1> q_e_vec;                           // Error Quaternion vector used in the baseline 
     Eigen::Matrix<double, 3, 1> omega_e;                           // Error in the angular velocities
-     Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input 
+    Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input 
     Eigen::Matrix<double, 3, 1> tau_rot;                           // Rotational Control action
 
     Eigen::Matrix<double, 4, 1> u;                                 // [thrust; mx; my; mz]
