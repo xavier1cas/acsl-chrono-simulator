@@ -4,6 +4,7 @@ alpha_factor: 0.255
 numsamples: 200
 tstep: 0.01
 hover_time: 2.0
+set_yaw_zero: true
 waypoints:
   - x: 0.0
     y: 0.0
@@ -25,7 +26,7 @@ waypoints:
     y: 0.0
     z: -1.0
     time: 6.2
-  - x: 10.5
+  - x: 11.5
     y: 0.0
     z: -0.9
-    time: 2.2
+    time: 4.2

@@ -1,6 +1,6 @@
 name: fto
 codebase: cpp
-alpha_factor: 0.25
+alpha_factor: 0.235
 numsamples: 200
 tstep: 0.01
 hover_time: 2.0
