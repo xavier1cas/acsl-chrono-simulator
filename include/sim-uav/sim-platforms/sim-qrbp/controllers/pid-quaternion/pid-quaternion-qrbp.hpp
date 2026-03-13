@@ -50,7 +50,7 @@ namespace _pid_quaternion_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 16;
+constexpr int NSI = 17;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
