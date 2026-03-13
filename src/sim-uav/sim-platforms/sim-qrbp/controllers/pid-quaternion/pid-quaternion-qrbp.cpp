@@ -243,8 +243,13 @@ void pid_quaternion::compute_u1_q_d()
     Eigen::AngleAxisd yaw_aa(0.0, Eigen::Vector3d::UnitZ());
     cim.q_yaw = Eigen::Quaterniond(yaw_aa);
 
+    // TEST -----------------------------------------------------------------
+
     // Finally construct the desired orientaiton quaternion
-    cim.q_d = cim.q_yaw * cim.q_align_star;
+    // cim.q_d = cim.q_yaw * cim.q_align_star;
+    cim.q_d = cim.q_yaw * cim.q_align;
+
+    // TEST -----------------------------------------------------------------
 
     // Normalize to guard against numerical drift
     cim.q_d.normalize();
@@ -313,26 +318,52 @@ void pid_quaternion::compute_u1_q_d()
 // Compute the rotational control
 void pid_quaternion::compute_rotational_control()
 {
-    // Quaternion error: q_e = q_d ⊗ q*
-    Eigen::Quaterniond q_conj = cim.q.conjugate();   // q*
-    Eigen::Quaterniond q_e    = cim.q_d * q_conj;    // q_d ⊗ q*
+    // // Quaternion error: q_e = q_d ⊗ q*
+    // Eigen::Quaterniond q_conj = cim.q.conjugate();   // q*
+    // Eigen::Quaterniond q_e    = cim.q_d * q_conj;    // q_d ⊗ q*
 
-    // Unwinding:
-    // q_e = [1; 0; 0; 0] - [sign(q_e(1))*q_e(1); q_e(2:4)]
-    double s = (q_e.w() >= 0.0) ? 1.0 : -1.0;        // sign(q_e(1))
+    // // Unwinding:
+    // // q_e = [1; 0; 0; 0] - [sign(q_e(1))*q_e(1); q_e(2:4)]
+    // double s = (q_e.w() >= 0.0) ? 1.0 : -1.0;        // sign(q_e(1))
+
+    // double q0_mod          = s * q_e.w();
+    // Eigen::Vector3d qv_mod = q_e.vec();
+
+    // // Final unwound quaternion error stored in cim.q_e
+    // cim.q_e = Eigen::Quaterniond(
+    //     1.0 - q0_mod,        // scalar part
+    //     -qv_mod.x(),
+    //     -qv_mod.y(),
+    //     -qv_mod.z());
+
+    // // Normalize to guard against numerical drift
+    // cim.q_e.normalize();        
+
+    // TEST -----------------------------------------------------------------
+    Eigen::Quaterniond q_conj = cim.q.conjugate();   // q*
+    Eigen::Quaterniond q_e_raw = cim.q_d * q_conj;   // q_d ⊗ q*
+
+    // Align
+    Eigen::Quaterniond q_e;
+    double s_align = (q_e_raw.w() >= 0.0) ? 1.0 : -1.0;
+    q_e.w()   = s_align * q_e_raw.w();
+    q_e.vec() = s_align * q_e_raw.vec();
+
+    // "Unwinding" (actually just Δ = [1;0;0;0] - q_e)
+    double s = (q_e.w() >= 0.0) ? 1.0 : -1.0;   // sign(q_e(0))
 
     double q0_mod          = s * q_e.w();
     Eigen::Vector3d qv_mod = q_e.vec();
 
-    // Final unwound quaternion error stored in cim.q_e
     cim.q_e = Eigen::Quaterniond(
-        1.0 - q0_mod,        // scalar part
+        1.0 - q0_mod,
         -qv_mod.x(),
         -qv_mod.y(),
         -qv_mod.z());
 
-    // Normalize to guard against numerical drift
-    cim.q_e.normalize();        
+    cim.q_e.normalize();
+
+    // TEST -----------------------------------------------------------------
 
     // Assign the vector parts of q_e
     cim.q_e_vec << cim.q_e.x(), cim.q_e.y(), cim.q_e.z();

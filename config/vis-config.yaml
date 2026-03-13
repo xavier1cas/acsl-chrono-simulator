@@ -43,7 +43,7 @@ main:
   # true: fixed viewpoint; false: dynamic/follow
   enable_static_cam: false
   # (m) Distance the camera is placed in z (NED)
-  mv_cam_chase_ht: 0.5
+  mv_cam_chase_ht: 1.0
   # (m) Distance the camera is placed in x (NED) 
   mv_cam_chase_dt: 2.0
   

@@ -103,6 +103,16 @@ void minjerkpoly::setPolynomialCoefficientMatrices()
     this->jerk_coef_z_ = ::_shared_::_compute_::polyDerMatrix(acceleration_coef_z_);
 }
 
+// Function to compute the time vector given a dt, ouptut is [0.0, dt, 2*dt, ....., ~Tmax]
+Eigen::VectorXd minjerkpoly::GetTimeVector(double Tmax, double dt)
+{
+    // Compute the approximate number of points we need according to dt
+    const int N = static_cast<int>(std::floor(Tmax / dt)) + 1;
+
+    // Return the linspaced Eigen vector
+    return Eigen::VectorXd::LinSpaced(N, 0.0, dt * (N - 1));
+}
+
 // ========================================================================================================
 // HELPER FUNCTIONS FOR MINJERKPOLY COMPUTATION
 // ========================================================================================================
@@ -308,11 +318,34 @@ void minjerkpoly::InitiateModule()
     // Setup the polynomial coefficeient matrices
     this->setPolynomialCoefficientMatrices();
 
-    // Create and assign to nurbsasset
-    auto controlpts = ::_shared_::_serialize_::serialize2ChVector3d(this->waypoints_[0],
-                                                                    this->waypoints_[1],
-                                                                    this->waypoints_[2]);
-    this->visualshape = ::_shared_::_visualize_::createNurbsVisual(controlpts,2);
+    /// Create and assign trajectory visualization.
+    // Get the time vector
+    auto time_vector = this->GetTimeVector(this->GetTmax());
+
+    // Compute the full trajectory's waypoints
+    std::vector<double> vis_waypoints_x; vis_waypoints_x.reserve(time_vector.size());
+    std::vector<double> vis_waypoints_y; vis_waypoints_y.reserve(time_vector.size());
+    std::vector<double> vis_waypoints_z; vis_waypoints_z.reserve(time_vector.size());
+    for (double t : time_vector) {
+        // Update module state at time t
+        this->UpdateModule(t);
+
+        // Get current position as Eigen vector
+        const auto pos = this->GetPosition();  // e.g. Eigen::Vector3d
+
+        // Pushback to the vector
+        vis_waypoints_x.push_back(pos(0));
+        vis_waypoints_y.push_back(pos(1));
+        vis_waypoints_z.push_back(pos(2));
+    }
+    
+    // Create and assign to nurbasset
+    auto controlpts_line = ::_shared_::_serialize_::serialize2ChVector3d(vis_waypoints_x,
+                                                                         vis_waypoints_y,
+                                                                         vis_waypoints_z);
+
+    this->visualshape = ::_shared_::_visualize_::createNurbsVisual(controlpts_line);
+    
     
 }
 

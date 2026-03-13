@@ -9,7 +9,7 @@
       ]
     },
     "KI_translational": {
-      "scaling_coef": 1.0,
+      "scaling_coef": 2.0,
       "matrix": [
         [1.8, 0.0, 0.0],
         [0.0, 1.8, 0.0],
@@ -17,7 +17,7 @@
       ]
     },
     "KD_translational": {
-      "scaling_coef": 1.0,
+      "scaling_coef": 1.3,
       "matrix": [
         [9.5, 0.0, 0.0],
         [0.0, 9.5, 0.0],

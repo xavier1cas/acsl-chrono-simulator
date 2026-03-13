@@ -99,6 +99,10 @@ protected:
     void SetAngVel(const Eigen::Vector3d& ang_vel) override { this->c_state.angular_velocity = ang_vel; }
     void SetAngAcc(const Eigen::Vector3d& ang_accel) override { this->c_state.angular_acceleration = ang_accel; }
 
+    // Function to compute the time vector given a dt, ouptut is [0.0, dt, 2*dt, ....., ~Tmax]
+    // Default time interval is 0.001 - we want precision 
+    Eigen::VectorXd GetTimeVector(double Tmax, double dt = 1e-3);
+
 private:
     // Class objects unique to piecewise-polynomial-trajectory
     std::vector<std::vector<double>> waypoints_;                         // The waypoints we actually want to hit
