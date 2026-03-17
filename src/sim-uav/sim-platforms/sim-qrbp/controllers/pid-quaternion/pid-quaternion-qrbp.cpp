@@ -239,33 +239,18 @@ void pid_quaternion::compute_u1_q_d()
                              -cim.q_align.z())
         : cim.q_align;
 
-    // Construct the yaw quaternion - NEEDS FIXING IN THEORY
-    Eigen::AngleAxisd yaw_aa(0.0, Eigen::Vector3d::UnitZ());
-    cim.q_yaw = Eigen::Quaterniond(yaw_aa);
-
-    // TEST -----------------------------------------------------------------
-
-    // Finally construct the desired orientaiton quaternion
-    // cim.q_d = cim.q_yaw * cim.q_align_star;
-    cim.q_d = cim.q_yaw * cim.q_align;
-
-    // TEST -----------------------------------------------------------------
-
-    // Normalize to guard against numerical drift
-    cim.q_d.normalize();
-
     // Fill up the filter dynamics for integration
     cim.internal_state_q_d0_filter << cip.A_filter_Qd * csm.state_q_d0_filter
-                                    + cip.B_filter_Qd * cim.q_d.w();
+                                    + cip.B_filter_Qd * cim.q_align.w();
 
     cim.internal_state_q_d1_filter << cip.A_filter_Qd * csm.state_q_d1_filter
-                                    + cip.B_filter_Qd * cim.q_d.x();
+                                    + cip.B_filter_Qd * cim.q_align.x();
                                     
     cim.internal_state_q_d2_filter << cip.A_filter_Qd * csm.state_q_d2_filter
-                                    + cip.B_filter_Qd * cim.q_d.y();                                    
+                                    + cip.B_filter_Qd * cim.q_align.y();                                    
 
     cim.internal_state_q_d3_filter << cip.A_filter_Qd * csm.state_q_d3_filter
-                                    + cip.B_filter_Qd * cim.q_d.z();  
+                                    + cip.B_filter_Qd * cim.q_align.z();  
                                     
     // Reconstruct the raw differentiated signal
     cim.q_signal_dot = Eigen::Quaterniond(cip.C_filter_Qd * csm.state_q_d0_filter,
@@ -274,13 +259,13 @@ void pid_quaternion::compute_u1_q_d()
                                           cip.C_filter_Qd * csm.state_q_d3_filter);
 
     // Enforce the orthogonality condition
-    // Cache the projection q_d^T q_signal_dot
-    double proj = cim.q_d.w() * cim.q_signal_dot.w()
-                + cim.q_d.vec().dot(cim.q_signal_dot.vec());
+    // Cache the projection q_align^T q_signal_dot
+    double proj = cim.q_align.w() * cim.q_signal_dot.w()
+                + cim.q_align.vec().dot(cim.q_signal_dot.vec());
 
-    // q_d_dot = q_signal_dot - proj * q_d;
-    cim.q_d_dot.w() = cim.q_signal_dot.w() - proj * cim.q_d.w();
-    cim.q_d_dot.vec() = cim.q_signal_dot.vec() - proj * cim.q_d.vec();
+    // q_d_dot = q_signal_dot - proj * q_align;
+    cim.q_align_dot.w() = cim.q_signal_dot.w() - proj * cim.q_align.w();
+    cim.q_align_dot.vec() = cim.q_signal_dot.vec() - proj * cim.q_align.vec();
 
     // Compute desired angular velocity ω_d from q and q_d_dot
     // q_conj = [ q0; -qv ] - Split into scalar and vector parts 
@@ -288,8 +273,8 @@ void pid_quaternion::compute_u1_q_d()
 
     const double a0           = q_conj.w();
     const Eigen::Vector3d av  = q_conj.vec();
-    const double b0           = cim.q_d_dot.w();
-    const Eigen::Vector3d bv  = cim.q_d_dot.vec();
+    const double b0           = cim.q_align_dot.w();
+    const Eigen::Vector3d bv  = cim.q_align_dot.vec();
 
     Eigen::Vector3d v = a0 * bv
                       + b0 * av
@@ -311,6 +296,22 @@ void pid_quaternion::compute_u1_q_d()
     cim.alpha_d = Eigen::Matrix<double, 3, 1>(cip.C_filter_omega_d * csm.state_omega_x_d_filter,
                                               cip.C_filter_omega_d * csm.state_omega_y_d_filter,
                                               cip.C_filter_omega_d * csm.state_omega_z_d_filter);
+
+    // TEST -----------------------------------------------------------------
+
+    // Construct the yaw quaternion - NEEDS FIXING IN THEORY
+    // Eigen::AngleAxisd yaw_aa( 0.0 , Eigen::Vector3d::UnitZ());
+    Eigen::AngleAxisd yaw_aa(cim.psi_user_unwrapped, -cim.f_d_hat_I.normalized());
+    cim.q_yaw = Eigen::Quaterniond(yaw_aa);
+    
+    // Finally construct the desired orientaiton quaternion
+    // cim.q_d = cim.q_yaw * cim.q_align_star;
+    cim.q_d = cim.q_yaw * cim.q_align;
+
+    // TEST -----------------------------------------------------------------
+
+    // Normalize to guard against numerical drift
+    cim.q_d.normalize();                                              
 
 }
 
@@ -510,10 +511,10 @@ void pid_quaternion::ConfigureHeaders()
         << "q_signal_dot x [-], "
         << "q_signal_dot y [-], "
         << "q_signal_dot z [-], "
-        << "q_d_dot w [-], "
-        << "q_d_dot x [-], "
-        << "q_d_dot y [-], "
-        << "q_d_dot z [-], "
+        << "q_align_dot w [-], "
+        << "q_align_dot x [-], "
+        << "q_align_dot y [-], "
+        << "q_align_dot z [-], "
         << "omega_d x [rad/s], "
         << "omega_d y [rad/s], "
         << "omega_d z [rad/s], "
@@ -623,10 +624,10 @@ void pid_quaternion::LogData()
         << cim.q_signal_dot.x() << ", "
         << cim.q_signal_dot.y() << ", "
         << cim.q_signal_dot.z() << ", "
-        << cim.q_d_dot.w() << ", "
-        << cim.q_d_dot.x() << ", "
-        << cim.q_d_dot.y() << ", "
-        << cim.q_d_dot.z() << ", "
+        << cim.q_align_dot.w() << ", "
+        << cim.q_align_dot.x() << ", "
+        << cim.q_align_dot.y() << ", "
+        << cim.q_align_dot.z() << ", "
         << cim.omega_d(0) << ", "
         << cim.omega_d(1) << ", "
         << cim.omega_d(2) << ", "

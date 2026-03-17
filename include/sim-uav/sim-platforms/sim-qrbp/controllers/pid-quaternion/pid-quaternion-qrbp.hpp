@@ -104,7 +104,7 @@ struct controller_internal_members {
     Eigen::Quaterniond q_yaw;                                      // Desired yaw quaternion
     Eigen::Quaterniond q_d;                                        // Desried quaternion 
     Eigen::Quaterniond q_signal_dot;                               // Raw differentiated desried quaternion
-    Eigen::Quaterniond q_d_dot;                                    // Desired quaternion rate
+    Eigen::Quaterniond q_align_dot;                                // Desired quaternion rate for roll and pitch
     Eigen::Matrix<double, 3, 1> omega_d;                           // Desired angular velocity 
     Eigen::Matrix<double, 3, 1> alpha_d;                           // Desired angular acceleration
     Eigen::Matrix<double, 2, 1> internal_state_q_d0_filter;        // Internal States for filter
