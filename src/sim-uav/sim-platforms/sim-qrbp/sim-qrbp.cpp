@@ -441,7 +441,8 @@ void simqrbp::ConfigureQRBPMotors()
     _uav_::motorstruct motor_properties;
 
     // Cache the motor torque constant
-    motor_properties.ct = 0.1017;
+    // motor_properties.ct = 0.1017;
+    motor_properties.ct = 2.0 * 0.1017;
 
     // Cache the motor polynomial coefficients
     // Polynomial coefficients vector to evaluate the Commanded Thrust [-] based on the Thrust in Newton

@@ -306,7 +306,7 @@ void pid_quaternion::compute_u1_q_d()
     
     // Finally construct the desired orientaiton quaternion
     // cim.q_d = cim.q_yaw * cim.q_align_star;
-    cim.q_d = cim.q_yaw * cim.q_align;
+    cim.q_d = cim.q_yaw * cim.q_align_star;
 
     // TEST -----------------------------------------------------------------
 
