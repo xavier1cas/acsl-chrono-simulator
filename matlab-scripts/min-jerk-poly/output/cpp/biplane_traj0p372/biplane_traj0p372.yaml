@@ -1,6 +1,6 @@
 name: biplane_traj
 codebase: cpp
-alpha_factor: 0.369
+alpha_factor: 0.372
 numsamples: 200
 tstep: 0.01
 hover_time: 15.0

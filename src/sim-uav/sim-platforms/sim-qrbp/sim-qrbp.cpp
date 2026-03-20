@@ -143,7 +143,8 @@ void simqrbp::ConfigureQRBPProps()
     prop_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
 
     // Configure the mass of the propeller
-    prop_properties.mass = 0.00395402309271749;
+    // prop_properties.mass = 0.00395402309271749;
+    prop_properties.mass = 0.0;
 
     // Configure the propeller Interia vectors
     prop_properties.InertiaXX = chrono::ChVector3d(2.83955219476957e-06,2.84026926028763e-06,5.66580058802151e-06);
@@ -442,7 +443,7 @@ void simqrbp::ConfigureQRBPMotors()
 
     // Cache the motor torque constant
     // motor_properties.ct = 0.1017;
-    motor_properties.ct = 2.0 * 0.1017;
+    motor_properties.ct = 4.0 * 0.1017;
 
     // Cache the motor polynomial coefficients
     // Polynomial coefficients vector to evaluate the Commanded Thrust [-] based on the Thrust in Newton
@@ -557,7 +558,7 @@ void simqrbp::ConfigureQRBPAerodynamics()
     GetUAVAerodynamics().chassis_body_surface_aera = 1.0319;
 
     // Set the air density for the simulation
-    GetUAVAerodynamics().air_density = 1.225;
+    GetUAVAerodynamics().air_density = 1.228;
 
     // Set the span of a single wing
     GetUAVAerodynamics().aerofoil_span = 0.50;
