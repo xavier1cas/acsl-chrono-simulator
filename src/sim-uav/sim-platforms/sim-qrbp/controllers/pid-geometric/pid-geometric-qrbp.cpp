@@ -69,6 +69,7 @@ void pid_geometric::read_params(const std::string& jsonFile)
     nlohmann::json j;
     file >> j;
 
+    // Controller matrices ----------------------------------------------------------------------------------------------
     // Translational parameters
     cip.Kp_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KP_translational"], 3, 3);
     cip.Ki_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KI_translational"], 3, 3);
@@ -79,7 +80,12 @@ void pid_geometric::read_params(const std::string& jsonFile)
     cip.Kd_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KD_rotational"], 3, 3);
 
     // Differentiator matrices
-    
+    cip.A_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_mu"], 2, 2);
+    cip.B_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["B_filter_mu"], 2, 1);
+    cip.C_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["C_filter_mu"], 1, 2);
+    cip.A_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_omega_d"], 2, 2);
+    cip.B_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["B_filter_omega_d"], 2, 1);
+    cip.C_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["C_filter_omega_d"], 1, 2);
 
 }
 
@@ -153,18 +159,25 @@ void pid_geometric::update(double time,
 // Function to assign elements from the rk4 integrator
 void pid_geometric::assign_from_rk4()
 {
-    //------------ assign after integration  ------------//
     int index = 0;
+
+    //------------ assign after integration  ------------//
     ::_shared_::_deserialize_::assignElementsToMembers(csm.e_tran_pos_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_x_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_y_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_z_filter, y, index);
 }
 
 // Model function for integration
 void pid_geometric::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
 {
-    //------------ Fill up the dy for integration  ------------//
     int index = 0;
     
+    //------------ Fill up the dy for integration  ------------//
     ::_shared_::_serialize_::assignElementsToDxdt(cim.e_tran_pos, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_x_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_y_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_z_filter, dy, index);
 }
 
 
@@ -185,10 +198,62 @@ void pid_geometric::compute_translational_control_in_I()
     cim.mu_tran_I << cim.mu_tran_baseline - MASS * G * e3_basis;
 }
 
+// Function to compute the outerloop translational control rate in I using the differentiator
+void pid_geometric::compute_translational_control_rate()
+{
+    // Compute the internal state for rate of change of mu
+    cim.internal_state_mu_x_filter << cip.A_filter_mu * csm.state_mu_x_filter
+                                    + cip.B_filter_mu * cim.mu_tran_I(0);
+
+    cim.internal_state_mu_y_filter << cip.A_filter_mu * csm.state_mu_y_filter
+                                    + cip.B_filter_mu * cim.mu_tran_I(1);
+
+    cim.internal_state_mu_z_filter << cip.A_filter_mu * csm.state_mu_z_filter
+                                    + cip.B_filter_mu * cim.mu_tran_I(2);
+
+    // Compute the rate of change of the translational virtual control input
+    cim.mu_tran_I_dot(0) = cip.C_filter_mu * csm.state_mu_x_filter;
+    cim.mu_tran_I_dot(1) = cip.C_filter_mu * csm.state_mu_y_filter;
+    cim.mu_tran_I_dot(2) = cip.C_filter_mu * csm.state_mu_z_filter;
+}
+
 // Compute the orientation commands and the desired total thrust
 void pid_geometric::compute_u1_R_d()
 {
-	
+	// Compute the desired total thrust
+    cim.u(0) = cim.mu_tran_I.norm();
+
+    // Compute the desired body frame z axis
+    cim.b3d = cim.mu_tran_I / cim.u(0);
+
+    // Compute the desired "heading" vector 
+    cim.c1 << std::cos(cim.psi_user),
+              std::sin(cim.psi_user),
+              0.0;
+
+    // Construct an orthonormal triad
+    Eigen::Matrix<double, 3, 1> n;
+    n = cim.b3d.cross(cim.c1);
+    double sigma = n.norm();
+    cim.b2d =  n / sigma;
+
+    cim.b1d = cim.b2d.cross(cim.b3d);
+
+    // Construct the desired rotation matrix
+    cim.R_d.col(0) = cim.b1d;
+    cim.R_d.col(1) = cim.b2d;
+    cim.R_d.col(2) = cim.b3d;
+
+    // Compute R_d_dot
+    Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
+    cim.b3d_dot = (1/cim.mu_tran_I.norm()) * (I - cim.b3d * cim.b3d.transpose()) * cim.mu_tran_I_dot;
+
+    std::cout << cim.b3d_dot << std::endl;
+    
+    cim.c1_dot << -1.0 * cim.psi_dot_user * std::sin(cim.psi_user),
+                         cim.psi_dot_user * std::cos(cim.psi_user),
+                         0.0;
+
 }
 
 
@@ -209,11 +274,11 @@ void pid_geometric::compute_normalized_thrusts()
     cim.Sat_Thrust = (cim.Thrust.cwiseMin(MAX_THRUST).cwiseMax(MIN_THRUST));
 
     // Compute the final control inputs
-    control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(0));
-    control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(1));
-    control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(2));
-    control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(3));
-
+    // control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(0));
+    // control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(1));
+    // control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(2));
+    // control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(3));
+    control_input(0) = 0.0; control_input(1) = 0.0; control_input(2) = 0.0; control_input(3) = 0.0;
 }
 
 // Function that is called in sim-bridge.cpp
@@ -225,16 +290,19 @@ void pid_geometric::run(const double time_step_rk4_) {
     // 2. Compute the translational control input
     compute_translational_control_in_I();
 
-    // 3. Compute the thrust needed and the desired rotaion matrix
+    // 3. Compute the rate of change of the translational control input
+    compute_translational_control_rate();
+
+    // 4. Compute the thrust needed and the desired rotaion matrix
     compute_u1_R_d();
 
-    // 4. Compute the rotational control input
+    // 5. Compute the rotational control input
     compute_rotational_control();
 
-    // 5. Compute the normalized thrust - Final Step
+    // 6. Compute the normalized thrust - Final Step
     compute_normalized_thrusts();
 
-    // 6. Do the integration
+    // 7. Do the integration
     rk4.do_step(boost::bind(&pid_geometric::model, this, bph::_1, bph::_2, bph::_3),
                 y, cim.t, time_step_rk4_);
     
@@ -245,7 +313,7 @@ void pid_geometric::run(const double time_step_rk4_) {
     cim.alg_duration = std::chrono::duration_cast<std::chrono::microseconds>(
                             cim.alg_end_time - cim.alg_start_time).count();
 
-    // 7. Log the Data after all the calculataions
+    // 8. Log the Data after all the calculataions
     this->LogData();
     
 }

@@ -50,7 +50,11 @@ namespace _pid_geometric_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 17;
+constexpr int NSI = 45;
+
+// -------------------------------------------------------------------------------------------------------------------- //
+// CONTROLLER STRUCTURES
+// -------------------------------------------------------------------------------------------------------------------- //
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
@@ -59,11 +63,23 @@ struct controller_internal_parameters {
     Eigen::Matrix<double, 3, 3> Kd_tran;            // Derivative Gains for the translational control
     Eigen::Matrix<double, 3, 3> Kp_att;             // Proportional Gains for the rotational control
     Eigen::Matrix<double, 3, 3> Kd_att;             // Derivative Gains for the rotational control
+    Eigen::Matrix<double, 2, 2> A_filter_mu;        // Differentiator A matrix for \mu
+    Eigen::Matrix<double, 2, 1> B_filter_mu;        // Differentiator B matrix for \mu
+    Eigen::Matrix<double, 1, 2> C_filter_mu;        // Differentiator C matrix for q_d
+    Eigen::Matrix<double, 2, 2> A_filter_omega_d;   // Differentiator A matrix for omega_d
+    Eigen::Matrix<double, 2, 1> B_filter_omega_d;   // Differentiator B matrix for omega_d
+    Eigen::Matrix<double, 1, 2> C_filter_omega_d;   // Differentiator C matrix for omega_d
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
 struct controller_integrated_state_members {
-    Eigen::Matrix<double, 3, 1> e_tran_pos_I;           // Translational integral error
+    Eigen::Matrix<double, 3, 1> e_tran_pos_I;                      // Translational integral error
+    Eigen::Matrix<double, 2, 1> state_mu_x_filter;                 // States for filter
+    Eigen::Matrix<double, 2, 1> state_mu_y_filter;                 // States for filter
+    Eigen::Matrix<double, 2, 1> state_mu_z_filter;                 // States for filter
+    Eigen::Matrix<double, 2, 1> state_omega_x_d_filter;            // States for filter
+    Eigen::Matrix<double, 2, 1> state_omega_y_d_filter;            // States for filter
+    Eigen::Matrix<double, 2, 1> state_omega_z_d_filter;            // States for filter
 };
 
 // Structure for all the internal members of the controller
@@ -81,10 +97,31 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 1> e_tran_vel;                        // Translational error in velocity
     Eigen::Matrix<double, 3, 1> mu_tran_baseline;                  // Baseline control input
     Eigen::Matrix<double, 3, 1> mu_tran_I;                         // Virtual control action in the inertial frame
+    Eigen::Matrix<double, 3, 1> mu_tran_I_dot;                     // Rate of virtual control action in the inertial frame
     Eigen::Matrix<double, 3, 1> mu_tran_J;                         // Virtual control action in the body frame
     
     Eigen::Matrix<double, 3, 3> Rji;                               // Rotation matrix from the body to the inertial frame
     Eigen::Matrix<double, 3, 3> Rij;                               // Rotation matrix from the inertial to the body frame
+    Eigen::Matrix<double, 3, 1> c1;                                // Desired "heading" vector in the inertial frame
+    Eigen::Matrix<double, 3, 1> b3d;                               // Desired body z axis
+    Eigen::Matrix<double, 3, 1> b2d;                               // Desired body y axis
+    Eigen::Matrix<double, 3, 1> b1d;                               // Desired body x axis
+    Eigen::Matrix<double, 3, 3> R_d;                               // Desired rotation matrix
+
+    Eigen::Matrix<double, 3, 1> c1_dot;                            // Desired "heading rate" vector in the inertial frame
+    Eigen::Matrix<double, 3, 1> b3d_dot;                           // Differential of Desired body z axis
+    Eigen::Matrix<double, 3, 1> b2d_dot;                           // Differential of Desired body y axis
+    Eigen::Matrix<double, 3, 1> b1d_dot;                           // Differential of Desired body x axis
+    Eigen::Matrix<double, 3, 3> R_d_dot;                           // Differential of Desired rotation matrix
+
+    Eigen::Matrix<double, 2, 1> internal_state_mu_x_filter;        // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_mu_y_filter;        // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_mu_z_filter;        // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_omega_x_d_filter;   // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_omega_y_d_filter;   // Internal States for filter
+    Eigen::Matrix<double, 2, 1> internal_state_omega_z_d_filter;   // Internal States for filter
+
+
     Eigen::Matrix<double, 3, 1> omega_d;                           // Desired angular velocity 
     Eigen::Matrix<double, 3, 1> alpha_d;                           // Desired angular acceleration
 
@@ -101,7 +138,6 @@ struct controller_internal_members {
     std::chrono::high_resolution_clock::time_point alg_start_time; // Algorithm Start timepoint
     std::chrono::high_resolution_clock::time_point alg_end_time;   // Algorithm End timepoint
 };
-
 
 // =========================================================================================================
 // pid_geometric.hpp   -- QRBP PID geometric controller
@@ -216,7 +252,7 @@ private:
     ::_acsl_::_qrbp_::_pid_geometric_::controller_internal_members cim;   
 
     // Define the internal integrated state members of the controller
-    ::_acsl_::_qrbp_::_pid_geometric_::controller_integrated_state_members csm; 
+    ::_acsl_::_qrbp_::_pid_geometric_::controller_integrated_state_members csm;
 
     // Member to unwrap the heading for heading command
     ::_shared_::_compute_::SimplePsiUnwrapState psiState;
@@ -230,6 +266,9 @@ private:
 
     // Function to compute the thrust (u1) and the desired rotation matrix
     void compute_u1_R_d();
+
+    // Function to observe the outerloop control input
+    void compute_translational_control_rate();
 
     // Function to compute the rotational control input
     void compute_rotational_control();
