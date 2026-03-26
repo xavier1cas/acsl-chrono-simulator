@@ -184,6 +184,24 @@ Eigen::Matrix3d jacobianMatrixDerivative(double roll, double pitch, double roll_
     return Jdot;
 }
 
+// Computes the skew symmetric matrix of a vector v
+Eigen::Matrix3d skewSymmetric(Eigen::Matrix<double, 3, 1> v) {
+    
+    // Skew-Symmetric matrix structure
+    // v = [v1 v2 v3]^T
+    // 
+    // m = [  0 -v3  v2]
+    //     [ v3   0 -v1]
+    //     [-v2  v1   0]
+    Eigen::Matrix3d m;
+
+    m <<  0.0, -v(2),  v(1),
+          v(2),  0.0, -v(0),
+         -v(1), v(0),   0.0;
+
+    return m;         
+}
+
 } // namespace _transformations_
 
 

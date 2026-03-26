@@ -50,7 +50,7 @@ namespace _pid_geometric_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 45;
+constexpr int NSI = 15;
 
 // -------------------------------------------------------------------------------------------------------------------- //
 // CONTROLLER STRUCTURES
@@ -63,6 +63,7 @@ struct controller_internal_parameters {
     Eigen::Matrix<double, 3, 3> Kd_tran;            // Derivative Gains for the translational control
     Eigen::Matrix<double, 3, 3> Kp_att;             // Proportional Gains for the rotational control
     Eigen::Matrix<double, 3, 3> Kd_att;             // Derivative Gains for the rotational control
+    Eigen::Matrix<double, 3, 1> Ka_att;             // The axis scaling gaisn for the rotational control
     Eigen::Matrix<double, 2, 2> A_filter_mu;        // Differentiator A matrix for \mu
     Eigen::Matrix<double, 2, 1> B_filter_mu;        // Differentiator B matrix for \mu
     Eigen::Matrix<double, 1, 2> C_filter_mu;        // Differentiator C matrix for q_d
@@ -109,6 +110,9 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 3> R_d;                               // Desired rotation matrix
 
     Eigen::Matrix<double, 3, 1> c1_dot;                            // Desired "heading rate" vector in the inertial frame
+    Eigen::Matrix<double, 3, 1> n_hat;                             // Intermediate variable to compute b2d_dot
+    Eigen::Matrix<double, 3, 1> n_hat_dot;                         // Intermediate variable to compute b2d_dot
+    double sigma;                                                  // Intermediate variable to compute b2d_dot
     Eigen::Matrix<double, 3, 1> b3d_dot;                           // Differential of Desired body z axis
     Eigen::Matrix<double, 3, 1> b2d_dot;                           // Differential of Desired body y axis
     Eigen::Matrix<double, 3, 1> b1d_dot;                           // Differential of Desired body x axis
@@ -122,12 +126,14 @@ struct controller_internal_members {
     Eigen::Matrix<double, 2, 1> internal_state_omega_z_d_filter;   // Internal States for filter
 
 
+    Eigen::Matrix<double, 3, 1> omega_d_in_K;                      // Desired angular velocity in the desired frame
     Eigen::Matrix<double, 3, 1> omega_d;                           // Desired angular velocity 
     Eigen::Matrix<double, 3, 1> alpha_d;                           // Desired angular acceleration
 
     Eigen::Quaterniond q;                                          // Quaternion
     Eigen::Matrix<double, 3, 1> omega;                             // Angular velocity
     Eigen::Matrix<double, 3, 1> omega_e;                           // Error in the angular velocities
+    Eigen::Matrix<double, 3, 1> Xi_e;                              // Error in the attitude states
     Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input 
     Eigen::Matrix<double, 3, 1> tau_rot;                           // Rotational Control action
 

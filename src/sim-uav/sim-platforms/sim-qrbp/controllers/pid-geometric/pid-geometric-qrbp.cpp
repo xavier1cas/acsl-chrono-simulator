@@ -78,6 +78,7 @@ void pid_geometric::read_params(const std::string& jsonFile)
     // Rotational parameters
     cip.Kp_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KP_rotational"], 3, 3);
     cip.Kd_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KD_rotational"], 3, 3);
+    cip.Ka_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["Ka_rotational"], 3, 1);
 
     // Differentiator matrices
     cip.A_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_mu"], 2, 2);
@@ -147,7 +148,8 @@ void pid_geometric::update(double time,
     cim.r_ddot_user = m_traj.GetAcceleration();   
     cim.psi_user = m_traj.GetEulerAngle()(2);
     cim.psi_user_unwrapped = ::_shared_::_compute_::unwrapPsiSimple(cim.psi_user, this->psiState);
-    cim.psi_dot_user = m_traj.GetEulerRate()(2);
+    // cim.psi_dot_user = m_traj.GetEulerRate()(2);
+    cim.psi_dot_user = 0.0;
 
     // 3. Capture the time before the execution of the controller ------------------
     cim.alg_start_time = std::chrono::high_resolution_clock::now();
@@ -166,6 +168,9 @@ void pid_geometric::assign_from_rk4()
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_x_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_y_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_z_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_x_d_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_y_d_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_z_d_filter, y, index);
 }
 
 // Model function for integration
@@ -178,6 +183,9 @@ void pid_geometric::model(const _control_::rk4_array<double, NSI> &y, _control_:
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_x_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_y_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_z_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_x_d_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_y_d_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_z_d_filter, dy, index);
 }
 
 
@@ -224,18 +232,17 @@ void pid_geometric::compute_u1_R_d()
     cim.u(0) = cim.mu_tran_I.norm();
 
     // Compute the desired body frame z axis
-    cim.b3d = cim.mu_tran_I / cim.u(0);
+    cim.b3d = -cim.mu_tran_I / cim.u(0);
 
     // Compute the desired "heading" vector 
     cim.c1 << std::cos(cim.psi_user),
               std::sin(cim.psi_user),
-              0.0;
+               0.0;
 
     // Construct an orthonormal triad
-    Eigen::Matrix<double, 3, 1> n;
-    n = cim.b3d.cross(cim.c1);
-    double sigma = n.norm();
-    cim.b2d =  n / sigma;
+    cim.n_hat = cim.b3d.cross(cim.c1);
+    cim.sigma = cim.n_hat.norm();
+    cim.b2d =  cim.n_hat / cim.sigma;
 
     cim.b1d = cim.b2d.cross(cim.b3d);
 
@@ -246,22 +253,94 @@ void pid_geometric::compute_u1_R_d()
 
     // Compute R_d_dot
     Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
-    cim.b3d_dot = (1/cim.mu_tran_I.norm()) * (I - cim.b3d * cim.b3d.transpose()) * cim.mu_tran_I_dot;
-
-    std::cout << cim.b3d_dot << std::endl;
     
+    // compute b3d_dot
+    cim.b3d_dot = -1.0 * (1/cim.mu_tran_I.norm()) * (I - cim.b3d * cim.b3d.transpose()) * cim.mu_tran_I_dot;
+    
+    // compute b2d_dot
     cim.c1_dot << -1.0 * cim.psi_dot_user * std::sin(cim.psi_user),
-                         cim.psi_dot_user * std::cos(cim.psi_user),
-                         0.0;
+                   cim.psi_dot_user * std::cos(cim.psi_user),
+                   0.0;
 
+    cim.n_hat_dot = cim.b3d_dot.cross(cim.c1) + cim.b3d.cross(cim.c1_dot);
+
+    cim.b2d_dot = (1/cim.sigma) * (I - cim.b2d * cim.b2d.transpose()) * cim.n_hat_dot;
+
+    // compute b1d_dot
+    cim.b1d_dot = cim.b2d_dot.cross(cim.b3d) + cim.b2d.cross(cim.b3d_dot);
+
+    // assign to R_d_dot
+    cim.R_d_dot.col(0) = cim.b1d_dot;
+    cim.R_d_dot.col(1) = cim.b2d_dot;
+    cim.R_d_dot.col(2) = cim.b3d_dot;
+
+    Eigen::Matrix3d omega_d_K_skew;
+    omega_d_K_skew = cim.R_d.transpose() * cim.R_d_dot;
+
+    // build the desired angular velocity in the desired frame R_d from the skew symmetric matric omega_d_K_skew
+    // omega_d_K_skew = [   0 -wd3  wd2]
+    //                  [ wd3    0 -wd1]
+    //                  [-wd2  wd1    0]
+    cim.omega_d_in_K(0) = omega_d_K_skew(2, 1);
+    cim.omega_d_in_K(1) = omega_d_K_skew(0, 2);
+    cim.omega_d_in_K(2) = omega_d_K_skew(1, 0);
+
+    // transform the desired angular velocity in the desired frame R_d to the current body frame J
+    cim.omega_d = cim.Rji.transpose() * cim.R_d * cim.omega_d_in_K;
+
+    // Compute the internal state for angular acceleration
+    cim.internal_state_omega_x_d_filter << cip.A_filter_omega_d * csm.state_omega_x_d_filter
+                                         + cip.B_filter_omega_d * cim.omega_d_in_K(0);
+
+    cim.internal_state_omega_y_d_filter << cip.A_filter_omega_d * csm.state_omega_y_d_filter
+                                         + cip.B_filter_omega_d * cim.omega_d_in_K(1);
+
+    cim.internal_state_omega_z_d_filter << cip.A_filter_omega_d * csm.state_omega_z_d_filter
+                                         + cip.B_filter_omega_d * cim.omega_d_in_K(2);
+
+    // Compute the desired angular acceleration
+    cim.alpha_d(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
+    cim.alpha_d(1) = cip.C_filter_omega_d * csm.state_omega_y_d_filter;
+    cim.alpha_d(2) = cip.C_filter_omega_d * csm.state_omega_z_d_filter;
 }
-
 
 // Compute the rotational control
 void pid_geometric::compute_rotational_control()
 {
-    
-                                               
+    // Compute the error in the attitude
+    Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
+    Eigen::Matrix<double, 3, 1> e1 = I.col(0);
+    Eigen::Matrix<double, 3, 1> e2 = I.col(1);
+    Eigen::Matrix<double, 3, 1> e3 = I.col(2);
+    Eigen::Vector3d a1e1 = cip.Ka_att(0) * e1;
+    Eigen::Vector3d a2e2 = cip.Ka_att(1) * e2;
+    Eigen::Vector3d a3e3 = cip.Ka_att(2) * e3;
+    Eigen::Vector3d r1 = cim.R_d.transpose() * cim.Rji * e1;
+    Eigen::Vector3d r2 = cim.R_d.transpose() * cim.Rji * e2;
+    Eigen::Vector3d r3 = cim.R_d.transpose() * cim.Rji * e3;
+
+    cim.Xi_e = a1e1.cross(r1) + a2e2.cross(r2) + a3e3.cross(r3);
+
+    // Compute the error in the angular velocities
+    cim.omega_e << cim.omega - cim.omega_d;
+
+    // Compute the baseline control input
+    cim.tau_rot_baseline << inertia_matrix_q * ( - cip.Kp_att * cim.Xi_e
+                                                 - cip.Kd_att * cim.omega_e);
+
+    // Cache the feedforward term
+    Eigen::Vector3d fft;
+    fft = - inertia_matrix_q
+          * ( ::_shared_::_transformations_::skewSymmetric(cim.omega) * cim.Rji.transpose() * cim.R_d * cim.omega_d 
+              - cim.Rji.transpose() * cim.R_d * cim.alpha_d);
+
+    // Compute with dynamic inversion
+    cim.tau_rot << cim.tau_rot_baseline + cim.omega.cross(inertia_matrix_q * cim.omega) + fft;
+
+    // Assing the control inputs
+    cim.u(1) = cim.tau_rot(0);
+    cim.u(2) = cim.tau_rot(1);
+    cim.u(3) = cim.tau_rot(2);
 }
 
 // Function to compute the normalized thrusts
@@ -274,11 +353,10 @@ void pid_geometric::compute_normalized_thrusts()
     cim.Sat_Thrust = (cim.Thrust.cwiseMin(MAX_THRUST).cwiseMax(MIN_THRUST));
 
     // Compute the final control inputs
-    // control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(0));
-    // control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(1));
-    // control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(2));
-    // control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(3));
-    control_input(0) = 0.0; control_input(1) = 0.0; control_input(2) = 0.0; control_input(3) = 0.0;
+    control_input(0) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(0));
+    control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(1));
+    control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(2));
+    control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_qrbp, cim.Sat_Thrust(3));
 }
 
 // Function that is called in sim-bridge.cpp
