@@ -413,17 +413,90 @@ void pid_geometric::ConfigureHeaders()
     oss << ", "
         << "Controller Time [s], "
         << "Algorithm Execution Time [us], "
-        ;    
+        << "user x [m], "
+        << "user y [m], "
+        << "user z [m], "
+        << "user vx [m/s], "
+        << "user vy [m/s], "
+        << "user vz [m/s], "
+        << "user ax [m/s2], "
+        << "user ay [m/s2], "
+        << "user az [m/s2], "
+        << "user psi [rad], "
+        << "x [m], "
+        << "y [m], "
+        << "z [m], "
+        << "vx [m/s], "
+        << "vy [m/s], "
+        << "vz [m/s], "
+        << "omega x [rad/s], "
+        << "omega y [rad/s], "
+        << "omega z [rad/s], "
+        << "e_tran_pos x [m], "
+        << "e_tran_pos y [m], "
+        << "e_tran_pos z [m], "
+        << "e_tran_vel x [m], "
+        << "e_tran_vel y [m], "
+        << "e_tran_vel z [m], "
+        << "e_tran_pos_I x [-], "
+        << "e_tran_pos_I y [-], "
+        << "e_tran_pos_I z [-], "
+        << "mu_tran_baseline x [N], "
+        << "mu_tran_baseline y [N], "
+        << "mu_tran_baseline z [N], "
+        << "mu_tran_I x [N], "
+        << "mu_tran_I y [N], "
+        << "mu_tran_I z [N], "
+        << "mu_tran_I_dot x [N/s], "
+        << "mu_tran_I_dot y [N/s], "
+        << "mu_tran_I_dot z [N/s], "
+        << "omega_d x [rad/s], "
+        << "omega_d y [rad/s], "
+        << "omega_d z [rad/s], "
+        << "alpha_d x [rad/s2], "
+        << "alpha_d y [rad/s2], "
+        << "alpha_d z [rad/s2], "
+        << "Xi_e x [-], "
+        << "Xi_e y [-], "
+        << "Xi_e z [-], "
+        << "omega_e x [-], "
+        << "omega_e y [-], "
+        << "omega_e z [-], "
+        << "tau_rot_baseline x [-], "
+        << "tau_rot_baseline y [-], "
+        << "tau_rot_baseline z [-], "
+        << "tau_rot x [-], "
+        << "tau_rot y [-], "
+        << "tau_rot z [-], "
+        << "u1 [N], "
+        << "u2 [Nm], "
+        << "u3 [Nm], "
+        << "u4 [Nm], "
+        << "T1 [N], "
+        << "T2 [N], "
+        << "T3 [N], "
+        << "T4 [N], "
+        << "T1 Normalized [-], "
+        << "T2 Normalized [-], "
+        << "T3 Normalized [-], "
+        << "T4 Normalized [-], "
+        ;
+
+        // Use the helper function to create the header for the matrix data
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "R_d", cim.R_d, "[-]");
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "R_d_dot", cim.R_d_dot, "[-]" );
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "R_ji", cim.Rji, "[-]");
+
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
 
         BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
 
-        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE PID QUATERNION LOG HEADER DATA");
+        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE PID GEOMETRIC LOG HEADER DATA");
     }
     catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE PID QUATERNION LOG HEADER DATA", e.what());
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE PID GEOMETRIC LOG HEADER DATA", e.what());
     }
 
 }
@@ -436,7 +509,79 @@ void pid_geometric::LogData()
     oss << ", "
         << cim.t << ", "
         << cim.alg_duration << ", "
+        << cim.r_user(0) << ", "
+        << cim.r_user(1) << ", "
+        << cim.r_user(2) << ", "
+        << cim.r_dot_user(0) << ", "
+        << cim.r_dot_user(1) << ", "
+        << cim.r_dot_user(2) << ", "
+        << cim.r_ddot_user(0) << ", "
+        << cim.r_ddot_user(1) << ", "
+        << cim.r_ddot_user(2) << ", "
+        << cim.psi_user << ", "
+        << cim.x_tran_pos(0) << ", "
+        << cim.x_tran_pos(1) << ", "
+        << cim.x_tran_pos(2) << ", "
+        << cim.x_tran_vel(0) << ", "
+        << cim.x_tran_vel(1) << ", "
+        << cim.x_tran_vel(2) << ", "
+        << cim.omega(0) << ", "
+        << cim.omega(1) << ", "
+        << cim.omega(2) << ", "
+        << cim.e_tran_pos(0) << ", "
+        << cim.e_tran_pos(1) << ", "
+        << cim.e_tran_pos(2) << ", "
+        << cim.e_tran_vel(0) << ", "
+        << cim.e_tran_vel(1) << ", "
+        << cim.e_tran_vel(2) << ", "
+        << csm.e_tran_pos_I(0) << ", "
+        << csm.e_tran_pos_I(1) << ", "
+        << csm.e_tran_pos_I(2) << ", "
+        << cim.mu_tran_baseline(0) << ", "
+        << cim.mu_tran_baseline(1) << ", "
+        << cim.mu_tran_baseline(2) << ", "
+        << cim.mu_tran_I(0) << ", "
+        << cim.mu_tran_I(1) << ", "
+        << cim.mu_tran_I(2) << ", "
+        << cim.mu_tran_I_dot(0) << ", "
+        << cim.mu_tran_I_dot(1) << ", "
+        << cim.mu_tran_I_dot(2) << ", "
+        << cim.omega_d(0) << ", "
+        << cim.omega_d(1) << ", "
+        << cim.omega_d(2) << ", "
+        << cim.alpha_d(0) << ", "
+        << cim.alpha_d(1) << ", "
+        << cim.alpha_d(2) << ", "
+        << cim.Xi_e(0) << ", "
+        << cim.Xi_e(1) << ", "
+        << cim.Xi_e(2) << ", "
+        << cim.omega_e(0) << ", "
+        << cim.omega_e(1) << ", "
+        << cim.omega_e(2) << ", "
+        << cim.tau_rot_baseline(0) << ", "
+        << cim.tau_rot_baseline(1) << ", "
+        << cim.tau_rot_baseline(2) << ", "
+        << cim.tau_rot(0) << ", "
+        << cim.tau_rot(1) << ", "
+        << cim.tau_rot(2) << ", "
+        << cim.u(0) << ", "
+        << cim.u(1) << ", "
+        << cim.u(2) << ", "
+        << cim.u(3) << ", "
+        << cim.Sat_Thrust(0) << ", "
+        << cim.Sat_Thrust(1) << ", "
+        << cim.Sat_Thrust(2) << ", "
+        << cim.Sat_Thrust(3) << ", "
+        << this->control_input(0) << ", "
+        << this->control_input(1) << ", "
+        << this->control_input(2) << ", "
+        << this->control_input(3) << ", "
         ;
+
+        // User helper functions to output the matrix data
+        ::_shared_::_serialize_::appendEigenData(oss, cim.R_d);
+        ::_shared_::_serialize_::appendEigenData(oss, cim.R_d_dot);
+        ::_shared_::_serialize_::appendEigenData(oss, cim.Rji);
 
     try {
         BOOST_LOG_SCOPED_THREAD_TAG("Tag", "ControllerTag");
@@ -444,7 +589,7 @@ void pid_geometric::LogData()
         BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
     }
     catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE PID QUATERNION LOG HEADER DATA", e.what());
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE PID GEOMETRIC LOG DATA", e.what());
     }
 }
 
