@@ -50,7 +50,7 @@ namespace _mrac_geometric_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 15;
+constexpr int NSI = 141;
 
 // -------------------------------------------------------------------------------------------------------------------- //
 // CONTROLLER STRUCTURES
@@ -58,29 +58,89 @@ constexpr int NSI = 15;
 
 // Structure for all parameter members of the controller
 struct controller_internal_parameters {
+    Eigen::Matrix<double, 3, 3> Kp_refmod_tran;     // Proportional Gains for the translational reference model
+    Eigen::Matrix<double, 3, 3> Kd_refmod_tran;     // Derivative Gains for the translational reference model
+    Eigen::Matrix<double, 3, 3> Ki_refmod_tran;     // Integral Gains for the translational reference command
     Eigen::Matrix<double, 3, 3> Kp_tran;            // Proportional Gains for the translational control
     Eigen::Matrix<double, 3, 3> Ki_tran;            // Integral Gains for the translational control
     Eigen::Matrix<double, 3, 3> Kd_tran;            // Derivative Gains for the translational control
-    Eigen::Matrix<double, 3, 3> Kp_att;             // Proportional Gains for the rotational control
-    Eigen::Matrix<double, 3, 3> Kd_att;             // Derivative Gains for the rotational control
-    Eigen::Matrix<double, 3, 1> Ka_att;             // The axis scaling gaisn for the rotational control
+    Eigen::Matrix<double, 6, 6> Gamma_x_tran;       // Adaptive Gains for the translational control
+    Eigen::Matrix<double, 3, 3> Gamma_r_tran;       // Adaptive Gains for the translational control
+    Eigen::Matrix<double, 30, 30> Gamma_Theta_tran; // Adaptive Gains for the translational control
+    Eigen::Matrix<double, 6, 6> Q_tran;          	// Lyapunov weighting matrix
+    Eigen::Matrix<double, 6, 6> P_tran;          	// Solution matrix to continuous Lyapunov equation
+    Eigen::Matrix<double, 6, 6> A_tran;          	// Translational system matrix
+    Eigen::Matrix<double, 6, 3> B_tran;          	// Translational input matrix
+    Eigen::Matrix<double, 6, 6> A_ref_tran;      	// Reference model system matrix
+    Eigen::Matrix<double, 6, 3> B_ref_tran;      	// Reference model input matrix
+    double dead_zone_delta_translational;        	// Translational deadzone delta radius
+    double dead_zone_e0_translational;           	// Translational deadzone error tolerance
+    double sigma_x_translational;                	// Translational E-mod gain for x (states)
+    double sigma_r_translational;                	// Translational E-mod gain for r (commands)
+    double sigma_Theta_translational;            	// Translational E-mod gain for Theta (parameters)
+    double projection_x_max_x_translational;     	// Translational Projection limit for Kx_hat
+    double projection_epsilon_x_translational;   	// Translational Projection tolerance for Kx_hat
+    double projection_x_max_r_translational;     	// Translational Projection limit for Kr_hat
+    double projection_epsilon_r_translational;   	// Translational Projection tolerance for Kr_hat
+    double projection_x_max_Theta_translational; 	// Translational Projection limit for Theta_hat
+    double projection_epsilon_Theta_translational; 	// Translational Projection tolerance for Theta_hat
+    
     Eigen::Matrix<double, 2, 2> A_filter_mu;        // Differentiator A matrix for \mu
     Eigen::Matrix<double, 2, 1> B_filter_mu;        // Differentiator B matrix for \mu
     Eigen::Matrix<double, 1, 2> C_filter_mu;        // Differentiator C matrix for q_d
     Eigen::Matrix<double, 2, 2> A_filter_omega_d;   // Differentiator A matrix for omega_d
     Eigen::Matrix<double, 2, 1> B_filter_omega_d;   // Differentiator B matrix for omega_d
     Eigen::Matrix<double, 1, 2> C_filter_omega_d;   // Differentiator C matrix for omega_d
+
+    Eigen::Matrix<double, 3, 3> Kp_omega_ref;    	// Proportional rotational reference model gains
+    Eigen::Matrix<double, 3, 3> Ki_omega_ref;    	// Integral rotational reference model gains
+    Eigen::Matrix<double, 3, 3> Kp_att;             // Proportional Gains for the rotational control
+    Eigen::Matrix<double, 3, 3> Kd_att;             // Derivative Gains for the rotational control
+    Eigen::Matrix<double, 3, 1> Ka_att;             // The axis scaling gaisn for the rotational control
+    Eigen::Matrix<double, 3, 3>  Gamma_x_rot;    	// Adaptive gain for state feedback parameters
+    Eigen::Matrix<double, 3, 3>  Gamma_r_rot;    	// Adaptive gain for command tracking parameters
+    Eigen::Matrix<double, 12, 12> Gamma_Theta_rot;  // Adaptive gain for dynamic regression parameters
+    Eigen::Matrix<double, 3, 3> Q_rot;           	// Lyapunov weighting matrix (rotation)
+    Eigen::Matrix<double, 3, 3> P_rot;           	// Lyapunov solution matrix (rotation)
+    Eigen::Matrix<double, 3, 3> A_rot;           	// Rotational system matrix
+    Eigen::Matrix<double, 3, 3> B_rot;           	// Rotational input matrix
+    Eigen::Matrix<double, 3, 3> A_ref_rot;       	// Rotational reference model matrix
+    Eigen::Matrix<double, 3, 3> B_ref_rot;       	// Rotational reference input matrix
+    double dead_zone_delta_rotational;           	// Rotational deadzone delta radius
+    double dead_zone_e0_rotational;              	// Rotational deadzone error tolerance
+    double sigma_x_rotational;                   	// Rotational E-mod gain for x (states)
+    double sigma_r_rotational;                   	// Rotational E-mod gain for r (commands)
+    double sigma_Theta_rotational;               	// Rotational E-mod gain for Theta (parameters)
+    double projection_x_max_x_rotational;        	// Rotational Projection limit for Kx_hat
+    double projection_epsilon_x_rotational;      	// Rotational Projection tolerance for Kx_hat
+    double projection_x_max_r_rotational;        	// Rotational Projection limit for Kr_hat
+    double projection_epsilon_r_rotational;      	// Rotational Projection tolerance for Kr_hat
+    double projection_x_max_Theta_rotational;    	// Rotational Projection limit for Theta_hat
+    double projection_epsilon_Theta_rotational;  	// Rotational Projection tolerance for Theta_hat 
+    
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
 struct controller_integrated_state_members {
-    Eigen::Matrix<double, 3, 1> e_tran_pos_I;                      // Translational integral error
-    Eigen::Matrix<double, 2, 1> state_mu_x_filter;                 // States for filter
-    Eigen::Matrix<double, 2, 1> state_mu_y_filter;                 // States for filter
-    Eigen::Matrix<double, 2, 1> state_mu_z_filter;                 // States for filter
-    Eigen::Matrix<double, 2, 1> state_omega_x_d_filter;            // States for filter
-    Eigen::Matrix<double, 2, 1> state_omega_y_d_filter;            // States for filter
-    Eigen::Matrix<double, 2, 1> state_omega_z_d_filter;            // States for filter
+    Eigen::Matrix<double, 3, 1> e_tran_pos_I;               // Translational integral error
+    Eigen::Matrix<double, 3, 1> e_tran_pos_ref_I;		    // Translational Integral error (reference model - user cmd)
+	Eigen::Matrix<double, 6, 1> x_tran_ref;				    // Reference model in I
+	Eigen::Matrix<double, 6, 3> K_hat_x_tran;   			// Translational Adaptive gains for x
+	Eigen::Matrix<double, 3, 3> K_hat_r_tran;	    		// Translational Adaptive gains for r
+	Eigen::Matrix<double, 30, 3> Theta_hat_tran;	    	// Translational Adaptive gains for Theta
+	
+    Eigen::Matrix<double, 2, 1> state_mu_x_filter;          // States for filter
+    Eigen::Matrix<double, 2, 1> state_mu_y_filter;          // States for filter
+    Eigen::Matrix<double, 2, 1> state_mu_z_filter;          // States for filter
+    Eigen::Matrix<double, 2, 1> state_omega_x_d_filter;     // States for filter
+    Eigen::Matrix<double, 2, 1> state_omega_y_d_filter;     // States for filter
+    Eigen::Matrix<double, 2, 1> state_omega_z_d_filter;     // States for filter
+
+    Eigen::Matrix<double, 3, 1> e_rot_omega_ref_I;	        // Integral error (ang vel ref model - desired angular velocity)
+	Eigen::Matrix<double, 3, 1> omega_rot_ref;			    // Angular Velocity Reference model
+	Eigen::Matrix<double, 3, 3> K_hat_x_rot;			    // Rotational Adaptive gains for x
+	Eigen::Matrix<double, 3, 3> K_hat_r_rot;			    // Rotational Adaptive gains for r
+	Eigen::Matrix<double, 12, 3> Theta_hat_rot;			    // Rotational Adaptive gains for Theta
 };
 
 // Structure for all the internal members of the controller
@@ -92,11 +152,26 @@ struct controller_internal_members {
     double psi_user;                                               // Rotational command for psi
     double psi_user_unwrapped;                                     // Rotational command for psi without the -pi to pi jumps but as a continuous signal
     double psi_dot_user;                                           // Rotational command for psi rate
+    Eigen::Matrix<double, 3, 1> r_cmd_tran;                        // Translational reference command
+    Eigen::Matrix<double, 6, 1> x_tran_ref_dot;                    // Translational reference model
+    Eigen::Matrix<double, 6, 1> x_tran;                            // Translational states [position; velocity]
     Eigen::Matrix<double, 3, 1> x_tran_pos;                        // Translational position
     Eigen::Matrix<double, 3, 1> x_tran_vel;                        // Translational velocity
+    Eigen::Matrix<double, 3, 1> e_tran_pos_ref;                    // Translational reference model error
+    Eigen::Matrix<double, 6, 1> e_tran;                            // Translational error in states [e_pos; e_vel]
     Eigen::Matrix<double, 3, 1> e_tran_pos;                        // Translational error in position
     Eigen::Matrix<double, 3, 1> e_tran_vel;                        // Translational error in velocity
+    Eigen::Matrix<double, 6, 3> K_hat_x_tran_dot;				   // Adaptive gain to be integrated
+	Eigen::Matrix<double, 3, 3> K_hat_r_tran_dot;				   // Adaptive gain to be integrated
+	Eigen::Matrix<double, 30, 3> Theta_hat_tran_dot;			   // Adaptive gain to be integrated
+    Eigen::Matrix<double, 27, 1> outer_loop_regressor;			   // Outer loop regressor
+	Eigen::Matrix<double, 30, 1> augmented_outer_loop_regressor;   // Outer loop augmented regressor
+    double dead_zone_value_translational;						   // Dead zone val - OL
+    bool proj_op_activated_K_hat_x_translational;				   // Projection activation boolean - OL - K_hat_x
+	bool proj_op_activated_K_hat_r_translational;				   // Projection activation boolean - OL - K_hat_r
+	bool proj_op_activated_Theta_hat_translational;				   // Projection activation boolean - OL - Theta_hat
     Eigen::Matrix<double, 3, 1> mu_tran_baseline;                  // Baseline control input
+    Eigen::Matrix<double, 3, 1> mu_tran_adaptive;                  // Adaptive control input
     Eigen::Matrix<double, 3, 1> mu_tran_I;                         // Virtual control action in the inertial frame
     Eigen::Matrix<double, 3, 1> mu_tran_I_dot;                     // Rate of virtual control action in the inertial frame
     Eigen::Matrix<double, 3, 1> mu_tran_J;                         // Virtual control action in the body frame

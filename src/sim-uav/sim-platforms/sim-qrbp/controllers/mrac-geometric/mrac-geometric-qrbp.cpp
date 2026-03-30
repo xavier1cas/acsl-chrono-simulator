@@ -71,22 +71,60 @@ void mrac_geometric::read_params(const std::string& jsonFile)
 
     // Controller matrices ----------------------------------------------------------------------------------------------
     // Translational parameters
-    cip.Kp_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KP_translational"], 3, 3);
-    cip.Ki_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KI_translational"], 3, 3);
-    cip.Kd_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KD_translational"], 3, 3);
+    cip.Kp_refmod_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["KP_refmod_translational"], 3, 3);
+	cip.Ki_refmod_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["KI_refmod_translational"], 3, 3);
+	cip.Kd_refmod_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["KD_refmod_translational"], 3, 3);
+    cip.Kp_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["KP_translational"], 3, 3);
+    cip.Ki_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["KI_translational"], 3, 3);
+    cip.Kd_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["KD_translational"], 3, 3);
+    cip.Gamma_x_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["Gamma_x_translational"], 6, 6);
+	cip.Gamma_r_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["Gamma_r_translational"], 3, 3);
+	cip.Gamma_Theta_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["Gamma_Theta_translational"], 30, 30);
+	cip.Q_tran = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["TRANSLATIONAL"]["Q_translational"], 6, 6);
 
     // Rotational parameters
-    cip.Kp_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KP_rotational"], 3, 3);
-    cip.Kd_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["KD_rotational"], 3, 3);
-    cip.Ka_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["Ka_rotational"], 3, 1);
+    cip.Kp_omega_ref = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["KP_omega_ref"], 3, 3);
+	cip.Ki_omega_ref = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["KI_omega_ref"], 3, 3);
+    cip.Kp_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["KP_rotational"], 3, 3);
+    cip.Kd_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["KD_rotational"], 3, 3);
+    cip.Ka_att = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["Ka_rotational"], 3, 1);
+    cip.Gamma_x_rot = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["Gamma_x_rotational"], 3, 3);
+	cip.Gamma_r_rot = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["Gamma_r_rotational"], 3, 3);
+	cip.Gamma_Theta_rot = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["Gamma_Theta_rotational"], 12, 12);
+	cip.Q_rot = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["ROTATIONAL"]["Q_rotational"], 3, 3);
 
     // Differentiator matrices
-    cip.A_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_mu"], 2, 2);
-    cip.B_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["B_filter_mu"], 2, 1);
-    cip.C_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["C_filter_mu"], 1, 2);
-    cip.A_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["A_filter_omega_d"], 2, 2);
-    cip.B_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["B_filter_omega_d"], 2, 1);
-    cip.C_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["BASELINE"]["C_filter_omega_d"], 1, 2);
+    cip.A_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["FILTERS"]["A_filter_mu"], 2, 2);
+    cip.B_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["FILTERS"]["B_filter_mu"], 2, 1);
+    cip.C_filter_mu = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["FILTERS"]["C_filter_mu"], 1, 2);
+    cip.A_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["FILTERS"]["A_filter_omega_d"], 2, 2);
+    cip.B_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["FILTERS"]["B_filter_omega_d"], 2, 1);
+    cip.C_filter_omega_d = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["FILTERS"]["C_filter_omega_d"], 1, 2);
+
+    // Robustification Parameters
+	cip.dead_zone_delta_translational = j["ROBUSTIFICATION"]["dead_zone_delta_translational"];
+	cip.dead_zone_e0_translational = j["ROBUSTIFICATION"]["dead_zone_e0_translational"];
+	cip.sigma_x_translational = j["ROBUSTIFICATION"]["sigma_x_translational"];
+	cip.sigma_r_translational = j["ROBUSTIFICATION"]["sigma_r_translational"];
+	cip.sigma_Theta_translational = j["ROBUSTIFICATION"]["sigma_Theta_translational"];
+    cip.projection_x_max_x_translational = j["ROBUSTIFICATION"]["projection_x_max_x_translational"];
+	cip.projection_epsilon_x_translational = j["ROBUSTIFICATION"]["projection_epsilon_x_translational"];
+    cip.projection_x_max_r_translational = j["ROBUSTIFICATION"]["projection_x_max_r_translational"];
+	cip.projection_epsilon_r_translational = j["ROBUSTIFICATION"]["projection_epsilon_r_translational"];
+    cip.projection_x_max_Theta_translational = j["ROBUSTIFICATION"]["projection_x_max_Theta_translational"];
+	cip.projection_epsilon_Theta_translational = j["ROBUSTIFICATION"]["projection_epsilon_Theta_translational"];
+
+    cip.dead_zone_delta_rotational = j["ROBUSTIFICATION"]["dead_zone_delta_rotational"];
+	cip.dead_zone_e0_rotational = j["ROBUSTIFICATION"]["dead_zone_e0_rotational"];
+    cip.sigma_x_rotational = j["ROBUSTIFICATION"]["sigma_x_rotational"];
+	cip.sigma_r_rotational = j["ROBUSTIFICATION"]["sigma_r_rotational"];
+	cip.sigma_Theta_rotational = j["ROBUSTIFICATION"]["sigma_Theta_rotational"];
+    cip.projection_x_max_x_rotational = j["ROBUSTIFICATION"]["projection_x_max_x_rotational"]; 
+	cip.projection_epsilon_x_rotational = j["ROBUSTIFICATION"]["projection_epsilon_x_rotational"];
+    cip.projection_x_max_r_rotational = j["ROBUSTIFICATION"]["projection_x_max_r_rotational"];
+	cip.projection_epsilon_r_rotational = j["ROBUSTIFICATION"]["projection_epsilon_r_rotational"];
+    cip.projection_x_max_Theta_rotational = j["ROBUSTIFICATION"]["projection_x_max_Theta_rotational"];
+	cip.projection_epsilon_Theta_rotational = j["ROBUSTIFICATION"]["projection_epsilon_Theta_rotational"];
 
 }
 
@@ -102,6 +140,47 @@ void mrac_geometric::init(){
     // Setup the logging
     InitiateLogging();
     ConfigureHeaders();
+
+    /// Translational - Initialize matrices
+	// Initialize to zero the 6x6 matrix and set the top-right 3x3 block as follows
+	::_shared_::_initiate_::initMat(cip.A_tran);
+	cip.A_tran.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity();
+
+	// Initialize to zero the 6x3 matrix and set the bottom 3x3 block as follows
+	::_shared_::_initiate_::initMat(cip.B_tran);
+	cip.B_tran.block<3, 3>(3, 0) = Eigen::Matrix3d::Identity();
+
+	// Initialize to zero the 6x6 matrix
+	::_shared_::_initiate_::initMat(cip.A_ref_tran);
+	// Set the top-right 3x3 block as follows
+	cip.A_ref_tran.block<3, 3>(0, 3) = Eigen::Matrix3d::Identity();
+	// Set the bottom-left 3x3 block as follows
+	cip.A_ref_tran.block<3, 3>(3, 0) = -cip.Kp_refmod_tran;
+	// Set the bottom-right 3x3 block as follows
+	cip.A_ref_tran.block<3, 3>(3, 3) = -cip.Kd_refmod_tran;
+
+	// Initialize to zero the 6x3 matrix and set the bottom 3x3 block as follows
+	::_shared_::_initiate_::initMat(cip.B_ref_tran);
+	cip.B_ref_tran.block<3, 3>(3, 0) = (1.0 / MASS) * Eigen::Matrix3d::Identity();
+
+	// Solve the continuous Lyapunov equation to compute P_translational
+	cip.P_tran = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_tran, cip.Q_tran);
+
+    /// Rotational - Initialize matrices
+	// Intialize to zero the 3x3 matrix
+	::_shared_::_initiate_::initMat(cip.A_rot);
+
+	// Initlize to identity the 3x3 matrix 
+	cip.B_rot = Eigen::Matrix3d::Identity();
+	
+	// Set the 3x3 matrix as follows
+	cip.A_ref_rot << -cip.Kp_omega_ref;
+
+	// Set the 3x3 matrix as follows
+	cip.B_ref_rot = Eigen::Matrix3d::Identity();
+
+	// Solve the continuous Lyapunov eequation to compute P_rotational
+	cip.P_rot = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_rot, cip.Q_rot);
 }
 
 // Update function for the controller
@@ -129,6 +208,8 @@ void mrac_geometric::update(double time,
     // Assign the Translational States
     cim.x_tran_pos << x,y,z;
     cim.x_tran_vel << vx, vy, vz;
+    cim.x_tran << cim.x_tran_pos,
+                  cim.x_tran_vel;
 
     // Assign the quaternions and ensure it is normalized
     // q0 = w, q1 = x, q2 = y, q3 = z
@@ -164,13 +245,18 @@ void mrac_geometric::assign_from_rk4()
     int index = 0;
 
     //------------ assign after integration  ------------//
-    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_tran_pos_I, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_x_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_y_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_mu_z_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_x_d_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_y_d_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_z_d_filter, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_tran_pos_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_tran_pos_ref_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.x_tran_ref, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_tran, y, index);
+	::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_tran, y, index);
+	::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_tran, y, index);
 }
 
 // Model function for integration
@@ -179,13 +265,18 @@ void mrac_geometric::model(const _control_::rk4_array<double, NSI> &y, _control_
     int index = 0;
     
     //------------ Fill up the dy for integration  ------------//
-    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_tran_pos, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_x_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_y_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_z_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_x_d_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_y_d_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_z_d_filter, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_tran_pos, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_tran_pos_ref, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran_ref_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_tran_dot, dy, index);
+	::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_tran_dot, dy, index);
+	::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_tran_dot, dy, index);
 }
 
 
@@ -193,17 +284,103 @@ void mrac_geometric::model(const _control_::rk4_array<double, NSI> &y, _control_
 void mrac_geometric::compute_translational_control_in_I()
 {
     // Compute the error in the states
-    cim.e_tran_pos << cim.x_tran_pos - cim.r_user;
-    cim.e_tran_vel << cim.x_tran_vel - cim.r_dot_user;
+    cim.e_tran_pos << cim.x_tran_pos - csm.x_tran_ref.head<3>();
+    cim.e_tran_vel << cim.x_tran_vel - csm.x_tran_ref.tail<3>();
+    cim.e_tran << cim.e_tran_pos,
+                  cim.e_tran_vel;
+
+    // Compute the translational position error between the reference model and the user defined trajectory
+    cim.e_tran_pos_ref << csm.x_tran_ref.head<3>() - cim.r_user;
+
+    // Compute the refernce command input [reference model - user_defined_trajectory]
+    cim.r_cmd_tran << MASS * ( - cip.Ki_refmod_tran * csm.e_tran_pos_ref_I      // Integral term
+                               + cip.Kp_refmod_tran * cim.r_user                // Proportional term
+                               + cip.Kd_refmod_tran * cim.r_dot_user            // Derivative term
+                               + cim.r_ddot_user );                             // Feedforward term
+
+    // Reference model
+    cim.x_tran_ref_dot << cip.A_ref_tran * csm.x_tran_ref
+                        + cip.B_ref_tran * cim.r_cmd_tran;
 
     // Compute the baseline control input
-    cim.mu_tran_baseline << MASS*( - cip.Kp_tran * cim.e_tran_pos 
-                                   - cip.Kd_tran * cim.e_tran_vel
-                                   - cip.Ki_tran * csm.e_tran_pos_I
-                                   + cim.r_ddot_user );
+    cim.mu_tran_baseline << MASS*( - cip.Kp_tran * cim.e_tran_pos               // Proportional term
+                                   - cip.Kd_tran * cim.e_tran_vel               // Derivative term
+                                   - cip.Ki_tran * csm.e_tran_pos_I             // Integral term
+                                   + cim.x_tran_ref_dot.tail<3>() )             // Feedforward term
+                                   - MASS * G * e3_basis;                       // Weight Dynamic inversion term
+
+    // Compute the augmented regressor vector
+    cim.augmented_outer_loop_regressor << cim.mu_tran_baseline,
+										  cim.outer_loop_regressor;
+
+    // Cache the transpose of the tracking error * P * B
+	Eigen::Matrix<double, 1, 3> e_transpose_p_b = cim.e_tran.transpose() * cip.P_tran * cip.B_tran;
+
+	// Computing the scalar value output from the dead-zone modification modulation function
+	cim.dead_zone_value_translational = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(cim.e_tran.transpose(),
+																   						 cip.dead_zone_delta_translational,
+																   							cip.dead_zone_e0_translational);
+
+	// Adaptive laws
+	cim.K_hat_x_tran_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_x_tran,
+																				cim.dead_zone_value_translational,
+																				cim.x_tran,
+																				e_transpose_p_b,
+																				cip.sigma_x_translational,
+																				csm.K_hat_x_tran);
+
+	cim.K_hat_r_tran_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_r_tran,
+																				cim.dead_zone_value_translational,
+																				cim.r_cmd_tran,
+																				e_transpose_p_b,
+																				cip.sigma_r_translational,
+																				csm.K_hat_r_tran);
+
+	cim.Theta_hat_tran_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(cip.Gamma_Theta_tran,
+																				  cim.dead_zone_value_translational,
+																				  cim.augmented_outer_loop_regressor,
+																				  e_transpose_p_b,
+																				  cip.sigma_Theta_translational,
+																				  csm.Theta_hat_tran);
+
+    // Projection operator - Ball
+    // Projection operator K_hat_x
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_tran)> proj_op_output_K_hat_x_translational = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_tran, 
+                                                                    cim.K_hat_x_tran_dot,
+                                                                    cip.projection_x_max_x_translational,
+                                                                    cip.projection_epsilon_x_translational);
+
+    cim.K_hat_x_tran_dot = proj_op_output_K_hat_x_translational.projected_matrix;
+    cim.proj_op_activated_K_hat_x_translational = proj_op_output_K_hat_x_translational.projection_operator_activated;
+    
+    // Projection operator K_hat_r
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_tran)> proj_op_output_K_hat_r_translational = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_r_tran,
+                                                                    cim.K_hat_r_tran_dot,
+                                                                    cip.projection_x_max_r_translational,
+                                                                    cip.projection_epsilon_r_translational);
+
+    cim.K_hat_r_tran_dot = proj_op_output_K_hat_r_translational.projected_matrix;
+    cim.proj_op_activated_K_hat_r_translational = proj_op_output_K_hat_r_translational.projection_operator_activated;															 
+
+    // Projection operator Theta_hat
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_tran)> proj_op_output_Theta_hat_translational =
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.Theta_hat_tran,
+                                                                    cim.Theta_hat_tran_dot,
+                                                                    cip.projection_x_max_Theta_translational,
+                                                                    cip.projection_epsilon_Theta_translational);
+
+    cim.Theta_hat_tran_dot = proj_op_output_Theta_hat_translational.projected_matrix;
+    cim.proj_op_activated_Theta_hat_translational = proj_op_output_Theta_hat_translational.projection_operator_activated;
+
+    // Adaptive control law
+    cim.mu_tran_adaptive << csm.K_hat_x_tran.transpose() * cim.x_tran
+                          + csm.K_hat_r_tran.transpose() * cim.r_cmd_tran;
+                          - csm.Theta_hat_tran.transpose() * cim.augmented_outer_loop_regressor;
 
     // Compute with the dynamic inversion without aerodynamics
-    cim.mu_tran_I << cim.mu_tran_baseline - MASS * G * e3_basis;
+    cim.mu_tran_I << cim.mu_tran_baseline + cim.mu_tran_adaptive;
 }
 
 // Function to compute the outerloop translational control rate in I using the differentiator
