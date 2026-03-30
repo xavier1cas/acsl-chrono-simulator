@@ -105,7 +105,8 @@ controller:
     mrac_observer: false
     mrac_long_lat: false
     pid_quaternion: false
-    pid_geometric: true
+    pid_geometric: false
+    mrac_geometric: true
   x8copter: 
     pid: false
     mrac: false
