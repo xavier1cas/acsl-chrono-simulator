@@ -251,12 +251,19 @@ void mrac_geometric::assign_from_rk4()
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_x_d_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_y_d_filter, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.state_omega_z_d_filter, y, index);
+
     ::_shared_::_deserialize_::assignElementsToMembers(csm.e_tran_pos_I, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.e_tran_pos_ref_I, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.x_tran_ref, y, index);
     ::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_tran, y, index);
 	::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_tran, y, index);
 	::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_tran, y, index);
+
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.e_omega_ref_I, y, index);
+    ::_shared_::_deserialize_::assignElementsToMembers(csm.omega_ref, y, index);
+	::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_x_rot, y, index);
+	::_shared_::_deserialize_::assignElementsToMembers(csm.K_hat_r_rot, y, index);
+	::_shared_::_deserialize_::assignElementsToMembers(csm.Theta_hat_rot, y, index);
 }
 
 // Model function for integration
@@ -271,12 +278,20 @@ void mrac_geometric::model(const _control_::rk4_array<double, NSI> &y, _control_
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_x_d_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_y_d_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_omega_z_d_filter, dy, index);
+
     ::_shared_::_serialize_::assignElementsToDxdt(cim.e_tran_pos, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.e_tran_pos_ref, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran_ref_dot, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_tran_dot, dy, index);
 	::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_tran_dot, dy, index);
 	::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_tran_dot, dy, index);
+
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.e_omega_ref, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.omega_ref_dot, dy, index);
+    ::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_x_rot_dot, dy, index);
+	::_shared_::_serialize_::assignElementsToDxdt(cim.K_hat_r_rot_dot, dy, index);
+	::_shared_::_serialize_::assignElementsToDxdt(cim.Theta_hat_rot_dot, dy, index);
+
 }
 
 
@@ -467,13 +482,13 @@ void mrac_geometric::compute_u1_R_d()
 
     // Compute the internal state for angular acceleration
     cim.internal_state_omega_x_d_filter << cip.A_filter_omega_d * csm.state_omega_x_d_filter
-                                         + cip.B_filter_omega_d * cim.omega_d_in_K(0);
+                                         + cip.B_filter_omega_d * cim.omega_d(0);
 
     cim.internal_state_omega_y_d_filter << cip.A_filter_omega_d * csm.state_omega_y_d_filter
-                                         + cip.B_filter_omega_d * cim.omega_d_in_K(1);
+                                         + cip.B_filter_omega_d * cim.omega_d(1);
 
     cim.internal_state_omega_z_d_filter << cip.A_filter_omega_d * csm.state_omega_z_d_filter
-                                         + cip.B_filter_omega_d * cim.omega_d_in_K(2);
+                                         + cip.B_filter_omega_d * cim.omega_d(2);
 
     // Compute the desired angular acceleration
     cim.alpha_d(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
@@ -499,20 +514,97 @@ void mrac_geometric::compute_rotational_control()
     cim.Xi_e = a1e1.cross(r1) + a2e2.cross(r2) + a3e3.cross(r3);
 
     // Compute the error in the angular velocities
-    cim.omega_e << cim.omega - cim.omega_d;
+    cim.omega_e << cim.omega - csm.omega_ref;
 
-    // Compute the baseline control input
-    cim.tau_rot_baseline << inertia_matrix_q * ( - cip.Kp_att * cim.Xi_e
-                                                 - cip.Kd_att * cim.omega_e);
+    // Compute the error between the angular velocity reference model and the desired angular velocity
+    cim.e_omega_ref << csm.omega_ref - cim.omega_d;
+
+    // Compute the command angular velocity
+    cim.omega_cmd << cip.Kp_omega_ref * cim.omega_d - cip.Ki_omega_ref * csm.e_omega_ref_I + cim.alpha_d;
+
+    // Compute the derivative of the refernce angular velocity
+    cim.omega_ref_dot << cip.A_ref_rot * csm.omega_ref + cip.B_ref_rot * cim.omega_cmd;
 
     // Cache the feedforward term
     Eigen::Vector3d fft;
-    fft = - inertia_matrix_q
-          * ( ::_shared_::_transformations_::skewSymmetric(cim.omega) * cim.Rji.transpose() * cim.R_d * cim.omega_d 
-              - cim.Rji.transpose() * cim.R_d * cim.alpha_d);
+    fft = inertia_matrix_q * ( cim.omega.cross(inertia_matrix_q * cim.omega) - cim.alpha_d );
+    
+    // Compute the baseline control input
+    cim.tau_rot_baseline << inertia_matrix_q * ( - cip.Kp_att * cim.Xi_e        // Proportional term
+                                                 - cip.Kd_att * cim.omega_e)    // Derivative term
+                                                 + fft;                         // Feedforward term
 
-    // Compute with dynamic inversion
-    cim.tau_rot << cim.tau_rot_baseline + cim.omega.cross(inertia_matrix_q * cim.omega) + fft;
+    // Compute the augmented regressor vector
+    cim.augmented_inner_loop_regressor << cim.tau_rot_baseline, cim.inner_loop_regressor;
+
+    // Cache the transpose of the tracking error * P * B
+    Eigen::Matrix<double, 1, 3> e_transpose_p_b = cim.omega_e.transpose() * cip.P_rot * cip.B_rot;
+
+    // Computing the scalar value output from the dead-zone modification modulation function
+	cim.dead_zone_value_rotational = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(cim.omega_e.transpose(),
+																								 cip.dead_zone_delta_rotational,
+																								 cip.dead_zone_e0_rotational);
+
+	// Adaptive laws
+	cim.K_hat_x_rot_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_x_rot,
+																				cim.dead_zone_value_rotational,
+																				cim.omega,
+																				e_transpose_p_b,
+																				cip.sigma_x_rotational,
+																				csm.K_hat_x_rot);
+
+	cim.K_hat_r_rot_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_r_rot,
+																				cim.dead_zone_value_rotational,
+																				cim.omega_cmd,
+																				e_transpose_p_b,
+																				cip.sigma_r_rotational,
+																				csm.K_hat_r_rot);
+
+	cim.Theta_hat_rot_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(cip.Gamma_Theta_rot,
+																				  cim.dead_zone_value_rotational,
+																				  cim.augmented_inner_loop_regressor,
+																				  e_transpose_p_b,
+																				  cip.sigma_Theta_rotational,
+																				  csm.Theta_hat_rot);	
+
+    // Projection operator - Ball
+    // Projection operator K_hat_x
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_rot)> proj_op_output_K_hat_x_rotational = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_rot,
+                                                                    cim.K_hat_x_rot_dot,
+                                                                    cip.projection_x_max_x_rotational,
+                                                                    cip.projection_epsilon_x_rotational);
+
+    cim.K_hat_x_rot_dot = proj_op_output_K_hat_x_rotational.projected_matrix;
+    cim.proj_op_activated_K_hat_x_rotational = proj_op_output_K_hat_x_rotational.projection_operator_activated;
+
+    // Projection operator K_hat_r
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_rot)> proj_op_output_K_hat_r_rotational = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_r_rot,
+                                                                    cim.K_hat_r_rot_dot,
+                                                                    cip.projection_x_max_r_rotational,
+                                                                    cip.projection_epsilon_r_rotational);
+                                
+    cim.K_hat_r_rot_dot = proj_op_output_K_hat_r_rotational.projected_matrix;
+    cim.proj_op_activated_K_hat_r_rotational = proj_op_output_K_hat_r_rotational.projection_operator_activated;
+
+    // Projection operator Theta_hat
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_rot)> proj_op_output_Theta_hat_rotational = 
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.Theta_hat_rot,
+                                                                    cim.Theta_hat_rot_dot,
+                                                                    cip.projection_x_max_Theta_rotational,
+                                                                    cip.projection_epsilon_Theta_rotational);
+
+    cim.Theta_hat_rot_dot = proj_op_output_Theta_hat_rotational.projected_matrix;
+    cim.proj_op_activated_Theta_hat_rotational = proj_op_output_Theta_hat_rotational.projection_operator_activated;
+
+    // Adaptive control law
+	cim.tau_rot_adaptive << csm.K_hat_x_rot.transpose() * cim.omega
+						  + csm.K_hat_r_rot.transpose() * cim.omega_cmd
+						  - csm.Theta_hat_rot.transpose() * cim.augmented_inner_loop_regressor;
+
+	// Total rotational control input
+	cim.tau_rot << cim.tau_rot_baseline + cim.tau_rot_adaptive;	
 
     // Assing the control inputs
     cim.u(1) = cim.tau_rot(0);

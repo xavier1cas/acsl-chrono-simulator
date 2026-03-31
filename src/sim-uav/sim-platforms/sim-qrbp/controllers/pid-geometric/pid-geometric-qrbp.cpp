@@ -290,13 +290,13 @@ void pid_geometric::compute_u1_R_d()
 
     // Compute the internal state for angular acceleration
     cim.internal_state_omega_x_d_filter << cip.A_filter_omega_d * csm.state_omega_x_d_filter
-                                         + cip.B_filter_omega_d * cim.omega_d_in_K(0);
+                                         + cip.B_filter_omega_d * cim.omega_d(0);
 
     cim.internal_state_omega_y_d_filter << cip.A_filter_omega_d * csm.state_omega_y_d_filter
-                                         + cip.B_filter_omega_d * cim.omega_d_in_K(1);
+                                         + cip.B_filter_omega_d * cim.omega_d(1);
 
     cim.internal_state_omega_z_d_filter << cip.A_filter_omega_d * csm.state_omega_z_d_filter
-                                         + cip.B_filter_omega_d * cim.omega_d_in_K(2);
+                                         + cip.B_filter_omega_d * cim.omega_d(2);
 
     // Compute the desired angular acceleration
     cim.alpha_d(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
@@ -330,12 +330,10 @@ void pid_geometric::compute_rotational_control()
 
     // Cache the feedforward term
     Eigen::Vector3d fft;
-    fft = - inertia_matrix_q
-          * ( ::_shared_::_transformations_::skewSymmetric(cim.omega) * cim.Rji.transpose() * cim.R_d * cim.omega_d 
-              - cim.Rji.transpose() * cim.R_d * cim.alpha_d);
+    fft = inertia_matrix_q * ( cim.omega.cross(inertia_matrix_q * cim.omega) - cim.alpha_d );
 
     // Compute with dynamic inversion
-    cim.tau_rot << cim.tau_rot_baseline + cim.omega.cross(inertia_matrix_q * cim.omega) + fft;
+    cim.tau_rot << cim.tau_rot_baseline + fft;
 
     // Assing the control inputs
     cim.u(1) = cim.tau_rot(0);

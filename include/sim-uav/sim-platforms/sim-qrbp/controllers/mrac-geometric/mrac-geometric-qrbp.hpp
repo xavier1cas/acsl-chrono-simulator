@@ -50,7 +50,7 @@ namespace _mrac_geometric_
 {
 
 // Define the number of states in the boost array for integration
-constexpr int NSI = 141;
+constexpr int NSI = 201;
 
 // -------------------------------------------------------------------------------------------------------------------- //
 // CONTROLLER STRUCTURES
@@ -136,8 +136,8 @@ struct controller_integrated_state_members {
     Eigen::Matrix<double, 2, 1> state_omega_y_d_filter;     // States for filter
     Eigen::Matrix<double, 2, 1> state_omega_z_d_filter;     // States for filter
 
-    Eigen::Matrix<double, 3, 1> e_rot_omega_ref_I;	        // Integral error (ang vel ref model - desired angular velocity)
-	Eigen::Matrix<double, 3, 1> omega_rot_ref;			    // Angular Velocity Reference model
+    Eigen::Matrix<double, 3, 1> e_omega_ref_I;   	        // Integral error (ang vel ref model - desired angular velocity)
+	Eigen::Matrix<double, 3, 1> omega_ref;  			    // Angular Velocity Reference model
 	Eigen::Matrix<double, 3, 3> K_hat_x_rot;			    // Rotational Adaptive gains for x
 	Eigen::Matrix<double, 3, 3> K_hat_r_rot;			    // Rotational Adaptive gains for r
 	Eigen::Matrix<double, 12, 3> Theta_hat_rot;			    // Rotational Adaptive gains for Theta
@@ -207,10 +207,23 @@ struct controller_internal_members {
 
     Eigen::Quaterniond q;                                          // Quaternion
     Eigen::Matrix<double, 3, 1> omega;                             // Angular velocity
+    Eigen::Matrix<double, 3, 1> omega_cmd;                         // Angular velocity reference command
+    Eigen::Matrix<double, 3, 1> omega_ref_dot;                     // Angular velocity reference model
+    Eigen::Matrix<double, 3, 1> e_omega_ref;                       // Angular velocity reference model error
     Eigen::Matrix<double, 3, 1> omega_e;                           // Error in the angular velocities
     Eigen::Matrix<double, 3, 1> Xi_e;                              // Error in the attitude states
+    Eigen::Matrix<double, 9, 1> inner_loop_regressor;			   // Inner loop regressor vector
+	Eigen::Matrix<double, 12, 1> augmented_inner_loop_regressor;   // Inner loop augmented regressor vector    
     Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input 
+    Eigen::Matrix<double, 3, 1> tau_rot_adaptive;                  // Adaptive rotational control input 
     Eigen::Matrix<double, 3, 1> tau_rot;                           // Rotational Control action
+    Eigen::Matrix<double, 3, 3> K_hat_x_rot_dot;				   // Adaptive gain to be integrated
+	Eigen::Matrix<double, 3, 3> K_hat_r_rot_dot;				   // Adaptive gain to be integrated
+	Eigen::Matrix<double, 12, 3> Theta_hat_rot_dot;				   // Adaptive gain to be integrated
+    double dead_zone_value_rotational;							   // Dead zone val - IL
+    bool proj_op_activated_K_hat_x_rotational;					   // Projection activation boolean - IL - K_hat_x
+	bool proj_op_activated_K_hat_r_rotational;					   // Projection activation boolean - IL - K_hat_r
+	bool proj_op_activated_Theta_hat_rotational;				   // Projection activation boolean - IL - Theta_hat
 
     Eigen::Matrix<double, 4, 1> u;                                 // [thrust; mx; my; mz]
     Eigen::Matrix<double, 4, 1> Thrust;                            // Newtons
