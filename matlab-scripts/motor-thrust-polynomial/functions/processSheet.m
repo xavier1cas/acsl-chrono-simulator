@@ -214,7 +214,14 @@ function data = processSheet(F, param)
         Ct(ii) = estimated_thrust_N(ii) / ...
             ((param.rho * param.D^4) * estimated_rps(ii)^2);
     end
-    avg_Ct = mean(Ct);
+    
+    % avg_Ct = mean(Ct);
+
+    % Sort for the top 10 values
+    Ct_sorted = sort(Ct, 'descend');       % largest first
+    nTop      = min(20, numel(Ct_sorted)); % in case Ct has <5 elements
+    avg_Ct    = mean(Ct_sorted(1:nTop));   % mean of top 20 values
+
 
     %----------------------------------------------------------------------
     % Plot experimental thrust data (g and N)
@@ -330,6 +337,29 @@ function data = processSheet(F, param)
     set(gca, 'FontSize', param.font_size);
 
     %----------------------------------------------------------------------
+    % Plot torque vs normalized thrust setpoint
+    %   torque = 0.15 * Ct * thrust
+    %   where Ct ≈ avg_Ct and thrust is from the forward polynomial
+    %----------------------------------------------------------------------
+    
+    % Use the same input grid you used for thrust (control_input_vector)
+    % and the corresponding thrust values y (or estimated_thrust_N)
+    torque = 0.15 * avg_Ct * y;   % y is thrust [N] from forward transfer function
+    
+    set(figure, 'Color', 'white');
+    plot(control_input_vector, torque, '-', ...
+        'LineWidth', 2, ...
+        'Color', 'black');
+    grid on;
+    xlabel('Normalized Commanded Thrust [-]', ...
+           'Interpreter', 'latex', 'FontSize', param.font_size);
+    ylabel('Torque [Nm]', ...
+           'Interpreter', 'latex', 'FontSize', param.font_size);
+    title('Back Torque vs. Normalized Thrust Setpoint', ...
+          'Interpreter', 'latex', 'FontSize', param.font_size);
+    set(gca, 'FontSize', param.font_size);
+
+    %----------------------------------------------------------------------
     % Assemble output structure
     %----------------------------------------------------------------------
 
@@ -337,4 +367,27 @@ function data = processSheet(F, param)
     data.thrust_to_normalized_thrust_polynomial = rP;
     data.normalized_thrust_to_rads_polynomial    = coeff_interp_rads;
     data.estimated_Ct = avg_Ct;
+
+    % Ensure row vectors for readability
+    nth2th  = data.normalized_thrust_to_thrust_polynomial(:).';
+    th2nth  = data.thrust_to_normalized_thrust_polynomial(:).';
+    nth2rad = data.normalized_thrust_to_rads_polynomial(:).';
+    Ct      = data.estimated_Ct;
+    
+    names = { ...
+        'normalized_thrust_to_thrust_polynomial'; ...
+        'thrust_to_normalized_thrust_polynomial'; ...
+        'normalized_thrust_to_rads_polynomial'; ...
+        'estimated_Ct'};
+    
+    values = { ...
+        nth2th; ...
+        th2nth; ...
+        nth2rad; ...
+        Ct};
+    
+    Tpoly = table(names, values, ...
+        'VariableNames', {'Name','Value'});
+    
+    disp(Tpoly);
 end
