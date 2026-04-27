@@ -70,7 +70,7 @@
 // -----------------------------------------------------------------------------
 #include "sim-qrbp.hpp"
 // #include "sim-x8copter.hpp"
-// #include "sim-acslquad.hpp"
+#include "sim-tailsitter.hpp"
 
 namespace _acsl_
 {
@@ -103,9 +103,9 @@ namespace _bridge_
 //   4) Remove it from sim-config.yaml and any related headers/logic.
 // -----------------------------------------------------------------------------
 struct platforms {
-    bool qrbp{};       // Quadrotor Biplane
-    bool x8copter{};   // X8 coaxial drone
-    bool acslquad{};   // ACSL quadrotor test platform
+    bool qrbp{};         // Quadrotor Biplane
+    bool x8copter{};     // X8 coaxial drone
+    bool tailsitter{};   // Tailsitter (scaled/lighter version of the QRBP)
 
 
     // -------------------------------------------------------------------------
@@ -122,7 +122,7 @@ struct platforms {
         return {
             {"qrbp", qrbp},
             {"x8copter", x8copter},
-            {"acslquad", acslquad}
+            {"tailsitter", tailsitter}
         };
     }
 
@@ -166,12 +166,10 @@ struct platforms {
         //         new ::_acsl_::_x8copter_::simx8copter(sys)
         //     );
         // }
-        // else if (active == "acslquad") {
-        //     _message_::SIMULATOR_INFO("ATTACHING ACSLQUAD TO THE PHYSICS SYSTEM");
-        //     return std::unique_ptr< ::_acsl_::_uav_::simuavbase >(
-        //         new ::_acsl_::_acslquad_::simacslquad(sys)
-        //     );
-        // }
+        else if (active == "tailsitter") {
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING TAILSITTER TO THE PHYSICS SYSTEM");
+            return std::unique_ptr< ::_acsl_::_uav_::simuavbase >( new ::_acsl_::_tailsitter_::simtailsitter(sys) );
+        }
 
         _message_::SIMULATOR_ERROR("[SIMBRG]: ACTIVE PLATFORM NAME NOT RECOGNIZED: " + active);
         return nullptr;

@@ -80,8 +80,7 @@
 #include "mrac-geometric-qrbp.hpp"
 // #include "pid-x8copter.hpp"
 // #include "mrac-x8copter.hpp"
-// #include "pid-acslquad.hpp"
-// #include "mrac-acslquad.hpp"
+#include "mrac-geometric-tailsitter.hpp"
 
 namespace _acsl_
 {
@@ -94,7 +93,7 @@ namespace _bridge_
 //
 // Purpose:
 //   Holds grouped controller selection flags for each UAV platform. Each inner
-//   struct (qrbp, x8copter, acslquad) contains boolean flags for available
+//   struct (qrbp, x8copter, tailsitter) contains boolean flags for available
 //   control algorithms (e.g., PID, MRAC).
 //
 // Pattern:
@@ -151,14 +150,13 @@ struct controllers
     } x8copter;
 
     // -------------------------------------------------------------------------
-    // Platform group: ACSL quad
-    // Holds controller flags specific to ACSL quadrotor testbed.
+    // Platform group: tailsitter
+    // Holds controller flags specific to tailsitter.
     // -------------------------------------------------------------------------
-    struct acslquad
+    struct tailsitter
     {
-        bool pid{};         // Standard PID controller
-        bool mrac{};        // Model Reference Adaptive Controller
-    } acslquad;
+        bool mrac_geometric{};  // MRAC with geometric control for TAILSITTER
+    } tailsitter;
 
     // -------------------------------------------------------------------------
     // Returns all controller selection flags as:
@@ -180,8 +178,7 @@ struct controllers
             {"x8copter", "pid", x8copter.pid},
             {"x8copter", "mrac", x8copter.mrac},
             {"x8copter", "tlmrac", x8copter.tlmrac},
-            {"acslquad", "pid", acslquad.pid},
-            {"acslquad", "mrac", acslquad.mrac},
+            {"tailsitter", "mrac_geometric", tailsitter.mrac_geometric}
         };
     }
 
@@ -194,7 +191,7 @@ struct controllers
     //   specified platform.
     //
     // Parameters:
-    //   platform    - String name ("qrbp", "x8copter", "acslquad") indicating
+    //   platform    - String name ("qrbp", "x8copter", "tailsitter") indicating
 		// 							   current active platform attached to the system
     //   logger      - Reference to the simulator's logging instance.
     //   trajectory  - Reference to the currently active trajectory object.
@@ -249,10 +246,13 @@ struct controllers
             return std::make_unique< ::_acsl_::_qrbp_::_mrac_geometric_::mrac_geometric >(logger, trajectory);
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC GEOMETRIC CONTROLLER TO QRBP");
         }
+        else if (active.first == "tailsitter" && active.second == "mrac_geometric") {
+            return std::make_unique< ::_acsl_::_tailsitter_::_mrac_geometric_::mrac_geometric >(logger, trajectory);
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC_GEOMETRIC CONTROLLER TO TAILSITTER");
+        }
         // [Add more else if branches for other controllers as needed]
-        // e.g., x8copter and acslquad controllers
+        // e.g., x8copter and tailsitter controllers
         // else if (active.first == "x8copter" && active.second == "pid") { ... }
-        // else if (active.first == "acslquad" && active.second == "pid") { ... }
 
         return nullptr;
     }

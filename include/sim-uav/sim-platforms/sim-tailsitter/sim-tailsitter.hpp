@@ -22,55 +22,54 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  **********************************************************************************************************************/
 
-
  /**********************************************************************************************************************
- * File:        sim-qrbp.hpp
+ * File:        sim-tailsitter.hpp
  * Author:      Giri Mugundan Kumar
- * Date:        August 11, 2025
+ * Date:        April 23, 2026
  * For info:    Andrea L'Afflitto 
  *              a.lafflitto@vt.edu
  * 
- * Description: Derived UAV class for the simulated qrbp.
+ * Description: Derived UAV class for the simulated tailsitter.
  * 
  * GitHub:    https://github.com/girimugundankumar/acsl-physics-sim.git
  **********************************************************************************************************************/
 
-#ifndef SIM_QRBP_HPP_
-#define SIM_QRBP_HPP_
+#ifndef SIM_TAILSITTER_HPP_
+#define SIM_TAILSITTER_HPP_
 
 #include "sim-uav.hpp"
 
 namespace _acsl_
 {
 
-namespace _qrbp_
+namespace _tailsitter_
 {
 
 // Define the number of propellers for this class of UAV
 #define NOP 4
 
 // ============================================================================
-// simqrbp class
+// simtailsitter class
 // Inherits from the templated base UAV simulator class, specifying nop = 4,
 // meaning this is a fixed 4‑propeller variant of the UAV.
 // ============================================================================
-class simqrbp : public _acsl_::_uav_::simuav<NOP> 
+class simtailsitter : public _acsl_::_uav_::simuav<NOP> 
 {
 public:
     // ------------------------------------------------------------------------
-    // Constructor for simqrbp
+    // Constructor for simtailsitter
     //
     // Parameters:
-    //   sys - a reference to the Chrono physical system (ChSystemNSC) 
+    //   sys - a reference to the Chrono physical system (ChSystemNSC)
     //         where bodies, joints, and simulation settings live.
-    //
+    // 
     // This constructor *must* forward 'sys' to the base class constructor
     // for simuav<4>, because that class stores a reference to ChSystemNSC.
     // ------------------------------------------------------------------------
-    simqrbp(chrono::ChSystemNSC& sys) // <-- Call the base class constructor, Set the wing data.
+    simtailsitter(chrono::ChSystemNSC& sys) // <-- Call the base class constructor, Set the wing data.
         : _acsl_::_uav_::simuav<NOP>(sys, ::_acsl_::_uav_::_aerofoil_::AirFoilType::NACA0012)  
     {
-        // All initialization specific to 'simqrbp' goes here.
+        // All initialization specific to 'simtailsitter' goes here.
         // NOTE: THE ORDER OF THESE FUNCTIONS MATTER. YOU CAN IGNORE THE UNIQUE FNS
         //       IF YOU ARE TRYING TO REPLICATE THIS CODE FOR ANOTHER PLATFORM.    
         // 
@@ -81,17 +80,17 @@ public:
         //   - Call the function to setup the chassis of the uav
         //   - Initiate the entire UAV and add it to the physics system
 
-        SetUAVPlatformName("qrbp");                                    // <- Baseclass function
-        SetupInertialNEDFrame();                                       // <- Baseclass function
-        SetUAVShapesDir("../chrono-assets/models/qrbp/qrbp_shapes/");  // <- Baseclass function
+        SetUAVPlatformName("tailsitter");                                          // <- Baseclass function
+        SetupInertialNEDFrame();                                                   // <- Baseclass function
+        SetUAVShapesDir("../chrono-assets/models/tailsitter/tailsitter_shapes/");  // <- Baseclass function
         
-        ConfigureQRBPChassis();                                 // <- Compulsary derived class function
-        ConfigureQRBPProps();                                   // <- Compulsary derived class function
-        ConfigureQRBPLinks();                                   // <- Compulsary derived class function
-        ConfigureQRBPMotors();                                  // <- Compulsary derived class function
-        ConfigureQRBPAerodynamics();                            // <- Unique derived class function
+        ConfigureTAILSITTERChassis();                                 // <- Compulsary derived class function
+        ConfigureTAILSITTERProps();                                   // <- Compulsary derived class function
+        // ConfigureTAILSITTERLinks();                                   // <- Compulsary derived class function
+        // ConfigureTAILSITTERMotors();                                  // <- Compulsary derived class function
+        // ConfigureTAILSITTERAerodynamics();                            // <- Unique derived class function
         
-        AddUAVToSystem();                                       // <- Baseclass function
+        AddUAVToSystem();                                             // <- Baseclass function
 
     }
 
@@ -113,18 +112,18 @@ public:
     // The unique functions are:
     //   - Function to setup the aerodynamics
     // ------------------------------------------------------------------------
-    void ConfigureQRBPChassis();
-    void ConfigureQRBPProps();
-    void ConfigureQRBPLinks();
-    void ConfigureQRBPMotors();
-    void ConfigureQRBPAerodynamics();
+    void ConfigureTAILSITTERChassis();
+    void ConfigureTAILSITTERProps();
+    void ConfigureTAILSITTERLinks();
+    void ConfigureTAILSITTERMotors();
+    void ConfigureTAILSITTERAerodynamics();
 };
 
 
-}   // namespace _qrbp_
 
 
-}   // namespace _acsl_
+} // namespace _tailsitter_
 
+} // namespace _acsl_
 
-#endif // SIM_QRBP_HPP_
+#endif // SIM_TAILSITTER_HPP_

@@ -41,7 +41,7 @@ main:
 
   # Camera options -------------------------------------------------
   # true: fixed viewpoint; false: dynamic/follow
-  enable_static_cam: false
+  enable_static_cam: true
   # (m) Distance the camera is placed in z (NED)
   mv_cam_chase_ht: 1.0
   # (m) Distance the camera is placed in x (NED) 
@@ -57,7 +57,7 @@ main:
   # Show all COG frames in the scene
   render_all_COG_frames: false
   # Show the trajectory in the secene
-  render_trajectory: true
+  render_trajectory: false
   # Show the biplane frame
   render_biplane_frame: false
   # Show the chassis aerodynamic drag frame

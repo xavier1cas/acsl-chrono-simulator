@@ -161,6 +161,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-tailsitter)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-scene/sim-locales)
@@ -181,6 +182,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/si
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/pid-quaternion)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/pid-geometric)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-qrbp/controllers/mrac-geometric)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-tailsitter/controllers)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-tailsitter/controllers/mrac-geometric)
 
 #-----------------------------------------------------------------------------
 # Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen
@@ -212,6 +216,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-helpers.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-logger.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/sim-qrbp.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-tailsitter/sim-tailsitter.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-scene/sim-locales/sim-flat/sim-flat.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-bridge/sim-bridge.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/piecewise-polynomial/piecewise-polynomial-trajectory.cpp
@@ -225,6 +230,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/pid-quaternion/pid-quaternion-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/pid-geometric/pid-geometric-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/mrac-geometric/mrac-geometric-qrbp.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-tailsitter/controllers/mrac-geometric/mrac-geometric-tailsitter.cpp
    )
 
 add_executable(acsl_sim ${SOURCES})

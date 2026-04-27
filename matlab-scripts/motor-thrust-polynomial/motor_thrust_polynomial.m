@@ -57,8 +57,8 @@ set(groot, 'defaultLegendInterpreter','latex');
 parameters.font_size = 20;
 
 % Add the folder paths
-addpath("data\")
-addpath("functions\")
+addpath("data/")
+addpath("functions/")
 %==========================================================================
 
 %% Thrust Calibration Data Requirements and Test Procedure
@@ -106,12 +106,12 @@ addpath("functions\")
 % READ THE EXCEL SHEET - UNCOMMENT THE MOTOR YOU WANT FROM THE DATA FOLDER
 %-------------------------------------------------------------------------
 % Velox V2808 1300Kv Motor | DP 7x4x3 Triblade
-F = "velox_v2808_1300kv";
-parameters.D = 0.1778;      % Diameter of the propeller
+% F = "velox_v2808_1300kv";
+% parameters.D = 0.1778;      % Diameter of the propeller
 
 % Antigravity MN5008 400Kv | T-motor 16x5.4" CF
-% F = "antigravity_mn5008_400kv";
-% parameters.D = 0.4064;      % Diameter of the propeller
+F = "antigravity_mn5008_400kv";
+parameters.D = 0.4064;      % Diameter of the propeller
 
 %-------------------------------------------------------------------------
 % SET THE PARAMETERS FOR PROCESSING - Usually need not be modified
