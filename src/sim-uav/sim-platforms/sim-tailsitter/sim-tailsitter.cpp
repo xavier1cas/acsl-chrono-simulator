@@ -63,9 +63,6 @@ void simtailsitter::ConfigureTAILSITTERChassis()
 
     // Configure the chassis COM along with it's auxilliary frame at the COM ------------------------------------------
     // This is the most important as we will consider this to be the pixhawk in our subsequent calculations
-    // chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0163151142227842,0.0102080920244478,0.017016814810521),
-    //                                            chrono::ChQuaternion<>(1,0,0,0)); 
-
     chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0352349286341472,0.322872417873955,0.186003857246375),
                                                chrono::ChQuaternion<>(1,0,0,0)); 
 
@@ -159,7 +156,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
     // There are no collision geometries - Therefore we ignore that step
 
     // Set the color and opacity values
-    prop_properties.color = _uav_::_prop_color_::PURPLE;
+    prop_properties.color = _uav_::_prop_color_::BLACK;
     prop_properties.opacity = 0.5;
 
     // Call all the configuration helper functions
@@ -198,7 +195,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
     // There are no collision geometries - Therefore we ignore that step
 
     // Set the color and opacity values
-    prop_properties.color = _uav_::_prop_color_::PURPLE;
+    prop_properties.color = _uav_::_prop_color_::BLACK;
     prop_properties.opacity = 0.5;
 
     // Call all the configuration helper functions
@@ -237,7 +234,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
     // There are no collision geometries - Therefore we ignore that step
 
     // Set the color and opacity values
-    prop_properties.color = _uav_::_prop_color_::PURPLE;
+    prop_properties.color = _uav_::_prop_color_::BLACK;
     prop_properties.opacity = 0.5;
 
     // Call all the configuration helper functions
@@ -276,7 +273,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
     // There are no collision geometries - Therefore we ignore that step
 
     // Set the color and opacity values
-    prop_properties.color = _uav_::_prop_color_::PURPLE;
+    prop_properties.color = _uav_::_prop_color_::BLACK;
     prop_properties.opacity = 0.5;
 
     // Call all the configuration helper functions
@@ -303,7 +300,7 @@ void simtailsitter::ConfigureTAILSITTERLinks()
     
     // ---- Concentric1 (chassis to propeller_1) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        true, "Concentric1", GetUAVChassis().body, GetUAVProp(1).body,
+        false, "Concentric1", GetUAVChassis().body, GetUAVProp(1).body,
         chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
         chrono::ChVector3d(0.249963467924819,0.62243574972076,0.388090504677549),
         chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
@@ -336,7 +333,7 @@ void simtailsitter::ConfigureTAILSITTERLinks()
 
     // ---- Concentric3 (chassis to propeller_2) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        true, "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
+        false, "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
         chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
         chrono::ChVector3d(-0.195536532075518,0.104452368063775,0.383941248413645),
         chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
@@ -369,7 +366,7 @@ void simtailsitter::ConfigureTAILSITTERLinks()
 
     // ---- Concentric4 (chassis to propeller_3) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        true, "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
+        false, "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
         chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
         chrono::ChVector3d(0.249963467924483,0.104452368063776,0.383941248413645),
         chrono::ChVector3d(1.8821749714349e-16,0.00801014722760746,-0.999967918256077),
@@ -402,7 +399,7 @@ void simtailsitter::ConfigureTAILSITTERLinks()
 
     // ---- Concentric5 (chassis to propeller_4) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        true, "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
+        false, "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
         chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
         chrono::ChVector3d(-0.195536532075182,0.62243574972076,0.388090504677549),
         chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
@@ -569,12 +566,12 @@ void simtailsitter::ConfigureTAILSITTERAerodynamics()
     GetUAVAerodynamics().aerofoil_chord = 0.2;
 
     // Lower Wing                                      
-    ConfigureUAVTailSitterWingAeroCenters(1, 10, chrono::ChVector3d(0.249963469370506,-0.38737054221452,0.484704907166303), 
-                                                 chrono::ChVector3d(0.249963469370506,1.1125813351696,0.496720128007714));
+    ConfigureUAVTailSitterWingAeroCenters(1, 1, chrono::ChVector3d(0,-0.7124146,-0.32061229), 
+                                                 chrono::ChVector3d(0,0.7875854,-0.32061229));
 
     // Upper Wing
-    ConfigureUAVTailSitterWingAeroCenters(2, 10, chrono::ChVector3d(-0.195536532075349,-0.38737054221452,0.484704907166303), 
-                                                 chrono::ChVector3d(-0.195536532075349,1.1125813351696,0.496720128007713));
+    // ConfigureUAVTailSitterWingAeroCenters(2, 10, chrono::ChVector3d(-0.195536532075349,-0.38737054221452,0.484704907166303), 
+    //                                              chrono::ChVector3d(-0.195536532075349,1.1125813351696,0.496720128007713));
 
 }
 

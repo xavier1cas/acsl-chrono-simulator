@@ -86,7 +86,7 @@ constexpr bool   FLOOR_COLLIDABLE     = true;
 constexpr double FLOOR_PLACEMENT_X    = 0.0;
 constexpr double FLOOR_PLACEMENT_Y    = 0.0;
 // constexpr double FLOOR_PLACEMENT_Z    = 0.4;
-constexpr double FLOOR_PLACEMENT_Z    = 1.0;
+constexpr double FLOOR_PLACEMENT_Z    = 0.7;
 constexpr float  FLOOR_FRICTION_COEFF = 1.0;
 constexpr float  FLOOR_DAMPING_FACTOR = 0.5;
 
