@@ -905,6 +905,23 @@ void simuav<nop>::ConfigureUAVMotorCt(size_t idx, double ct)
     motors[idx - 1].ct = ct;
 }
 
+// =========================================================================================================
+// ConfigureUAVMotorRPSScaler(idx, rps_scale)
+//
+// Purpose:
+//   Set the constant that pre-multiplies the rps function for visualization. WILL ONLY AFFECT VIS.
+//
+// Parameters:
+//   idx       - 1-based index (1 <= idx <= nop).
+//   rps_scale - double value for the rps_scale
+// =========================================================================================================
+template <int nop>
+void simuav<nop>::ConfigureUAVMotorRPSScaler(size_t idx, double rps_scale)
+{
+    this->CheckUAVPropRequest(idx);
+    motors[idx - 1].rps_scaler = rps_scale;
+}
+
 
 // =========================================================================================================
 // InitiateUAVMotors()
@@ -1584,17 +1601,10 @@ void simuav<nop>::SetThrustSetPoint(size_t idx, double thrustSP)
     // Cache the values
     auto thrust = ::_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2newt, thrustSP);
     auto torque = 0.15 * motors[idx - 1].ct * thrust;       // Cq = 0.15 * ct -> Cq is the backtorque constant
-
-    // ##################################################################################
-    // FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX
-    // ##################################################################################
     
-    // IRRLICHT SYSTEM IS FINNICKY. HENCE THE 0.01 MODIFIER. - ONLY AFFECTS VISUALIZATON
-    auto rps = 0.01*(::_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, thrustSP));
-
-    // ##################################################################################
-    // FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX - FIX
-    // ##################################################################################
+    // IRRLICHT SYSTEM IS FINNICKY. HENCE THE MODIFIER. - ONLY AFFECTS VISUALIZATON
+    auto rps = motors[idx - 1].rps_scaler * (::_shared_::_compute_::evaluatePolynomial(motors[idx - 1].norm2rps, 
+                                                                                       thrustSP));
 
     // Set the values
     this->SetActuator(idx, thrust, torque, rps);

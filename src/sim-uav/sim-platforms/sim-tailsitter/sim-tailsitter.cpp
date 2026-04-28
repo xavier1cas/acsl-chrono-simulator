@@ -469,6 +469,9 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     // Cache the motor torque constant
     motor_properties.ct = 0.542418958461701;
 
+    // Cache the rps scaler value 
+    motor_properties.rps_scaler = 0.15;
+
     // Cache the motor polynomial coefficients
     // Polynomial coefficients vector to evaluate the Commanded Thrust [-] based on the Thrust in Newton
     // TMotor F35A - Velox V2808 Kv1300
@@ -522,6 +525,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     ConfigureUAVMotorNorm2Newt(1, motor_properties.norm2newt);
     ConfigureUAVMotorNorm2RPS(1, motor_properties.norm2rps);
     ConfigureUAVMotorCt(1, motor_properties.ct);
+    ConfigureUAVMotorRPSScaler(1, motor_properties.rps_scaler);
     
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the spin direction of the motor
@@ -536,6 +540,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     ConfigureUAVMotorNorm2Newt(2, motor_properties.norm2newt);
     ConfigureUAVMotorNorm2RPS(2, motor_properties.norm2rps);
     ConfigureUAVMotorCt(2, motor_properties.ct);
+    ConfigureUAVMotorRPSScaler(2, motor_properties.rps_scaler);
     
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the spin direction of the motor
@@ -550,6 +555,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     ConfigureUAVMotorNorm2Newt(3, motor_properties.norm2newt);
     ConfigureUAVMotorNorm2RPS(3, motor_properties.norm2rps);
     ConfigureUAVMotorCt(3, motor_properties.ct);
+    ConfigureUAVMotorRPSScaler(3, motor_properties.rps_scaler);
     
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the spin direction of the motor
@@ -564,7 +570,8 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     ConfigureUAVMotorNorm2Newt(4, motor_properties.norm2newt);
     ConfigureUAVMotorNorm2RPS(4, motor_properties.norm2rps);
     ConfigureUAVMotorCt(4, motor_properties.ct);
-    
+    ConfigureUAVMotorRPSScaler(4, motor_properties.rps_scaler);
+
     // ---------------------------------------------------------------------------------- INITIATE THE MOTORS
     InitiateUAVMotors();
     

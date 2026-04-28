@@ -77,14 +77,14 @@ inline constexpr double RAD2DEG = (180/PI);
 inline constexpr double SQRT2_OVER_2 = 0.7071067;
 
 // Vehicle and Environment Defines
-inline constexpr double LX = 0.097509;                                        // dist to motor along x^J              [m] X
-inline constexpr double LY = 0.110688;                                        // dist to motor along y^J              [m] X
-inline constexpr double LZ = 0.04137335;                                      // dist to the aero center of the wings [m] X
-inline constexpr double LZ_S = 0.038779;                                      // dist to aero center of stabs         [m] X
+inline constexpr double LX = 0.2230099724;                                    // dist to motor along x^J              [m] 
+inline constexpr double LY = 0.2589711696;                                    // dist to motor along y^J              [m] 
+inline constexpr double LZ = 0.01801629;                                      // dist to the aero center of the wings [m] 
+inline constexpr double LZ_S = 0.10234962;                                    // dist to aero center of stabs         [m] 
 inline constexpr double SPAN_W = 1.50;                                        // span of wings                        [m]
 inline constexpr double CHORD_W = 0.20;                                       // chord of wings                       [m]
-inline constexpr double SPAN_S = 0.175;                                       // span of stabs                        [m] X
-inline constexpr double CHORD_S = 0.02;                                       // chord of stabs                       [m] X
+inline constexpr double SPAN_S = 0.420;                                       // span of stabs                        [m] 
+inline constexpr double CHORD_S = 0.05;                                       // chord of stabs                       [m] 
 inline constexpr double PLANFORM_AREA_W = (2.0 * SPAN_W * CHORD_S);           // planform area of wings             [m^2]
 inline constexpr double PLANFORM_AREA_S = (2.0 * SPAN_S * CHORD_S);           // planform area of stabs             [m^2]
 
@@ -99,8 +99,8 @@ static inline const Eigen::Vector3d e3_basis = Eigen::Vector3d(0.0, 0.0, 1.0);
 // Take care coding this from matlab. check the documentation for the polyval function.
 // The polynomails are reversed!.
 inline constexpr double CT_MOTOR =  0.542418958461701;                        // motor torque coeff              [-]
-inline constexpr double MAX_THRUST = 18;                                      // max allowed thrust per motor    [N] X
-inline constexpr double MIN_THRUST = 0.3;                                     // min allowed thrust per motor    [N] X
+inline constexpr double MAX_THRUST = 34;                                      // max allowed thrust per motor    [N] 
+inline constexpr double MIN_THRUST = 0.7;                                     // min allowed thrust per motor    [N] 
 
 // Roll Rate Filter ------------------------------------------------------------------------------------------------
 // A matrix of the roll_ref filter

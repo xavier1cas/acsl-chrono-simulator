@@ -243,6 +243,9 @@ struct propstruct {
 //   norm2rps      - Polynomial vector to compute the rad/s speed of the rotor
 //                   from a normalized thrust [0-1] value.
 //   ct            - Motor torque coefficient for computing the backtorque.
+//   rps_scaler    - scaling coefficient for the rps value, helps with the
+//                   irrlicht visualization system. A fast rotation object
+//                   does not render well.
 // ------------------------------------------------------------------------------------------------------------
 struct motorstruct {
     std::shared_ptr<chrono::ChLinkMotorRotationSpeed> motor;
@@ -255,6 +258,7 @@ struct motorstruct {
     Eigen::VectorXd newt2norm;
     Eigen::VectorXd norm2rps;
     double ct;
+    double rps_scaler = 0.01;                            // Default: 0.01 scaled
 };
 
 // ------------------------------------------------------------------------------------------------------------
@@ -675,6 +679,9 @@ protected:
     // Set the motor torque constant 
     virtual void ConfigureUAVMotorCt(size_t idx, double ct) = 0;
 
+    // Set the motor rps scalar constant
+    virtual void ConfigureUAVMotorRPSScaler(size_t idx, double rps_scale) = 0;
+
     // Create, initialize, and register motor in the internal list
     virtual void InitiateUAVMotors() = 0;
 
@@ -799,6 +806,7 @@ protected:
     void ConfigureUAVMotorNewt2Norm(size_t idx, Eigen::VectorXd& poly) override;
     void ConfigureUAVMotorNorm2RPS(size_t idx, Eigen::VectorXd& poly) override;
     void ConfigureUAVMotorCt(size_t idx, double ct) override;
+    virtual void ConfigureUAVMotorRPSScaler(size_t idx, double rps_scale) override;
 
     void InitiateUAVMotors() override;
 
