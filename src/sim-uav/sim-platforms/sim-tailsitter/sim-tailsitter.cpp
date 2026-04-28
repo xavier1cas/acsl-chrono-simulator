@@ -49,25 +49,27 @@ void simtailsitter::ConfigureTAILSITTERChassis()
     _uav_::chassisstruct chassis_properties;
 
     // Configure the initial position of the chassis ------------ -----------------------------------------------------
-    chassis_properties.init_pos = chrono::ChVector3d(0.0626960034167829,0.0398098665855967,0.291715918886598);
+    chassis_properties.init_pos = chrono::ChVector3d(-0.820174552834782,0.138326409126481,0.0275871680500605);
     
     // Configure the initial rotation of the chasssis -----------------------------------------------------------------
     chassis_properties.init_rot = chrono::ChQuaternion<>(1,0,0,0);
     
     // Configure the mass of the chassis ------------------------------------------------------------------------------
-    chassis_properties.mass = 1.54005578358517;
+    chassis_properties.mass = 1.54332953655354;
 
     // Configure the Chassis Inertia vectors --------------------------------------------------------------------------
-    chassis_properties.InertiaXX = chrono::ChVector3d(0.144934841382282,0.0467202293377085,0.178211716360287);
-    chassis_properties.InertiaXY = chrono::ChVector3d(1.50847693993492e-06,7.33299121677796e-06,-0.00105481465615566);
+    chassis_properties.InertiaXX = chrono::ChVector3d(0.151016870974707,0.0512672876060956,0.187965807814355);
+    chassis_properties.InertiaXY = chrono::ChVector3d(-5.06412826018973e-07,6.54535930503061e-06,1.71490800154151e-06);
 
     // Configure the chassis COM along with it's auxilliary frame at the COM ------------------------------------------
     // This is the most important as we will consider this to be the pixhawk in our subsequent calculations
-    chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(-0.0352349286341472,0.322872417873955,0.186003857246375),
+    chassis_properties.COM  = chrono::ChFramed(chrono::ChVector3d(0.000260032975304549,
+                                                                  3.98043445694742e-05,
+                                                                  0.0115331100824462),
                                                chrono::ChQuaternion<>(1,0,0,0)); 
 
     // Configure the name of the visualization obj file ---------------------------------------------------------------
-    chassis_properties.vis_obj_name = "body_2_1.obj";
+    chassis_properties.vis_obj_name = "body_5_1.obj";
 
     // Configure the chassis collision shapes -------------------------------------------------------------------------
     // Cache some variables for this 
@@ -79,37 +81,60 @@ void simtailsitter::ConfigureTAILSITTERChassis()
     chrono::ChFrame<> frame;                                                // Frame of the collision shape
 
     // 1
-    mr(0,0)=1; mr(1,0)=0;                    mr(2,0)=0;
-    mr(0,1)=0; mr(1,1)=-0.00801014722760637; mr(2,1)=0.999967918256077;
-    mr(0,2)=0; mr(1,2)=-0.999967918256077;   mr(2,2)=-0.00801014722760637;
-    pos = chrono::ChVector3d(-0.0354825354921314,0.32198645845824,0.299999171348472);
-    dim = chrono::ChVector3d(0.3655,0.0509962779529972,0.928);
+    mr(0,0)=1;                     mr(1,0)=1.85037170770859E-15; mr(2,0)=0;
+    mr(0,1)=-1.09836294215862E-16; mr(1,1)=1.09836294215862E-14; mr(2,1)=-1;
+    mr(0,2)=-1.85037170770859E-15; mr(1,2)=1;                    mr(2,2)=1.09836294215862E-14;
+    pos = chrono::ChVector3d(0.222750060533507,-6.86347572278478E-05,0.0529997453814312);
+    dim = chrono::ChVector3d(0.06,0.252699490762868,1.5);
     col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
     frame = chrono::ChFramed(pos, mr);
 
     chassis_properties.collision.emplace_back(col, frame);
 
     // 2
-    mr(0,0)=-2.19672588431727E-16; mr(1,0)=0.00801014722760712; mr(2,0)=-0.999967918256077;
-    mr(0,1)=1;                     mr(1,1)=0;                   mr(2,1)=0;
-    mr(0,2)=0;                     mr(1,2)=-0.999967918256077;  mr(2,2)=-0.00801014722760712;
-    pos = chrono::ChVector3d(-0.258232535492131,0.322598081802313,0.223645553275023);
-    dim = chrono::ChVector3d(0.252699490762865,0.06,1.5);
+    mr(0,0)=-1;                    mr(1,0)=-5.55111512312549E-15; mr(2,0)=4.69531820831031E-14;
+    mr(0,1)=1.09836294215861E-16;  mr(1,1)=-1.14229745984496E-14; mr(2,1)=1;
+    mr(0,2)=-5.55111512312495E-15; mr(1,2)=1;                     mr(2,2)=1.14229745984496E-14;
+    pos = chrono::ChVector3d(-0.222749939466497,-6.86347572295132E-05,0.0529997453814354);
+    dim = chrono::ChVector3d(0.0600000000000032,0.25269949076287,1.5);
     col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
-    frame = chrono::ChFramed(pos,mr);
+    frame = chrono::ChFramed(pos, mr);
 
     chassis_properties.collision.emplace_back(col, frame);
 
     // 3
-    mr(0,0)=-1;                   mr(1,0)=0;                    mr(2,0)=0;
-    mr(0,1)=2.19672588431726E-16; mr(1,1)=-0.00801014722760665; mr(2,1)=0.999967918256077;
-    mr(0,2)=0;                    mr(1,2)=0.999967918256077;    mr(2,2)=0.00801014722760665;
-    pos = chrono::ChVector3d(0.187267464507868,0.322598081802313,0.223645553275024);
-    dim = chrono::ChVector3d(0.06,0.252699490762866,1.5);
+    mr(0,0)=-1;                    mr(1,0)=-4.1646502831122E-16;  mr(2,0)=0;
+    mr(0,1)=-1.80231010491098E-16; mr(1,1)=-7.20924041964391E-16; mr(2,1)=1;
+    mr(0,2)=-4.1646502831122E-16;  mr(1,2)=1;                     mr(2,2)=7.20924041964391E-16;
+    pos = chrono::ChVector3d(-6.05329052111353E-08,6.82461176663568E-05,-0.0169999999999997);
+    dim = chrono::ChVector3d(0.199936900307179,0.0769999999999996,0.0760000000000003);
     col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
-    frame = chrono::ChFramed(pos,mr);
-    
+    frame = chrono::ChFramed(pos, mr);
+
     chassis_properties.collision.emplace_back(col, frame);
+
+    // 4
+    mr(0,0)=-1;                   mr(1,0)=-2.18684361597377E-15; mr(2,0)=-1.1007112867068E-14;
+    mr(0,1)=0;                    mr(1,1)=3.26560016492296E-15;  mr(2,1)=-1;
+    mr(0,2)=2.18684361597381E-15; mr(1,2)=-1;                    mr(2,2)=-3.26560016492296E-15;
+    pos = chrono::ChVector3d(6.05357001302583E-08,-0.459068634757229,0.12935581309071);
+    dim = chrono::ChVector3d(0.380762146130002,0.0509962779529998,0.0100000000000001);
+    col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
+    frame = chrono::ChFramed(pos, mr);
+
+    chassis_properties.collision.emplace_back(col, frame);
+
+    // 5
+    mr(0,0)=0;                    mr(1,0)=1.08853338830768E-14; mr(2,0)=-1;
+    mr(0,1)=1;                    mr(1,1)=2.18684361597378E-15; mr(2,1)=0;
+    mr(0,2)=2.18684361597378E-15; mr(1,2)=-1;                   mr(2,2)=-1.08853338830768E-14;
+    pos = chrono::ChVector3d(6.05356991865687E-08,0.458931365242771,0.129355813090654);
+    dim = chrono::ChVector3d(0.0509962779529988,0.38076214613,0.0100000000000002);
+    col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
+    frame = chrono::ChFramed(pos, mr);
+
+    chassis_properties.collision.emplace_back(col, frame);
+
 
     // Call all the configuration helper functions --------------------------------------------------------------------
     ConfigureUAVChassisInitPos(chassis_properties.init_pos);
@@ -133,21 +158,21 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // ------------------------------------------------ 1 ------------------------------------------------ //
     // Configure the intial position of the propeller
-    prop_properties.init_pos = chrono::ChVector3d(0.249963467924819,0.622423734499919,0.389590456554933);
+    prop_properties.init_pos = chrono::ChVector3d(-0.597424492301443,0.397257774369087,-0.0472628319499406);
 
     // Configure the initial rotation of the propeller
-    prop_properties.init_rot = chrono::ChQuaternion<>(0.709933147284872,-0.704269072433396,1.37055504022756e-17,1.38932008928742e-17);
+    prop_properties.init_rot = chrono::ChQuaternion<>(2.53545399382762e-15,2.53545399382763e-15,-0.707106781186546,0.707106781186549);
 
     // Configure the mass of the propeller
     // prop_properties.mass = 0.02311480613903;
     prop_properties.mass = 0.0;
 
     // Configure the propeller Interia vectors
-    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481959493161,2.02448155763798e-06,0.000245240519319778);
-    prop_properties.InertiaXY = chrono::ChVector3d(-1.27122136125483e-05,1.01829982031449e-07,1.94838378671284e-06);
+    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481962218972,2.00887421444941e-06,0.000245256129385561);
+    prop_properties.InertiaXY = chrono::ChVector3d(1.27126215242116e-05,1.25226930519482e-14,8.53229755274596e-15);
 
     // Configure the propeller COM along with it's auxilliary frame at the COM
-    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798186774076e-09,-0.00151682657378196,1.12688645520965e-09),
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798185223223e-09,-0.00151682657384863,1.1268864500665e-09),
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
@@ -157,7 +182,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // Set the color and opacity values
     prop_properties.color = _uav_::_prop_color_::BLACK;
-    prop_properties.opacity = 0.5;
+    prop_properties.opacity = 0.4;
 
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(1, prop_properties.init_pos);
@@ -172,21 +197,21 @@ void simtailsitter::ConfigureTAILSITTERProps()
     
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the intial position of the propeller
-    prop_properties.init_pos = chrono::ChVector3d(-0.195536532075518,0.104440352842934,0.38544120029103);
+    prop_properties.init_pos = chrono::ChVector3d(-1.04292449230144,-0.120742225630912,-0.0472628319499344);
 
     // Configure the initial rotation of the propeller
-    prop_properties.init_rot = chrono::ChQuaternion<>(0.709933147284872,-0.704269072433396,1.37055504022756e-17,1.38932008928742e-17);
+    prop_properties.init_rot = chrono::ChQuaternion<>(2.53545399382762e-15,2.53545399382763e-15,-0.707106781186546,0.707106781186549);
 
     // Configure the mass of the propeller
     // prop_properties.mass = 0.02311480613903;
-     prop_properties.mass = 0.0;
+    prop_properties.mass = 0.0;
 
     // Configure the propeller Interia vectors
-    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481959493161,2.02448155763798e-06,0.000245240519319778);
-    prop_properties.InertiaXY = chrono::ChVector3d(-1.27122136125483e-05,1.01829982031449e-07,1.94838378671284e-06);
+    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481962218972,2.00887421444941e-06,0.000245256129385561);
+    prop_properties.InertiaXY = chrono::ChVector3d(1.27126215242116e-05,1.25226930519482e-14,8.53229755274596e-15);
 
     // Configure the propeller COM along with it's auxilliary frame at the COM
-    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798186774076e-09,-0.00151682657378196,1.12688645520965e-09),
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798185223223e-09,-0.00151682657384863,1.1268864500665e-09),
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
@@ -196,7 +221,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // Set the color and opacity values
     prop_properties.color = _uav_::_prop_color_::BLACK;
-    prop_properties.opacity = 0.5;
+    prop_properties.opacity = 0.4;
 
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(2, prop_properties.init_pos);
@@ -211,21 +236,21 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the intial position of the propeller
-    prop_properties.init_pos = chrono::ChVector3d(0.249963467924483,0.104440352842935,0.385441200291029);
+    prop_properties.init_pos = chrono::ChVector3d(-0.597424492301445,-0.120742225630912,-0.0472628319499391);
 
     // Configure the initial rotation of the propeller
-    prop_properties.init_rot = chrono::ChQuaternion<>(0.709933147284872,-0.704269072433396,-6.67822392031798e-17,-6.63105858532401e-17);
+    prop_properties.init_rot = chrono::ChQuaternion<>(2.53545399382762e-15,2.53545399382763e-15,-0.707106781186546,0.707106781186549);
 
     // Configure the mass of the propeller
     // prop_properties.mass = 0.02311480613903;
     prop_properties.mass = 0.0;
 
     // Configure the propeller Interia vectors
-    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481959493161,2.02448155763798e-06,0.000245240519319778);
-    prop_properties.InertiaXY = chrono::ChVector3d(-1.27122136125483e-05,1.01829982031449e-07,1.94838378671284e-06);
+    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481962218972,2.00887421444941e-06,0.000245256129385561);
+    prop_properties.InertiaXY = chrono::ChVector3d(1.27126215242116e-05,1.25226930519482e-14,8.53229755274596e-15);
 
     // Configure the propeller COM along with it's auxilliary frame at the COM
-    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798186774076e-09,-0.00151682657378196,1.12688645520965e-09),
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798185223223e-09,-0.00151682657384863,1.1268864500665e-09),
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
@@ -235,7 +260,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // Set the color and opacity values
     prop_properties.color = _uav_::_prop_color_::BLACK;
-    prop_properties.opacity = 0.5;
+    prop_properties.opacity = 0.4;
 
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(3, prop_properties.init_pos);
@@ -250,21 +275,21 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the intial position of the propeller
-    prop_properties.init_pos = chrono::ChVector3d(-0.195536532075182,0.622423734499918,0.389590456554933);
+    prop_properties.init_pos = chrono::ChVector3d(-1.04292449230144,0.397257774369089,-0.0472628319499379);
 
     // Configure the initial rotation of the propeller
-    prop_properties.init_rot = chrono::ChQuaternion<>(0.709933147284872,-0.704269072433396,1.37055504022756e-17,1.38932008928742e-17);
+    prop_properties.init_rot = chrono::ChQuaternion<>(2.53545399382762e-15,2.53545399382763e-15,-0.707106781186546,0.707106781186549);
 
     // Configure the mass of the propeller
     // prop_properties.mass = 0.02311480613903;
     prop_properties.mass = 0.0;
 
     // Configure the propeller Interia vectors
-    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481959493161,2.02448155763798e-06,0.000245240519319778);
-    prop_properties.InertiaXY = chrono::ChVector3d(-1.27122136125483e-05,1.01829982031449e-07,1.94838378671284e-06);
+    prop_properties.InertiaXX = chrono::ChVector3d(0.000243481962218972,2.00887421444941e-06,0.000245256129385561);
+    prop_properties.InertiaXY = chrono::ChVector3d(1.27126215242116e-05,1.25226930519482e-14,8.53229755274596e-15);
 
     // Configure the propeller COM along with it's auxilliary frame at the COM
-    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798186774076e-09,-0.00151682657378196,1.12688645520965e-09),
+    prop_properties.COM = chrono::ChFramed(chrono::ChVector3d(-3.39798185223223e-09,-0.00151682657384863,1.1268864500665e-09),
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
@@ -274,7 +299,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
 
     // Set the color and opacity values
     prop_properties.color = _uav_::_prop_color_::BLACK;
-    prop_properties.opacity = 0.5;
+    prop_properties.opacity = 0.4;
 
     // Call all the configuration helper functions
     ConfigureUAVPropInitPos(4, prop_properties.init_pos);
@@ -301,133 +326,133 @@ void simtailsitter::ConfigureTAILSITTERLinks()
     // ---- Concentric1 (chassis to propeller_1) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         false, "Concentric1", GetUAVChassis().body, GetUAVProp(1).body,
-        chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(0.249963467924819,0.62243574972076,0.388090504677549),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(-3.90312782094781e-17,0.00801014722760722,-0.999967918256077)
+        chrono::ChVector3d(-0.597424492301444,0.397257774369086,-0.0507628319499394),
+        chrono::ChVector3d(-0.597424492301443,0.397257774369087,-0.0487628319499406),
+        chrono::ChVector3d(-3.50566874250047e-15,5.22275672758959e-15,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1)
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
         "Concentric1", GetUAVChassis().body, GetUAVProp(1).body,
-        chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(0.249963467924819,0.62243574972076,0.388090504677549),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(-3.90312782094781e-17,0.00801014722760722,-0.999967918256077),
+        chrono::ChVector3d(-0.597424492301444,0.397257774369086,-0.0507628319499394),
+        chrono::ChVector3d(-0.597424492301443,0.397257774369087,-0.0487628319499406),
+        chrono::ChVector3d(-3.50566874250047e-15,5.22275672758959e-15,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1),
         true, true, false, false, false, false
     });
 
     // ---- Coincident1 (chassis to propeller_1) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident1", GetUAVChassis().body, GetUAVProp(1).body,
-        chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(3.90312782094781e-17,-0.00801014722760722,0.999967918256077),
+        chrono::ChVector3d(-0.597424492301444,0.397257774369086,-0.0457628319499394),
+        chrono::ChVector3d(-0.597424492301443,0.397257774369087,-0.0457628319499406),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1),
         0.0
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident1", GetUAVChassis().body, GetUAVProp(1).body,
-        chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(0.249963467924819,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(3.90312782094781e-17,-0.00801014722760722,0.999967918256077)
+        chrono::ChVector3d(-0.597424492301444,0.397257774369086,-0.0457628319499394),
+        chrono::ChVector3d(-0.597424492301443,0.397257774369087,-0.0457628319499406),
+        chrono::ChVector3d(-3.50566874250047e-15,5.22275672758959e-15,-1),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1)
     });
 
-    // ---- Concentric3 (chassis to propeller_2) ----
+    // ---- Concentric2 (chassis to propeller_2) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        false, "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
-        chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
-        chrono::ChVector3d(-0.195536532075518,0.104452368063775,0.383941248413645),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(-3.90312782094781e-17,0.00801014722760722,-0.999967918256077)
+        false, "Concentric2", GetUAVChassis().body, GetUAVProp(2).body,
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630915,-0.0507628319499392),
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630912,-0.0487628319499344),
+        chrono::ChVector3d(-4.22391390242588e-15,1.08859376815227e-14,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1)
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
-        "Concentric3", GetUAVChassis().body, GetUAVProp(2).body,
-        chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
-        chrono::ChVector3d(-0.195536532075518,0.104452368063775,0.383941248413645),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(-3.90312782094781e-17,0.00801014722760722,-0.999967918256077),
+        "Concentric2", GetUAVChassis().body, GetUAVProp(2).body,
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630915,-0.0507628319499392),
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630912,-0.0487628319499344),
+        chrono::ChVector3d(-4.22391390242588e-15,1.08859376815227e-14,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1),
         true, true, false, false, false, false
     });
 
     // ---- Coincident2 (chassis to propeller_2) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident2", GetUAVChassis().body, GetUAVProp(2).body,
-        chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
-        chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
-        chrono::ChVector3d(3.90312782094781e-17,-0.00801014722760722,0.999967918256077),
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630915,-0.0457628319499392),
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630912,-0.0457628319499344),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1),
         0.0
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident2", GetUAVChassis().body, GetUAVProp(2).body,
-        chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
-        chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(3.90312782094781e-17,-0.00801014722760722,0.999967918256077)
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630915,-0.0457628319499392),
+        chrono::ChVector3d(-1.04292449230144,-0.120742225630912,-0.0457628319499344),
+        chrono::ChVector3d(-4.22391390242588e-15,1.08859376815227e-14,-1),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1)
     });
 
-    // ---- Concentric4 (chassis to propeller_3) ----
+    // ---- Concentric3 (chassis to propeller_3) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        false, "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
-        chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
-        chrono::ChVector3d(0.249963467924483,0.104452368063776,0.383941248413645),
-        chrono::ChVector3d(1.8821749714349e-16,0.00801014722760746,-0.999967918256077),
-        chrono::ChVector3d(1.8821749714349e-16,0.00801014722760746,-0.999967918256077)
+        false, "Concentric3", GetUAVChassis().body, GetUAVProp(3).body,
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630913,-0.0507628319499426),
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630912,-0.0487628319499391),
+        chrono::ChVector3d(-4.22391390242588e-15,1.08859376815227e-14,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1)
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
-        "Concentric4", GetUAVChassis().body, GetUAVProp(3).body,
-        chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
-        chrono::ChVector3d(0.249963467924483,0.104452368063776,0.383941248413645),
-        chrono::ChVector3d(1.8821749714349e-16,0.00801014722760746,-0.999967918256077),
-        chrono::ChVector3d(1.8821749714349e-16,0.00801014722760746,-0.999967918256077),
+        "Concentric3", GetUAVChassis().body, GetUAVProp(3).body,
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630913,-0.0507628319499426),
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630912,-0.0487628319499391),
+        chrono::ChVector3d(-4.22391390242588e-15,1.08859376815227e-14,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1),
         true, true, false, false, false, false
     });
 
     // ---- Coincident3 (chassis to propeller_3) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident3", GetUAVChassis().body, GetUAVProp(3).body,
-        chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
-        chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
-        chrono::ChVector3d(-1.8821749714349e-16,-0.00801014722760746,0.999967918256077),
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630913,-0.0457628319499426),
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630912,-0.0457628319499391),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1),
         0.0
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident3", GetUAVChassis().body, GetUAVProp(3).body,
-        chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
-        chrono::ChVector3d(0.249963467924483,0.104428337622093,0.386941152168414),
-        chrono::ChVector3d(1.8821749714349e-16,0.00801014722760746,-0.999967918256077),
-        chrono::ChVector3d(-1.8821749714349e-16,-0.00801014722760746,0.999967918256077)
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630913,-0.0457628319499426),
+        chrono::ChVector3d(-0.597424492301445,-0.120742225630912,-0.0457628319499391),
+        chrono::ChVector3d(-4.22391390242588e-15,1.08859376815227e-14,-1),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1)
     });
 
-    // ---- Concentric5 (chassis to propeller_4) ----
+    // ---- Concentric4 (chassis to propeller_4) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
-        false, "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
-        chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(-0.195536532075182,0.62243574972076,0.388090504677549),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(-3.90312782094781e-17,0.00801014722760722,-0.999967918256077)
+        false, "Concentric4", GetUAVChassis().body, GetUAVProp(4).body,
+        chrono::ChVector3d(-1.04292449230144,0.397257774369086,-0.0507628319499354),
+        chrono::ChVector3d(-1.04292449230144,0.397257774369089,-0.0487628319499379),
+        chrono::ChVector3d(-4.22524492555908e-15,1.03617656841521e-14,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1)
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Generic>{
-        "Concentric5", GetUAVChassis().body, GetUAVProp(4).body,
-        chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(-0.195536532075182,0.62243574972076,0.388090504677549),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(-3.90312782094781e-17,0.00801014722760722,-0.999967918256077),
+        "Concentric4", GetUAVChassis().body, GetUAVProp(4).body,
+        chrono::ChVector3d(-1.04292449230144,0.397257774369086,-0.0507628319499354),
+        chrono::ChVector3d(-1.04292449230144,0.397257774369089,-0.0487628319499379),
+        chrono::ChVector3d(-4.22524492555908e-15,1.03617656841521e-14,-1),
+        chrono::ChVector3d(-7.17134684968812e-15,-3.49148133884311e-15,-1),
         true, true, false, false, false, false
     });
 
     // ---- Coincident4 (chasssis to propeller_4) ----
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
         "Coincident4", GetUAVChassis().body, GetUAVProp(4).body,
-        chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(3.90312782094781e-17,-0.00801014722760722,0.999967918256077),
+        chrono::ChVector3d(-1.04292449230144,0.397257774369086,-0.0457628319499354),
+        chrono::ChVector3d(-1.04292449230144,0.397257774369089,-0.0457628319499379),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1),
         0.0
     });
     link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
         true, "Coincident4", GetUAVChassis().body, GetUAVProp(4).body,
-        chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(-0.195536532075182,0.622411719279077,0.391090408432317),
-        chrono::ChVector3d(-3.90312782094782e-17,0.00801014722760722,-0.999967918256077),
-        chrono::ChVector3d(3.90312782094781e-17,-0.00801014722760722,0.999967918256077)
+        chrono::ChVector3d(-1.04292449230144,0.397257774369086,-0.0457628319499354),
+        chrono::ChVector3d(-1.04292449230144,0.397257774369089,-0.0457628319499379),
+        chrono::ChVector3d(-4.22524492555908e-15,1.03617656841521e-14,-1),
+        chrono::ChVector3d(7.17134684968812e-15,3.49148133884311e-15,1)
     });
 
 
@@ -487,7 +512,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     // ------------------------------------------------ 1 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
-    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(0.249963467924819,0.622411719279078,0.391090408432317),
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-0.597424492301397,0.397257774369148,-0.0457628319499394),
                                               chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
@@ -501,7 +526,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     // ------------------------------------------------ 2 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CCW;
-    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-0.195536532075518,0.104428337622092,0.386941152168414),
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-1.04292449230149,-0.120742225630677,-0.0457628319499405),
                                               chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
@@ -515,7 +540,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     // ------------------------------------------------ 3 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CW;
-    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(0.249963467924819,0.104428337622092,0.386941152168414),
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-0.597424492301483,-0.120742225630798,-0.0457628319499421),
                                               chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
@@ -529,7 +554,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     // ------------------------------------------------ 4 ------------------------------------------------ //
     // Configure the spin direction of the motor
     motor_properties.spin_dir = _uav_::_motor_dir_::CW;
-    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-0.195536532075518,0.622411719279078,0.391090408432317),
+    motor_properties.frame = chrono::ChFramed(chrono::ChVector3d(-1.04292449230144,0.397257774369089,-0.0457628319499378),
                                               chrono::ChQuaternion<>(1,0,0,0));
 
     // Call all the configuration helper functions
@@ -566,12 +591,12 @@ void simtailsitter::ConfigureTAILSITTERAerodynamics()
     GetUAVAerodynamics().aerofoil_chord = 0.2;
 
     // Lower Wing                                      
-    ConfigureUAVTailSitterWingAeroCenters(1, 1, chrono::ChVector3d(0,-0.7124146,-0.32061229), 
-                                                 chrono::ChVector3d(0,0.7875854,-0.32061229));
+    ConfigureUAVTailSitterWingAeroCenters(1, 10, chrono::ChVector3d(0.22251642,0.75 + 0.00011867,0.01801629), 
+                                                 chrono::ChVector3d(0.22251642,-0.75 + 0.00011867,0.01801629));
 
     // Upper Wing
-    // ConfigureUAVTailSitterWingAeroCenters(2, 10, chrono::ChVector3d(-0.195536532075349,-0.38737054221452,0.484704907166303), 
-    //                                              chrono::ChVector3d(-0.195536532075349,1.1125813351696,0.496720128007713));
+    ConfigureUAVTailSitterWingAeroCenters(2, 10, chrono::ChVector3d(-0.22251642,0.75 + 0.00011867,0.01801629), 
+                                                 chrono::ChVector3d(-0.22251642,-0.75 + 0.00011867,0.01801629));
 
 }
 

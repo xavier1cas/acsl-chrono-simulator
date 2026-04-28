@@ -49,7 +49,7 @@ main:
   
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene
-  render_ned_frame: false
+  render_ned_frame: true
   # Show body-fixed UAV frame axes
   render_body_frame: true
   # Show propeller frame axes
@@ -57,19 +57,19 @@ main:
   # Show all COG frames in the scene
   render_all_COG_frames: false
   # Show the trajectory in the secene
-  render_trajectory: false
+  render_trajectory: true
   # Show the biplane frame
   render_biplane_frame: false
   # Show the chassis aerodynamic drag frame
   render_chassis_drag_frame: false
   # Show the chassis aerodynamic wing frames
-  render_wing_aero_frames: true
+  render_wing_aero_frames: false
 
   # Rendering effects ----------------------------------------------
   # Toggle shadow rendering (GPU-intensive)
   render_shadows: false
   # Visualize collision/contact boundaries
-  render_collision_zones: true
+  render_collision_zones: false
 
 
 # ============================================================================
