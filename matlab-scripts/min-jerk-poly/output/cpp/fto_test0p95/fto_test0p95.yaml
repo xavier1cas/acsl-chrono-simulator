@@ -1,0 +1,37 @@
+name: fto_test
+codebase: cpp
+alpha_factor: 0.95
+numsamples: 200
+tstep: 0.01
+hover_time: 2.0
+set_yaw_zero: false
+waypoints:
+  - x: 0.0
+    y: 0.0
+    z: 0.0
+    time: 0.0
+  - x: 0.1
+    y: 0.0
+    z: -0.5
+    time: 1.5
+  - x: 0.2
+    y: 0.0
+    z: -0.8
+    time: 0.8
+  - x: 1.0
+    y: 0.0
+    z: -1.2
+    time: 1.75
+  - x: 220.0
+    y: 0.0
+    z: -16.0
+    time: 80.0
+  - x: 240
+    y: 0.0
+    z: -18.0
+    time: 70.0
+  - x: 260
+    y: 0.0
+    z: -1.0
+    time: 80.0
+    

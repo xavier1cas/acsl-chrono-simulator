@@ -1,0 +1,105 @@
+name: tailsitter_trajectory
+codebase: cpp
+alpha_factor: 0.5
+numsamples: 200
+tstep: 0.01
+hover_time: 15.0
+set_yaw_zero: false
+waypoints:
+  - x: 0.0
+    y: 0.0
+    z: 0.0
+    time: 0.0
+  - x: 0.1
+    y: 0.0
+    z: -0.5
+    time: 4.0
+  - x: 0.8
+    y: 0.0
+    z: -1
+    time: 4.0
+  - x: 1.8
+    y: 0.0
+    z: -1
+    time: 4.0
+  - x: 2.5
+    y: 0.0
+    z: -1
+    time: 4.0
+  - x: 3.3
+    y: 0.0
+    z: -1
+    time: 5.0
+  - x: 4.9
+    y: 0.0
+    z: -1.2
+    time: 5.0
+  - x: 8.1
+    y: 0.0
+    z: -1.2
+    time: 4.2
+  - x: 12.1
+    y: 0.0
+    z: -1.2
+    time: 4.0
+  - x: 16.1
+    y: 0.0
+    z: -1.2
+    time: 3.8
+  - x: 20.1
+    y: 0.0
+    z: -1.2
+    time: 3.6
+  - x: 24.1
+    y: 0.0
+    z: -1.2
+    time: 3.4
+  - x: 28.1
+    y: 0.0
+    z: -1.2
+    time: 3.2
+  - x: 32.1
+    y: 0.0
+    z: -1.2
+    time: 3.0
+  - x: 36.1
+    y: 0.0
+    z: -1.2
+    time: 2.8
+  - x: 40.1
+    y: 0.0
+    z: -1.2
+    time: 2.8
+  - x: 44.1
+    y: 0.0
+    z: -1.2
+    time: 2.6
+  - x: 48.1
+    y: 0.0
+    z: -1.2
+    time: 2.8
+  - x: 52.1
+    y: 0.0
+    z: -1.2
+    time: 3.0
+  - x: 56.1
+    y: 0.0
+    z: -1.2
+    time: 3.2
+  - x: 60.1
+    y: 0.0
+    z: -1.2
+    time: 3.4
+  - x: 64.1
+    y: 0.0
+    z: -1.2
+    time: 3.6
+  - x: 68.1
+    y: 0.0
+    z: -1.2
+    time: 3.8
+  - x: 80.0
+    y: 0.0
+    z: -1.0
+    time: 30.0
+  
