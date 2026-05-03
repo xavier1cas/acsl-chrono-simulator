@@ -59,7 +59,7 @@ debug:
   # Set to true if you want to log the uav chassis and prop state data to file
   log_physics: true
   # Set to true if you want to stop the simulation at a given time (in seconds)
-  sim_debug_stop: true
+  sim_debug_stop: false
   # Set the value at which you want the simulation to stop (in seconds)
   sim_stop_time: 34.0
   # Set the value to true if you want the system to import model and not run 
@@ -138,7 +138,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: fto_test0p4
+  filename: bank_test0p4
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

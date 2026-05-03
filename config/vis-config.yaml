@@ -43,9 +43,9 @@ main:
   # true: fixed viewpoint; false: dynamic/follow
   enable_static_cam: false
   # (m) Distance the camera is placed in z (NED)
-  mv_cam_chase_ht: 1.0
+  mv_cam_chase_ht: 0.75
   # (m) Distance the camera is placed in x (NED) 
-  mv_cam_chase_dt: 2.0
+  mv_cam_chase_dt: 2.5
   
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene
@@ -77,8 +77,8 @@ main:
 # ============================================================================
 window:
   # (px) Window width for the display
-  width: 800
+  width: 1600
   # (px) Window height for the display
-  height: 600
+  height: 1200
   # Title bar text for visualization window
   title: "ACSL PHYSICS SIMULATOR"
