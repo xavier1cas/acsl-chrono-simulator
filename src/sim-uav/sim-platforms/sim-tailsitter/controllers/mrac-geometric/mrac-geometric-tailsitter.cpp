@@ -632,6 +632,12 @@ void mrac_geometric::compute_normalized_thrusts()
     control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_tailsitter, cim.Sat_Thrust(1));
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_tailsitter, cim.Sat_Thrust(2));
     control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_tailsitter, cim.Sat_Thrust(3));
+
+    std::cout << "T1: " << control_input(0) 
+              << "| T2: " << control_input(1)
+              << "| T3: " << control_input(2)
+              << "| T4: " << control_input(3) 
+              << std::endl;
 }
 
 // Function that is called in sim-bridge.cpp

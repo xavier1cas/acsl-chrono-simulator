@@ -77,8 +77,8 @@ main:
 # ============================================================================
 window:
   # (px) Window width for the display
-  width: 1600
+  width: 800
   # (px) Window height for the display
-  height: 1200
+  height: 600
   # Title bar text for visualization window
   title: "ACSL PHYSICS SIMULATOR"
