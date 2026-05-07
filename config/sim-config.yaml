@@ -138,7 +138,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: bank_traj0p8
+  filename: faster_bank_traj0p8
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

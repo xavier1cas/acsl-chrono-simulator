@@ -113,6 +113,14 @@ void simtailsitter::ConfigureTAILSITTERChassis()
 
     chassis_properties.collision.emplace_back(col, frame);
 
+    // New box: same rotation, same dimensions, 2 mm below in z
+    chrono::ChVector3d pos2 = chrono::ChVector3d( pos.x(), pos.y(), pos.z() + (1.2 * dim.z()) );
+    auto dim2 = chrono::ChVector3d( dim.x(), dim.y(), 3.0 * dim.z());
+    auto col2 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim2);
+    frame = chrono::ChFramed(pos2, mr);
+
+    chassis_properties.collision.emplace_back(col2, frame);
+
     // 4
     mr(0,0)=-1;                   mr(1,0)=-2.18684361597377E-15; mr(2,0)=-1.1007112867068E-14;
     mr(0,1)=0;                    mr(1,1)=3.26560016492296E-15;  mr(2,1)=-1;
