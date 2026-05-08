@@ -113,13 +113,13 @@ void simtailsitter::ConfigureTAILSITTERChassis()
 
     chassis_properties.collision.emplace_back(col, frame);
 
-    // New box: same rotation, same dimensions, 2 mm below in z
-    chrono::ChVector3d pos2 = chrono::ChVector3d( pos.x(), pos.y(), pos.z() + (1.2 * dim.z()) );
-    auto dim2 = chrono::ChVector3d( dim.x(), dim.y(), 3.0 * dim.z());
-    auto col2 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim2);
-    frame = chrono::ChFramed(pos2, mr);
+    // // New box: same rotation, same dimensions, 2 mm below in z
+    // chrono::ChVector3d pos2 = chrono::ChVector3d( pos.x(), pos.y(), pos.z() + (1.2 * dim.z()) );
+    // auto dim2 = chrono::ChVector3d( dim.x(), dim.y(), 3.0 * dim.z());
+    // auto col2 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim2);
+    // frame = chrono::ChFramed(pos2, mr);
 
-    chassis_properties.collision.emplace_back(col2, frame);
+    // chassis_properties.collision.emplace_back(col2, frame);
 
     // 4
     mr(0,0)=-1;                   mr(1,0)=-2.18684361597377E-15; mr(2,0)=-1.1007112867068E-14;
@@ -613,6 +613,12 @@ void simtailsitter::ConfigureTAILSITTERAerodynamics()
     ConfigureUAVTailSitterWingAeroCenters(2, 10, chrono::ChVector3d(-0.22251642,0.75 + 0.00011867,0.01801629), 
                                                  chrono::ChVector3d(-0.22251642,-0.75 + 0.00011867,0.01801629));
 
+}
+
+// Unique function that initiates and attaches the payload to the tailsitter
+void simtailsitter::ConfigureTAILSITTERPayload()
+{
+    
 }
 
 }   // namespace _tailsitter_

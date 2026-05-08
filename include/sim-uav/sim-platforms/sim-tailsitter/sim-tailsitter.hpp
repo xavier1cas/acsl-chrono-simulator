@@ -89,6 +89,7 @@ public:
         ConfigureTAILSITTERLinks();                                   // <- Compulsary derived class function
         ConfigureTAILSITTERMotors();                                  // <- Compulsary derived class function
         ConfigureTAILSITTERAerodynamics();                            // <- Unique derived class function
+        ConfigureTAILSITTERPayload();                                 // <- Unique derived class function
         
         AddUAVToSystem();                                             // <- Baseclass function
 
@@ -111,12 +112,14 @@ public:
     //
     // The unique functions are:
     //   - Function to setup the aerodynamics
+    //   - Function to setup the payload for the UAV
     // ------------------------------------------------------------------------
     void ConfigureTAILSITTERChassis();
     void ConfigureTAILSITTERProps();
     void ConfigureTAILSITTERLinks();
     void ConfigureTAILSITTERMotors();
     void ConfigureTAILSITTERAerodynamics();
+    void ConfigureTAILSITTERPayload();
 };
 
 
