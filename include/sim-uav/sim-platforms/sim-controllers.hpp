@@ -81,6 +81,7 @@
 // #include "pid-x8copter.hpp"
 // #include "mrac-x8copter.hpp"
 #include "mrac-geometric-tailsitter.hpp"
+#include "mrac-hybrid-tailsitter.hpp"
 
 namespace _acsl_
 {
@@ -156,11 +157,12 @@ struct controllers
     struct tailsitter
     {
         bool mrac_geometric{};  // MRAC with geometric control for TAILSITTER
+        bool mrac_hybrid{};     // MRAC with geometric il and hybrid ol
     } tailsitter;
 
     // -------------------------------------------------------------------------
     // Returns all controller selection flags as:
-		// 	 {platform, controller, reference} tuples.
+    // 	 {platform, controller, reference} tuples.
     //
     // Usage:
     //   Mutable iteration (can assign to flags):
@@ -178,7 +180,8 @@ struct controllers
             {"x8copter", "pid", x8copter.pid},
             {"x8copter", "mrac", x8copter.mrac},
             {"x8copter", "tlmrac", x8copter.tlmrac},
-            {"tailsitter", "mrac_geometric", tailsitter.mrac_geometric}
+            {"tailsitter", "mrac_geometric", tailsitter.mrac_geometric},
+            {"tailsitter", "mrac_hybrid", tailsitter.mrac_hybrid}
         };
     }
 
@@ -249,6 +252,10 @@ struct controllers
         else if (active.first == "tailsitter" && active.second == "mrac_geometric") {
             return std::make_unique< ::_acsl_::_tailsitter_::_mrac_geometric_::mrac_geometric >(logger, trajectory);
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC_GEOMETRIC CONTROLLER TO TAILSITTER");
+        }
+        else if (active.first == "tailsitter" && active.second == "mrac_hybrid") {
+            return std::make_unique< ::_acsl_::_tailsitter_::_mrac_hybrid_::mrac_hybrid >(logger, trajectory);
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC_HYBRID CONTROLLER TO TAILSITTER");
         }
         // [Add more else if branches for other controllers as needed]
         // e.g., x8copter and tailsitter controllers
