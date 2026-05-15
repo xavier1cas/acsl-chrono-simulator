@@ -682,7 +682,7 @@ void mrac_hybrid::post_integration_hybrid_algorithm()
 {
 
   // If theres a jump, let the user know in the terminal
-  _message_::SIMULATOR_INFO("[SIMCTL]: HAS POST INTEGRATION HYBRID ALGORITHM");
+  // _message_::SIMULATOR_INFO("[SIMCTL]: HAS POST INTEGRATION HYBRID ALGORITHM");
 
   // If hybrid is switched off, return
   if (!cip.use_hybrid) { return; }
@@ -710,8 +710,6 @@ void mrac_hybrid::post_integration_hybrid_algorithm()
     csm.integral_eQe_translational,
     cim.first_controller_loop
   );
-
-  std::cout << "time of last reset: " << cim.time_of_last_trajectory_reset_translational << std::endl;
 
 }
 

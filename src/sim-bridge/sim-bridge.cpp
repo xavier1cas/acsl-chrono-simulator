@@ -115,6 +115,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     this->enable_chassis_drag = config_file["aerodynamics"]["chassis_drag"].as_bool();
     this->enable_wing_aerodynamics = config_file["aerodynamics"]["wing_aero"].as_bool();
+    this->enable_wing_aerodynamics_dbg = config_file["aerodynamics"]["aero_terminal"].as_bool();
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -644,7 +645,7 @@ void simbridge::UpdatePhysicsSystem()
             const auto& aero = m_uav->GetUAVAerodynamics();
 
             const std::size_t n = aero.aerodynamic_center_frames.size();
-            if (this->enable_wing_aerodynamics)
+            if (this->enable_wing_aerodynamics && this->enable_wing_aerodynamics_dbg)
             {
                 msg << color_label << "AERODYNAMIC CENTERS:\n" << color_reset;
                 
@@ -662,10 +663,16 @@ void simbridge::UpdatePhysicsSystem()
                         << "\n" << color_reset;
                 }
             }
-            else
+            else if(this->enable_wing_aerodynamics && !this->enable_wing_aerodynamics_dbg)
             {
                 msg << color_label << "AERODYNAMIC CENTERS: " 
-                    << color_value << "NONE" 
+                    << color_value << "SWITCHED ON" 
+                    << color_reset << "\n";
+            }
+            else if(!this->enable_wing_aerodynamics)
+            {
+                msg << color_label << "AERODYNAMIC CENTERS: "
+                    << color_value << "NONE"
                     << color_reset << "\n";
             }
 

@@ -181,6 +181,7 @@ namespace _adaptive_laws_hybrid_
   )
   {
     constexpr int S_MAX_THRESHOLD = 1000000000;
+    // constexpr int S_MAX_THRESHOLD = 1000;
     const double time_since_last_trajectory_reset = time_now - time_of_last_trajectory_reset;
 
     if (s_hybrid > S_MAX_THRESHOLD || (s_hybrid > 0 && time_since_last_trajectory_reset > tolerance_time_reset_series))
@@ -217,6 +218,7 @@ namespace _adaptive_laws_hybrid_
 
     double integral_eQe = integral_eQe_map(0);
 
+    // Debug statements
     // std::cout << "integral_eQe: " << integral_eQe << std::endl;
     // std::cout << "summation_hybrid_P: " << summation_hybrid_P << std::endl;
 
@@ -231,17 +233,41 @@ namespace _adaptive_laws_hybrid_
       // Update reference trajectory (jump)
       const double series_element = evaluateSeriesElement(static_cast<double>(s_hybrid), alpha_hybrid_series);
       const double delta_series = ePe - series_element;
-      const double jump_factor = 1.0 - std::sqrt(delta_series / ePe);  // CHECK -> FIX FIX FIX
+      const double jump_factor = 1.0 - std::sqrt(delta_series / ePe);
       const VectorType jump_reference_trajectory = jump_factor * e;
       reference_model_state_map +=  jump_reference_trajectory;
-
-      std::cout << "Jump By: \n" << jump_reference_trajectory << std::endl;
 
       // Update integral storage term related to (e^T * Q * e)
       const double eQe = computeQuadraticForm(e, Q);
       const double eQe_previous = computeQuadraticForm(e_previous, Q);
       const double delta_integral_eQe = eQe - eQe_previous;
       integral_eQe_map(0) += delta_integral_eQe;
+
+      // Debug statements
+      std::cout << "[DBG] time_now: " << time_now << std::endl;
+      std::cout << "[DBG] time_of_last_trajectory_reset: " 
+                << time_of_last_trajectory_reset << std::endl;
+
+      std::cout << "[DBG] s_hybrid: " << s_hybrid << std::endl;
+      std::cout << "[DBG] ePe: " << ePe << std::endl;
+      std::cout << "[DBG] alpha_hybrid_series: " 
+                << alpha_hybrid_series << std::endl;
+
+      std::cout << "[DBG] series_element: " << series_element << std::endl;
+      std::cout << "[DBG] delta_series: " << delta_series << std::endl;
+      std::cout << "[DBG] jump_factor: " << jump_factor << std::endl;
+
+      std::cout << "[DBG] e: \n" << e << std::endl;
+      std::cout << "[DBG] jump_reference_trajectory: \n" 
+                << jump_reference_trajectory << std::endl;
+      std::cout << "[DBG] reference_model_state_map (after jump): \n"
+                << reference_model_state_map << std::endl;
+
+      std::cout << "[DBG] Q: \n" << Q << std::endl;
+      std::cout << "[DBG] eQe: " << eQe << std::endl;
+      std::cout << "[DBG] eQe_previous: " << eQe_previous << std::endl;
+      std::cout << "[DBG] delta_integral_eQe: " << delta_integral_eQe << std::endl;
+      std::cout << "[DBG] integral_eQe_map(0): " << integral_eQe_map(0) << std::endl;
 
       std::cout << "checkAndTriggerTrajectoryReset() cond. verified [integral_eQe >= summation_hybrid_P]" << std::endl;
     }
@@ -280,13 +306,6 @@ namespace _adaptive_laws_hybrid_
     eQe(0,0) = computeQuadraticForm(e, Q);
     const double ePe = computeQuadraticForm(e, P);
     const double ePe_previous = computeQuadraticForm(e_previous, P);
-
-
-    // std::cout << "ePe: " << ePe << std::endl;
-    // std::cout << "ePe_previous: " << ePe_previous << std::endl;
-
-    // std::cout << "DIFF ePe: " << ePe - ePe_previous << std::endl;
-
 
     // Update hybrid summation term
     summation_hybrid_P = updateSummationHybridP(ePe, ePe_previous, summation_hybrid_P);

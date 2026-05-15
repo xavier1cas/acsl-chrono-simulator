@@ -199,6 +199,7 @@ private:
     // ------------------------------------------------------------------------
     bool efsl;                          // <- Stands for enable flightstack loop.
     bool enable_wing_aerodynamics;      // <- Stands for enable wing aerodynamics.
+    bool enable_wing_aerodynamics_dbg;  // <- Stands for aerodynamics push terminal.
     bool enable_chassis_drag;           // <- Stands for enable chassis drag.
     bool enable_biplane_frame_data;     // <- Use Biplane frame data.
     bool treat_as_rigid_body;           // <- Use the u1-u4 control inputs &

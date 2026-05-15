@@ -1,7 +1,7 @@
 {
   "TRANSLATIONAL": {
     "KP_refmod_translational": {
-      "scaling_coef": 1.0,
+      "scaling_coef": 1.2,
       "matrix": [
         [8.0, 0.0, 0.0],
         [0.0, 9.0, 0.0],
@@ -17,7 +17,7 @@
       ]
     },
     "KD_refmod_translational": {
-      "scaling_coef": 1.1,
+      "scaling_coef": 2.0,
       "matrix": [
         [1.0, 0.0, 0.0],
         [0.0, 2.0, 0.0],
@@ -25,10 +25,10 @@
       ]
     },     
     "KP_translational": {
-      "scaling_coef": 0.55,
+      "scaling_coef": 0.60,
       "matrix": [
         [20.48, 0.0, 0.0],
-        [0.0, 32.4, 0.0],
+        [0.0, 32.8, 0.0],
         [0.0, 0.0, 34.8]
       ]
     },
@@ -41,7 +41,7 @@
       ]
     },
     "KD_translational": {
-      "scaling_coef": 0.75,
+      "scaling_coef": 0.76,
       "matrix": [
         [12.5, 0.0, 0.0],
         [0.0, 12.5, 0.0],
@@ -116,8 +116,8 @@
   },
   "HYBRID": {
     "use_hybrid": true,
-    "alpha_hybrid_series_translational": 0.01,
-    "tolerance_time_reset_series_hybrid_translational": 0.1
+    "alpha_hybrid_series_translational": 1.00001,
+    "tolerance_time_reset_series_hybrid_translational": 5e-3
   },
   "FILTERS": {
     "A_filter_mu": {
@@ -191,7 +191,7 @@
       "matrix": [
         [200.0,  0.0,  0.0],
         [ 0.0, 200.0,  0.0],
-        [ 0.0,   0.0,  40.0]
+        [ 0.0,   0.0,  100.0]
       ]
     },
     "Ka_rotational": {
@@ -203,7 +203,7 @@
       ]
     },
     "Gamma_x_rotational": {
-      "scaling_coef": 0.0001,
+      "scaling_coef": 0.001,
       "matrix": [
         [1.0, 0.0, 0.0],
         [0.0, 1.0, 0.0],

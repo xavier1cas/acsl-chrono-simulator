@@ -91,6 +91,8 @@ aerodynamics:
   chassis_drag: true
   # Set to true to import the wing aerodynamics
   wing_aero: true
+  # Set to true to print the wing aerodynamic state data to the terminal screen
+  aero_terminal: false
 
 # ============================================================================
 # CONTROLLER Selection
