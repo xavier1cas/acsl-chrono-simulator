@@ -111,11 +111,19 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->treat_as_rigid_body = config_file["debug"]["treat_as_rigid_body"].as_bool();
 
     // ------------------------------------------------------------------------
-    // STEP 4.1 – Extrack the aerodynamic mode and debugging settings
+    // STEP 4.1 – Extract the aerodynamic mode and debugging settings
     // ------------------------------------------------------------------------
     this->enable_chassis_drag = config_file["aerodynamics"]["chassis_drag"].as_bool();
     this->enable_wing_aerodynamics = config_file["aerodynamics"]["wing_aero"].as_bool();
     this->enable_wing_aerodynamics_dbg = config_file["aerodynamics"]["aero_terminal"].as_bool();
+
+    // ------------------------------------------------------------------------
+    // STEP 4.2 – Extract the motor disturbance properties
+    // ------------------------------------------------------------------------
+    this->motor_disturbance.reduce_efficiency = config_file["motor_disturbances"]["reduce_efficiency"].as_bool();
+    this->motor_disturbance.affected_motor = config_file["motor_disturbances"]["affected_motor"].as_int();
+    this->motor_disturbance.time_of_disturbance = static_cast<double>(config_file["motor_disturbances"]["time_of_disturbance"].as_float());
+    this->motor_disturbance.total_efficiency = static_cast<double>(config_file["motor_disturbances"]["total_efficiency"].as_float());
 
     // ------------------------------------------------------------------------
     // STEP 5 – Populate available_locales dynamically from YAML
@@ -390,98 +398,259 @@ void simbridge::UpdateVisualizationSystem()
     }
 }
 
+// // =====================================================================================================================
+// // UpdateControlAction()
+// //
+// // Purpose:
+// //   Dispatches the control law’s thrust commands to the simulated UAV by mapping
+// //   controller outputs to individual propulsors based on the current propulsion layout.
+// //
+// // Workflow:
+// //   1. Query the UAV for the number of propulsors currently configured.
+// //   2. For 1–8 propulsors, route controller thrust setpoints t1…t8 to the
+// //      corresponding prop indices on the UAV model.
+// //   3. If the requested number of propulsors is outside the supported range,
+// //      raise a simulator error with a descriptive message.
+// //
+// // Notes:
+// //   - Supports single-rotor, multi-rotor, and unconventional 1–8 actuator layouts.
+// //   - Controller interface is assumed to expose get_t1()…get_t8() accessors.
+// //   - This function only updates thrust setpoints; it does not advance the
+// //     physics simulation or perform real-time synchronization.
+// // =====================================================================================================================
+// void simbridge::UpdateControlAction() {
+    
+//     // If the body is to be treated as a rigid body, then
+//     if (this->treat_as_rigid_body) {
+//         m_uav->SetControlInputAtCOM(m_ctrl->get_u1(),
+//                                     m_ctrl->get_u2(),
+//                                     m_ctrl->get_u3(),
+//                                     m_ctrl->get_u4());
+//     }    
+//     else {
+//         int propCount = m_uav->GetPropCount();
+//         switch (propCount) {
+//             case 1: // Single-prop
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 break;
+//             case 2: // Twin-prop
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 break;
+//             case 3: // Tricopters
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+//                 break;
+//             case 4: // Quadcopters
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+//                 m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+//                 break;
+//             case 5: // Weird-stuff-I-guess
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+//                 m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+//                 m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+//                 break;
+//             case 6: // Hexacopters
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+//                 m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+//                 m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+//                 m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+//                 break;
+//             case 7: // Weirder-stuff-I-think
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+//                 m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+//                 m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+//                 m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+//                 m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
+//                 break;
+//             case 8: // Octocopters
+//                 m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
+//                 m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
+//                 m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
+//                 m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
+//                 m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
+//                 m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
+//                 m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
+//                 m_uav->SetThrustSetPoint(8, m_ctrl->get_t8());
+//                 break;
+//             default:
+//                 _message_::SIMULATOR_ERROR("[SIMBRG]: ONLY 1-8 ACTUATORS SUPPORTED. YOU HAVE" 
+//                                         "ASKED FOR SOMETHING I CANNOT GIVE YOU - GIRI");
+//                 break;
+//         }
+//     }
+// }
+
 // =====================================================================================================================
 // UpdateControlAction()
 //
 // Purpose:
 //   Dispatches the control law’s thrust commands to the simulated UAV by mapping
 //   controller outputs to individual propulsors based on the current propulsion layout.
+//   If configured, applies a motor efficiency disturbance to the selected motor
+//   after the specified disturbance time.
 //
 // Workflow:
-//   1. Query the UAV for the number of propulsors currently configured.
-//   2. For 1–8 propulsors, route controller thrust setpoints t1…t8 to the
-//      corresponding prop indices on the UAV model.
-//   3. If the requested number of propulsors is outside the supported range,
+//   1. If the body is to be treated as a rigid body, send the control inputs
+//      directly at the vehicle center of mass.
+//   2. Otherwise, query the UAV for the number of propulsors currently configured.
+//   3. Read controller thrust commands t1...t8 once into local variables.
+//   4. If motor-efficiency disturbance is enabled, check whether the disturbance
+//      activation time has been reached.
+//   5. If the disturbance is active, reduce the thrust of the affected motor by
+//      the configured total efficiency factor.
+//   6. Dispatch the final thrust commands to the UAV using the existing actuator
+//      mapping logic for 1–8 propulsors.
+//   7. If the requested number of propulsors is outside the supported range,
 //      raise a simulator error with a descriptive message.
 //
 // Notes:
 //   - Supports single-rotor, multi-rotor, and unconventional 1–8 actuator layouts.
 //   - Controller interface is assumed to expose get_t1()…get_t8() accessors.
-//   - This function only updates thrust setpoints; it does not advance the
-//     physics simulation or perform real-time synchronization.
+//   - total_efficiency is treated as a multiplier, e.g. 0.5 means the affected
+//     motor will produce 50% of the commanded thrust after disturbance activation.
+//   - If disturbance is disabled, the function behaves exactly as before.
 // =====================================================================================================================
 void simbridge::UpdateControlAction() {
-    
-    // If the body is to be treated as a rigid body, then
+
+    // ------------------------------------------------------------------------
+    // STEP 1 – If the vehicle is treated as a rigid body, send the control
+    //          inputs directly to the center of mass and exit early.
+    // ------------------------------------------------------------------------
     if (this->treat_as_rigid_body) {
         m_uav->SetControlInputAtCOM(m_ctrl->get_u1(),
                                     m_ctrl->get_u2(),
                                     m_ctrl->get_u3(),
                                     m_ctrl->get_u4());
-    }    
-    else {
-        int propCount = m_uav->GetPropCount();
-        switch (propCount) {
-            case 1: // Single-prop
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                break;
-            case 2: // Twin-prop
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                break;
-            case 3: // Tricopters
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-                break;
-            case 4: // Quadcopters
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-                break;
-            case 5: // Weird-stuff-I-guess
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-                break;
-            case 6: // Hexacopters
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-                m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
-                break;
-            case 7: // Weirder-stuff-I-think
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-                m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
-                m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
-                break;
-            case 8: // Octocopters
-                m_uav->SetThrustSetPoint(1, m_ctrl->get_t1());
-                m_uav->SetThrustSetPoint(2, m_ctrl->get_t2());
-                m_uav->SetThrustSetPoint(3, m_ctrl->get_t3());
-                m_uav->SetThrustSetPoint(4, m_ctrl->get_t4());
-                m_uav->SetThrustSetPoint(5, m_ctrl->get_t5());
-                m_uav->SetThrustSetPoint(6, m_ctrl->get_t6());
-                m_uav->SetThrustSetPoint(7, m_ctrl->get_t7());
-                m_uav->SetThrustSetPoint(8, m_ctrl->get_t8());
-                break;
-            default:
-                _message_::SIMULATOR_ERROR("[SIMBRG]: ONLY 1-8 ACTUATORS SUPPORTED. YOU HAVE" 
-                                        "ASKED FOR SOMETHING I CANNOT GIVE YOU - GIRI");
-                break;
+        return;
+    }
+
+    // ------------------------------------------------------------------------
+    // STEP 2 – Query the number of propulsors currently configured on the UAV.
+    // ------------------------------------------------------------------------
+    int propCount = m_uav->GetPropCount();
+
+    // ------------------------------------------------------------------------
+    // STEP 3 – Read controller thrust commands once into local variables.
+    //          These values may be modified below if a disturbance is active.
+    // ------------------------------------------------------------------------
+    double t1 = m_ctrl->get_t1();
+    double t2 = m_ctrl->get_t2();
+    double t3 = m_ctrl->get_t3();
+    double t4 = m_ctrl->get_t4();
+    double t5 = m_ctrl->get_t5();
+    double t6 = m_ctrl->get_t6();
+    double t7 = m_ctrl->get_t7();
+    double t8 = m_ctrl->get_t8();
+
+    // ------------------------------------------------------------------------
+    // STEP 4 – If motor disturbance logic is enabled, check whether the
+    //          disturbance activation time has been reached.
+    // ------------------------------------------------------------------------
+    if (this->motor_disturbance.reduce_efficiency) {
+
+        // --------------------------------------------------------------------
+        // STEP 5 – If the disturbance time has been reached, reduce the thrust
+        //          command of the selected motor by the configured efficiency.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetPhysicsSystem().GetChTime() >= this->motor_disturbance.time_of_disturbance) {
+
+            int motor = this->motor_disturbance.affected_motor;
+            if      (motor == 1) { t1 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 2) { t2 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 3) { t3 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 4) { t4 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 5) { t5 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 6) { t6 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 7) { t7 *= this->motor_disturbance.total_efficiency; }
+            else if (motor == 8) { t8 *= this->motor_disturbance.total_efficiency; }
         }
     }
-}
 
+    // ------------------------------------------------------------------------
+    // STEP 6 – Dispatch the final thrust commands using the existing actuator
+    //          mapping logic based on the current propulsion layout.
+    // ------------------------------------------------------------------------
+    switch (propCount) {
+        case 1: // Single-prop
+            m_uav->SetThrustSetPoint(1, t1);
+            break;
+
+        case 2: // Twin-prop
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            break;
+
+        case 3: // Tricopters
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            m_uav->SetThrustSetPoint(3, t3);
+            break;
+
+        case 4: // Quadcopters
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            m_uav->SetThrustSetPoint(3, t3);
+            m_uav->SetThrustSetPoint(4, t4);
+            break;
+
+        case 5: // Weird-stuff-I-guess
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            m_uav->SetThrustSetPoint(3, t3);
+            m_uav->SetThrustSetPoint(4, t4);
+            m_uav->SetThrustSetPoint(5, t5);
+            break;
+
+        case 6: // Hexacopters
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            m_uav->SetThrustSetPoint(3, t3);
+            m_uav->SetThrustSetPoint(4, t4);
+            m_uav->SetThrustSetPoint(5, t5);
+            m_uav->SetThrustSetPoint(6, t6);
+            break;
+
+        case 7: // Weirder-stuff-I-think
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            m_uav->SetThrustSetPoint(3, t3);
+            m_uav->SetThrustSetPoint(4, t4);
+            m_uav->SetThrustSetPoint(5, t5);
+            m_uav->SetThrustSetPoint(6, t6);
+            m_uav->SetThrustSetPoint(7, t7);
+            break;
+
+        case 8: // Octocopters
+            m_uav->SetThrustSetPoint(1, t1);
+            m_uav->SetThrustSetPoint(2, t2);
+            m_uav->SetThrustSetPoint(3, t3);
+            m_uav->SetThrustSetPoint(4, t4);
+            m_uav->SetThrustSetPoint(5, t5);
+            m_uav->SetThrustSetPoint(6, t6);
+            m_uav->SetThrustSetPoint(7, t7);
+            m_uav->SetThrustSetPoint(8, t8);
+            break;
+
+        // --------------------------------------------------------------------
+        // STEP 7 – If an unsupported propulsion layout is requested, raise an
+        //          error and notify the user.
+        // --------------------------------------------------------------------
+        default:
+            _message_::SIMULATOR_ERROR("[SIMBRG]: ONLY 1-8 ACTUATORS SUPPORTED. YOU HAVE "
+                                       "ASKED FOR SOMETHING I CANNOT GIVE YOU - GIRI");
+            break;
+    }
+}
 
 // =====================================================================================================================
 // UpdatePhysicsSystem()

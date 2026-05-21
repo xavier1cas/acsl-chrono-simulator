@@ -95,6 +95,24 @@ aerodynamics:
   aero_terminal: false
 
 # ============================================================================
+# UAV Motor Disturbances
+# !!! IMPORTANT: Please make sure the motor numbering is the right one to turn
+#                off.
+#                Quad     : 1-4 
+#                x8copter : 1-8
+# ============================================================================
+motor_disturbances:
+  # Set to true if motor disturbances are to be set on.
+  reduce_efficiency: false
+  # Set the motor number here.
+  affected_motor: 1
+  # Set the time at which you want the reduced efficieny to take place
+  time_of_disturbance: 12.0
+  # Set the efficieny percentage, 1.0 is 100% of total power, 0.5 is 50% of 
+  # total power
+  total_efficiency: 0.8
+
+# ============================================================================
 # CONTROLLER Selection
 # !!! IMPORTANT: 1. Only one controller can be active at any given time. 
 #                2. Controller and platform should match. Please see platform

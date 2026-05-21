@@ -204,7 +204,16 @@ private:
     bool enable_biplane_frame_data;     // <- Use Biplane frame data.
     bool treat_as_rigid_body;           // <- Use the u1-u4 control inputs &
                                         //    treat the uav as a rigid body
-
+    
+    // ------------------------------------------------------------------------
+    // Struct to store the motor disturbance parameters
+    // ------------------------------------------------------------------------
+    struct motor_distrubance_parameters {
+        bool reduce_efficiency;
+        int affected_motor;
+        double time_of_disturbance;
+        double total_efficiency;
+    } motor_disturbance;
     
     // ------------------------------------------------------------------------
     // Boolean for telling the system it's debugging configuration

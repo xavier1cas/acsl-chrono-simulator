@@ -117,7 +117,7 @@
   "HYBRID": {
     "use_hybrid": true,
     "alpha_hybrid_series_translational": 1.00001,
-    "tolerance_time_reset_series_hybrid_translational": 5e-3
+    "tolerance_time_reset_series_hybrid_translational": 10
   },
   "FILTERS": {
     "A_filter_mu": {
