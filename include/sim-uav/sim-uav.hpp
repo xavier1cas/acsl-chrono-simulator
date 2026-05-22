@@ -68,6 +68,7 @@
 #include "chrono/physics/ChLinkMate.h"
 #include "chrono/functions/ChFunction.h"
 #include "chrono/physics/ChMarker.h"
+#include "chrono/physics/ChBodyEasy.h"
 
 
 
@@ -533,6 +534,9 @@ public:
     // Retrieve the currently assigned UAV platform name.
     virtual std::string GetUAVPlatformName() const = 0;
 
+    // Retrieve the UAV physics system
+    virtual chrono::ChSystemNSC& getPhysicsSystem() = 0;
+
     // Get the file system path string for the UAV's shapes directory.
     virtual std::string GetUAVShapesDir() const = 0;
 
@@ -727,6 +731,7 @@ public:
 
     void SetUAVPlatformName(std::string name) override { this->name_ = name; }
     std::string GetUAVPlatformName() const override { return name_; }
+    chrono::ChSystemNSC& getPhysicsSystem() { return this->m_physics_; }
     std::string GetUAVShapesDir() const override { return shapes_dir; }
     int GetPropCount() override { return nop; }
 

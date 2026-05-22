@@ -61,7 +61,7 @@ debug:
   # Set to true if you want to stop the simulation at a given time (in seconds)
   sim_debug_stop: false
   # Set the value at which you want the simulation to stop (in seconds)
-  sim_stop_time: 34.0
+  sim_stop_time: 70.0
   # Set the value to true if you want the system to import model and not run 
   # anything else
   developer_mode: false
@@ -107,10 +107,10 @@ motor_disturbances:
   # Set the motor number here.
   affected_motor: 1
   # Set the time at which you want the reduced efficieny to take place
-  time_of_disturbance: 12.0
+  time_of_disturbance: 15.0
   # Set the efficieny percentage, 1.0 is 100% of total power, 0.5 is 50% of 
   # total power
-  total_efficiency: 0.8
+  total_efficiency: 0.75
 
 # ============================================================================
 # CONTROLLER Selection

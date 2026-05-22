@@ -253,10 +253,6 @@ void mrac_hybrid::update(double time,
 
   // 3. Capture the time before the execution of the controller ------------------
   cim.alg_start_time = std::chrono::high_resolution_clock::now();
-
-  // 4. Assign the values from the integrator ------------------------------------
-  assign_from_rk4();
-
 }
 
 // Function to assign elements from the rk4 integrator
@@ -669,11 +665,12 @@ void mrac_hybrid::compute_normalized_thrusts()
   control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_tailsitter, cim.Sat_Thrust(2));
   control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_tailsitter, cim.Sat_Thrust(3));
 
-  std::cout << "T1: " << control_input(0) 
-            << "| T2: " << control_input(1)
-            << "| T3: " << control_input(2)
-            << "| T4: " << control_input(3) 
-            << std::endl;
+  // DEBUG STATEMENT
+  // std::cout << "T1: " << control_input(0) 
+  //           << "| T2: " << control_input(1)
+  //           << "| T3: " << control_input(2)
+  //           << "| T4: " << control_input(3) 
+  //           << std::endl;
 
 }
 
@@ -686,6 +683,9 @@ void mrac_hybrid::post_integration_hybrid_algorithm()
 
   // If hybrid is switched off, return
   if (!cip.use_hybrid) { return; }
+
+  // Cache the refernce trajectory
+  auto x_tran_ref_old = csm.x_tran_ref;
 
   // Call hybrid step on OUTERLOOP
   std::tie(
@@ -711,6 +711,20 @@ void mrac_hybrid::post_integration_hybrid_algorithm()
     cim.first_controller_loop
   );
 
+  std::cout << "old ref: " << x_tran_ref_old.transpose() << std::endl;
+  std::cout << "new ref: " << csm.x_tran_ref.transpose() << std::endl;
+  std::cout << "diff ref: "
+  << (x_tran_ref_old - csm.x_tran_ref).transpose()
+  << std::endl;
+  std::cout << "P_tran: \n"  << cip.P_tran << std::endl;
+
+  // Assign the y's -> Use the dxdt function to reassign the y rk4 vector.
+  int index = 18;
+  ::_shared_::_serialize_::assignElementsToDxdt(csm.x_tran_ref, y, index);
+  index = 202;
+  ::_shared_::_serialize_::assignElementsToDxdt(csm.integral_eQe_translational, y, index);
+
+
 }
 
 // Function to comput the previous error and cache it
@@ -727,9 +741,6 @@ void mrac_hybrid::run(const double time_step_rk4_)
 {
 
   // Process the dynamics --------------------------------------------------------
-  // 0. Cache the previous error for hybrid post integration algorithm
-  cache_previous_error_hybrid();
-
   // 1. Compute the aerodynamics
 
   // 2. Compute the translational control input
@@ -751,8 +762,14 @@ void mrac_hybrid::run(const double time_step_rk4_)
   rk4.do_step(boost::bind(&mrac_hybrid::model, this, bph::_1, bph::_2, bph::_3),
               y, cim.t, time_step_rk4_);
 
+  // 7.1 Assign the values from the integrator 
+  assign_from_rk4();
+              
   // 8. Post integration hybrid algorithm
   post_integration_hybrid_algorithm();
+
+  // 8.1 Cache the previous error for hybrid post integration algorithm
+  cache_previous_error_hybrid();
 
   // Capture the time after the execution of the controller
   cim.alg_end_time = std::chrono::high_resolution_clock::now();
