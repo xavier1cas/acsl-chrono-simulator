@@ -107,10 +107,10 @@ motor_disturbances:
   # Set the motor number here.
   affected_motor: 1
   # Set the time at which you want the reduced efficieny to take place
-  time_of_disturbance: 15.0
+  time_of_disturbance: 40.0
   # Set the efficieny percentage, 1.0 is 100% of total power, 0.5 is 50% of 
   # total power
-  total_efficiency: 0.75
+  total_efficiency: 0.8
 
 # ============================================================================
 # CONTROLLER Selection

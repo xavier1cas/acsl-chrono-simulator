@@ -199,6 +199,9 @@ void mrac_hybrid::init(){
   cim.time_of_last_trajectory_reset_translational = 0.0;
   cim.e_previous_translational.setZero();
 
+  // Set the first run to true
+  cip.first_run = true;
+
 }
 
 // Update function for the controller
@@ -250,6 +253,22 @@ void mrac_hybrid::update(double time,
   cim.psi_user_unwrapped = ::_shared_::_compute_::unwrapPsiSimple(cim.psi_user, this->psiState);
   // cim.psi_dot_user = m_traj.GetEulerRate()(2);
   cim.psi_dot_user = 0.0;
+
+  // Code to start the reference model from the actual position,
+  // Quality of life improvement, has the first initial jump be less
+  // Theoretically supported as we can set the inital coniditions of
+  // the plant and reference model arbitrarily.
+  if (cip.first_run) {
+    
+    csm.x_tran_ref << cim.x_tran_pos, cim.x_tran_vel;
+    
+    // Assign the y's -> Use the dxdt function to reassign the y rk4 vector.
+    int index = 18;
+    ::_shared_::_serialize_::assignElementsToDxdt(csm.x_tran_ref, this->y, index);
+
+    cip.first_run = false;
+
+  }
 
   // 3. Capture the time before the execution of the controller ------------------
   cim.alg_start_time = std::chrono::high_resolution_clock::now();
@@ -724,6 +743,11 @@ void mrac_hybrid::post_integration_hybrid_algorithm()
   index = 202;
   ::_shared_::_serialize_::assignElementsToDxdt(csm.integral_eQe_translational, y, index);
 
+  // Assign the dy's -> Use the dxdt function to reassign the dy rk4 vector
+  index = 18;
+  // Reference model
+  cim.x_tran_ref_dot << cip.A_ref_tran * csm.x_tran_ref + cip.B_ref_tran * cim.r_cmd_tran;
+  ::_shared_::_serialize_::assignElementsToDxdt(cim.x_tran_ref_dot, dy, index);
 
 }
 
@@ -742,6 +766,9 @@ void mrac_hybrid::run(const double time_step_rk4_)
 
   // Process the dynamics --------------------------------------------------------
   // 1. Compute the aerodynamics
+
+  // 1.1 Cache the previous error for hybrid post integration algorithm
+  cache_previous_error_hybrid();
 
   // 2. Compute the translational control input
   compute_translational_control_in_I();
@@ -767,9 +794,6 @@ void mrac_hybrid::run(const double time_step_rk4_)
               
   // 8. Post integration hybrid algorithm
   post_integration_hybrid_algorithm();
-
-  // 8.1 Cache the previous error for hybrid post integration algorithm
-  cache_previous_error_hybrid();
 
   // Capture the time after the execution of the controller
   cim.alg_end_time = std::chrono::high_resolution_clock::now();

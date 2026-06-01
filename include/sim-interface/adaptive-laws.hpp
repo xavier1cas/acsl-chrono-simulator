@@ -232,6 +232,7 @@ namespace _adaptive_laws_hybrid_
       // Update reference trajectory (jump)
       const double series_element = evaluateSeriesElement(static_cast<double>(s_hybrid), alpha_hybrid_series);
       const double delta_series = ePe - series_element;
+      // const double jump_factor = 1.0 - std::sqrt(delta_series / ePe);
       const double jump_factor = 1.0 - std::sqrt(delta_series / ePe);
       const VectorType jump_reference_trajectory = jump_factor * e;
       reference_model_state_map +=  jump_reference_trajectory;

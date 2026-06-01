@@ -121,6 +121,8 @@ struct controller_internal_parameters {
   bool use_hybrid;                                          // Translational Hybrid parameters
   double alpha_hybrid_series_translational;                 // Translational Hybrid parameters
   double tolerance_time_reset_series_hybrid_translational;  // Translational Hybrid parameters
+
+  bool first_run;                                           // Boolean for telling the controller if its the first run
     
 };
 
