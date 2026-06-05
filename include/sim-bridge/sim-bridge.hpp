@@ -119,6 +119,12 @@ public:
     // ------------------------------------------------------------------------
     void EverRun();
 
+    // ------------------------------------------------------------------------
+    // Function: Pause function for the main while loop for the entire sim.
+    // ------------------------------------------------------------------------
+    void EverPause();
+
+
 private:
 
     // ------------------------------------------------------------------------
@@ -223,6 +229,7 @@ private:
     bool sim_debug_stop;
     double sim_stop_time;
     bool developer_mode;
+    bool developer_mode_steps;
 
     // ------------------------------------------------------------------------
     // Chrono Physics and Visual system object.

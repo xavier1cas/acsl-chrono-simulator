@@ -65,6 +65,9 @@ debug:
   # Set the value to true if you want the system to import model and not run 
   # anything else
   developer_mode: false
+  # Set the value to true if you want the system to update the physics for 
+  # every timestep as you press the "ENTER" key
+  developer_mode_steps: false
   # Set the value to true if you want to use u1-u4 instead of thrusts 
   treat_as_rigid_body: false
 

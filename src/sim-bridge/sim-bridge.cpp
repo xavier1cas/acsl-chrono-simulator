@@ -108,6 +108,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     this->sim_debug_stop = config_file["debug"]["sim_debug_stop"].as_bool();
     this->sim_stop_time = static_cast<double>(config_file["debug"]["sim_stop_time"].as_float()); 
     this->developer_mode = config_file["debug"]["developer_mode"].as_bool();
+    this->developer_mode_steps = config_file["debug"]["developer_mode_steps"].as_bool();
     this->treat_as_rigid_body = config_file["debug"]["treat_as_rigid_body"].as_bool();
 
     // ------------------------------------------------------------------------
@@ -253,6 +254,7 @@ void simbridge::ConfigureSimulatorFromConfig()
     // ------------------------------------------------------------------------
     _message_::SIMULATOR_INFO("[SIMBRG]: SIMULATOR CONFIG LOADED SUCCESSFULLY");
     _message_::SIMULATOR_INFO("[SIMBRG]:  - DEVELOPER MODE: "               + ::_shared_::_conversions_::bool2string(developer_mode));
+    _message_::SIMULATOR_INFO("[SIMBRG]:  - DEVELOPER MODE STEPS: "         + ::_shared_::_conversions_::bool2string(developer_mode_steps));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - HIL / SIL MODE : "              + ::_shared_::_conversions_::bool2string(efsl));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - CHASSIS DRAG ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_chassis_drag));
     _message_::SIMULATOR_INFO("[SIMBRG]:  - AERODYNAMICS ENABLED : "        + ::_shared_::_conversions_::bool2string(enable_wing_aerodynamics));
@@ -1031,6 +1033,17 @@ void simbridge::LogData()
     }
 }
 
+// Prototype ever pause function - will house the logic for the ultimate pause. (La Pausa)
+void simbridge::EverPause()
+{
+    if (this->developer_mode_steps) {
+        _message_::SIMULATOR_INFO("[SIMBRG] STEP DONE, PRESS **ENTER** KEY TO GO TO THE NEXT STEP");
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        std::cin.get();  // waits for Enter
+        return;          // Returns
+    }
+}
+
 // Prototype ever run function -  will house the logic for all the modes.
 void simbridge::EverRun()
 {
@@ -1043,7 +1056,10 @@ void simbridge::EverRun()
             this->UpdateVisualizationSystem();
 
             // Update the physics system
-            this->UpdatePhysicsSystem();  
+            this->UpdatePhysicsSystem();
+            
+            // If you need a pause
+            EverPause();
         }
 
     }
@@ -1058,7 +1074,10 @@ void simbridge::EverRun()
                 this->UpdateVisualizationSystem();
 
                 // Update the physics system
-                this->UpdatePhysicsSystem();    
+                this->UpdatePhysicsSystem();   
+                
+                // If you need a pause
+                EverPause();
             }
         }
         else
@@ -1070,9 +1089,15 @@ void simbridge::EverRun()
 
                 // Update the physics system
                 this->UpdatePhysicsSystem();
+
+                // If you need a pause
+                EverPause();
             }
         }
     }
+
+    
+    
 }
 
 

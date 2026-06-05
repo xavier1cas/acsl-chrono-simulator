@@ -69,7 +69,7 @@ void simtailsitter::ConfigureTAILSITTERChassis()
                                                chrono::ChQuaternion<>(1,0,0,0)); 
 
     // Configure the name of the visualization obj file ---------------------------------------------------------------
-    chassis_properties.vis_obj_name = "body_5_1.obj";
+    chassis_properties.vis_obj_name = "chassis.obj";
 
     // Configure the chassis collision shapes -------------------------------------------------------------------------
     // Cache some variables for this 
@@ -111,58 +111,9 @@ void simtailsitter::ConfigureTAILSITTERChassis()
     col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
     frame = chrono::ChFramed(pos, mr);
 
-    chassis_properties.collision.emplace_back(col, frame);
-
-    // #################################################
-    // TEMP CODE TEMP CODE TEMP CODE TEMP CODE TEMP CODE
-    // #################################################
-
-    // // New box: same rotation, same dimensions, 2 mm below in z
-    // chrono::ChVector3d pos2 = chrono::ChVector3d(pos.x(), -0.25, pos.z() + (1.2 * dim.z()) );
-    // auto dim2 = chrono::ChVector3d(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.25, 0.01, 0.1)));
-    // auto col2 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim2);
-    // frame = chrono::ChFramed(pos2, mr);
-
-    // chassis_properties.collision.emplace_back(col2, frame);
-
-    // chrono::ChVector3d pos3 = chrono::ChVector3d(pos.x(), 0.25, pos.z() + (1.2 * dim.z()) );
-    // auto dim3 = chrono::ChVector3d(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.25, 0.01, 0.1)));
-    // auto col3 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim3);
-    // frame = chrono::ChFramed(pos3, mr);
-
-    // chassis_properties.collision.emplace_back(col3, frame);
-
-    // chrono::ChVector3d pos4 = chrono::ChVector3d(-0.125, pos.y(), pos.z() + (1.2 * dim.z()) );
-    // auto dim4 = chrono::ChVector3d(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.01, 0.5, 0.1)));
-    // auto col4 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim4);
-    // frame = chrono::ChFramed(pos4, mr);
-
-    // chassis_properties.collision.emplace_back(col4, frame);
-
-    // chrono::ChVector3d pos5 = chrono::ChVector3d(0.125, pos.y(), pos.z() + (1.2 * dim.z()) );
-    // auto dim5 = chrono::ChVector3d(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.01, 0.5, 0.1)));
-    // auto col5 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim5);
-    // frame = chrono::ChFramed(pos5, mr);
-
-    // chassis_properties.collision.emplace_back(col5, frame);
-
-    // chrono::ChVector3d pos6 = chrono::ChVector3d(pos.x(), pos.y(), pos.z() + (1.2 * dim.z()) + 0.05 );
-    // auto dim6 = chrono::ChVector3d(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.25, 0.5, 0.01)));
-    // auto col6 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim6);
-    // frame = chrono::ChFramed(pos6, mr);
-
-    // chassis_properties.collision.emplace_back(col6, frame);
-
-    // chrono::ChVector3d pos7 = chrono::ChVector3d(pos.x(), pos.y(), pos.z() + 0.04 );
-    // auto dim7 = chrono::ChVector3d(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.25, 0.5, 0.01)));
-    // auto col7 = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat, dim7);
-    // frame = chrono::ChFramed(pos7, mr);
-
-    // chassis_properties.collision.emplace_back(col7, frame);
-
-    // #################################################
-    // TEMP CODE TEMP CODE TEMP CODE TEMP CODE TEMP CODE
-    // #################################################
+    // FIX - assign collision groups for box and frame
+    // don't really need this anyway.
+    // chassis_properties.collision.emplace_back(col, frame);
 
     // 4
     mr(0,0)=-1;                   mr(1,0)=-2.18684361597377E-15; mr(2,0)=-1.1007112867068E-14;
@@ -227,7 +178,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
-    prop_properties.vis_obj_name = "body_1_1.obj";
+    prop_properties.vis_obj_name = "propeller.obj";
 
     // There are no collision geometries - Therefore we ignore that step
 
@@ -266,7 +217,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
-    prop_properties.vis_obj_name = "body_1_1.obj";
+    prop_properties.vis_obj_name = "propeller.obj";
 
     // There are no collision geometries - Therefore we ignore that step
 
@@ -305,7 +256,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
-    prop_properties.vis_obj_name = "body_1_1.obj";
+    prop_properties.vis_obj_name = "propeller.obj";
 
     // There are no collision geometries - Therefore we ignore that step
 
@@ -344,7 +295,7 @@ void simtailsitter::ConfigureTAILSITTERProps()
                                            chrono::ChQuaternion<>(1,0,0,0));
     
     // Configure the name of the visualization obj file
-    prop_properties.vis_obj_name = "body_1_1.obj";
+    prop_properties.vis_obj_name = "propeller.obj";
 
     // There are no collision geometries - Therefore we ignore that step
 
@@ -661,25 +612,121 @@ void simtailsitter::ConfigureTAILSITTERAerodynamics()
 // Unique function that initiates and attaches the payload to the tailsitter
 void simtailsitter::ConfigureTAILSITTERPayload()
 {
-    // auto sph_mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
-    // sph_mat->SetFriction(1.0f);
-    // sph_mat->SetDampingF(0.5f);
+    // Initialize the box body
+    auto box = chrono_types::make_shared<chrono::ChBodyAuxRef>();
+    box->SetName("Box");
+    box->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-0.820174613366277,0.138257774369255,0.0490871680500573)));
+    box->SetRot(::_shared_::_transformations_::GetChronoOrientaitonFromNED(chrono::ChQuaternion<>(1,0,0,0)));
+    box->SetMass(0.142211570470112);
+    box->SetInertiaXX(chrono::ChVector3d(0.000475676703258402,0.000431812269027828,0.000781017171981662));
+    box->SetInertiaXY(chrono::ChVector3d(0,-2.46791768127287e-19,-1.65702232028199e-21));
+    box->SetFrameCOMToRef(chrono::ChFramed(chrono::ChVector3d(-1.67786076288889e-17,0,0.025),chrono::ChQuaternion<>(1,0,0,0)));
 
-    // auto sphereBody = chrono_types::make_shared<chrono::ChBodyEasySphere>(
-    //     0.025,
-    //     0.1,
-    //     sph_mat
-    // );
+    // Visualization shape
+    auto box_shape = chrono_types::make_shared<chrono::ChVisualShapeModelFile>(); 
+    box_shape->SetFilename(this->GetUAVShapesDir() + "box.obj");
+    box_shape->SetOpacity(0.3);
+    box->AddVisualShape(box_shape, chrono::ChFramed(chrono::ChVector3d(0,0,0), chrono::ChQuaterniond(1,0,0,0)));
 
-    // sphereBody->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-0.820175,
-    //                                                                                           0.138326,
-    //                                                                                           0.0275872 + 0.075)));
+    // Collision model
+    box->AddCollisionModel(chrono_types::make_shared<chrono::ChCollisionModel>());
 
-    // sphereBody->GetVisualShape(0)->SetTexture(
-    //     chrono::GetChronoDataFile("textures/bluewhite.png")
-    // );
+    // Collision material
+    auto mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    mat->SetRollingFriction(0.01);
+    mat->SetSpinningFriction(0.01);
 
-    // this->getPhysicsSystem().Add(sphereBody);
+    // Create a triangle mesh collision shape 
+    auto mesh = chrono::ChTriangleMeshConnected::CreateFromWavefrontFile(this->GetUAVShapesDir() + "box.obj", false, true);
+    mesh->RepairDuplicateVertexes(1e-9);
+
+    auto coll_shape = chrono_types::make_shared<chrono::ChCollisionShapeTriangleMesh>(mat, mesh, false, false, 0.005);
+    box->AddCollisionShape(coll_shape);
+    box->EnableCollision(true);
+
+    // Push back the body 
+    this->GetUAVBodyList().push_back(box);
+
+    // Create the links to the chassis
+    std::vector<_uav_::LinkData> link_data_vec;
+
+    // ---- Coincident15 (chassis to box) ----
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
+        "Coincident15", this->GetUAVChassis().body, box,
+        chrono::ChVector3d(-0.776202997969024,0.169865825445263,0.0490871680500605),
+        chrono::ChVector3d(-0.820174613366277,0.138257774369255,0.0490871680500573),
+        chrono::ChVector3d(0,0,-1),
+        0.0
+    });
+
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
+        true, "Coincident15", this->GetUAVChassis().body, box,
+        chrono::ChVector3d(-0.776202997969024,0.169865825445263,0.0490871680500605),
+        chrono::ChVector3d(-0.820174613366277,0.138257774369255,0.0490871680500573),
+        chrono::ChVector3d(-4.08802930999812e-20,9.30604413408574e-19,1),
+        chrono::ChVector3d(0,0,-1)
+    });
+
+    // ---- Coincident16 (chassis to box) ----
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
+        "Coincident16", this->GetUAVChassis().body, box,
+        chrono::ChVector3d(-0.895143063521276,-0.120742225630746,-0.00641283194993837),
+        chrono::ChVector3d(-0.895143063521276,0.0582577743692548,0.0990871680500574),
+        chrono::ChVector3d(-1,0,0),
+        0.0
+    });
+
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
+        true, "Coincident16", this->GetUAVChassis().body, box,
+        chrono::ChVector3d(-0.895143063521276,-0.120742225630746,-0.00641283194993837),
+        chrono::ChVector3d(-0.895143063521276,0.0582577743692548,0.0990871680500574),
+        chrono::ChVector3d(1,1.38376723274325e-15,-3.53608945387768e-15),
+        chrono::ChVector3d(-1,0,0)
+    });
+
+    // ---- Distance2 (chassis to box) ----
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::DistanceZ>{
+        "Distance2", this->GetUAVChassis().body, box,
+        chrono::ChVector3d(-0.895143063521276,0.218257774369255,0.0990871680500574),
+        chrono::ChVector3d(-0.813345143747726,0.178257774369254,0.00458716805006078),
+        chrono::ChVector3d(-4.41487124636098e-16,1,-9.30604413453649e-19),
+        0.04
+    });
+
+    link_data_vec.push_back(_uav_::LinkProperty<_uav_::LinkType::Parallel>{
+        false, "Distance2", this->GetUAVChassis().body, box,
+        chrono::ChVector3d(-0.895143063521276,0.218257774369255,0.0990871680500574),
+        chrono::ChVector3d(-0.813345143747726,0.178257774369254,0.00458716805006078),
+        chrono::ChVector3d(0,1,0),
+        chrono::ChVector3d(-4.41487124636098e-16,1,-9.30604413453649e-19)
+    });
+
+
+    this->LinkUAVBodies(link_data_vec);
+
+
+    // Add the payload
+    auto sph_mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    sph_mat->SetFriction(1.0f);
+    sph_mat->SetDampingF(0.5f);
+
+    auto sphereBody = chrono_types::make_shared<chrono::ChBodyEasySphere>(
+        0.015,
+        0.5,
+        sph_mat
+    );
+
+    sphereBody->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-0.820174613366277,
+                                                                                              0.138257774369255,
+                                                                                              0.0490871680500573)));
+
+    sphereBody->GetVisualShape(0)->SetTexture(
+        chrono::GetChronoDataFile("textures/bluewhite.png")
+    );
+
+    this->getPhysicsSystem().Add(sphereBody);
+
+
 }
 
 }   // namespace _tailsitter_

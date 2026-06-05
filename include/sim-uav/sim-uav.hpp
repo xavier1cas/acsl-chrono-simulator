@@ -57,6 +57,8 @@
 #include "chrono/geometry/ChTriangleMesh.h"
 #include "chrono/geometry/ChTriangleMeshConnected.h"
 #include "chrono/assets/ChVisualShapeTriangleMesh.h"
+#include "chrono/collision/ChCollisionShapeTriangleMesh.h"
+#include "chrono/assets/ChVisualShapeModelFile.h"
 #include "chrono/physics/ChLinkMotorRotationAngle.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
 #include "chrono/physics/ChLinkMotorRotationTorque.h"
@@ -384,8 +386,9 @@ struct m_states {
 //   Parallel   - Represents a ChLinkMateParallel constraint (parallel axis).
 //   Generic    - Represents a ChLinkMateGeneric constraint (custom DOF lock).
 //   DistanceZ  - Represents a ChLinkMateDistanceZ constraint (Z-axis distance).
+//   Orthogonal - Represents a ChLinkMateOrthogonal constriaint (edge to edge).
 // ------------------------------------------------------------------------------------------------------------
-enum class LinkType { Parallel, Generic, DistanceZ };
+enum class LinkType { Parallel, Generic, DistanceZ, Orthogonal };
 
 
 // ------------------------------------------------------------------------------------------------------------
@@ -481,6 +484,29 @@ struct LinkProperty<LinkType::DistanceZ> {
     double distance;
 };
 
+// ------------------------------------------------------------------------------------------------------------
+// Structure: LinkProperty<LinkType::Orthogonal>
+//
+// Purpose:
+//   Stores all properties required for a ChLinkMateOrthogonal constraint,
+//   which constrains the edge to edge mate of two bodies.
+//
+// Members:
+//   name     - Descriptive or unique name for the link.
+//   bodyA    - Shared pointer to body A.
+//   bodyB    - Shared pointer to body B.
+//   cA       - Constraint point on bodyA (local frame).
+//   cB       - Constraint point on bodyB (local frame).
+//   dA       - Direction vector on bodyA for orientation.
+//   dB       - Direction vector on bodyB for orientation. 
+// ------------------------------------------------------------------------------------------------------------
+template<>
+struct LinkProperty<LinkType::Orthogonal> {
+    std::string name;
+    std::shared_ptr<chrono::ChBodyAuxRef> bodyA, bodyB;
+    chrono::ChVector3d cA, cB, dA, dB;
+};
+
 
 // ------------------------------------------------------------------------------------------------------------
 // Type Alias: LinkData
@@ -502,7 +528,8 @@ struct LinkProperty<LinkType::DistanceZ> {
 using LinkData = std::variant<
     LinkProperty<LinkType::Parallel>,
     LinkProperty<LinkType::Generic>,
-    LinkProperty<LinkType::DistanceZ>
+    LinkProperty<LinkType::DistanceZ>,
+    LinkProperty<LinkType::Orthogonal>
 >;
 
 
@@ -562,10 +589,10 @@ public:
     virtual motorstruct& GetUAVMotor(size_t idx) = 0;
 
     // Return all Chrono body pointers belonging to the UAV.
-    virtual std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() = 0;
+    virtual std::vector<std::shared_ptr<chrono::ChBodyAuxRef>>& GetUAVBodyList() = 0;
 
     // Return all Chrono link/joint pointers belonging to the UAV.
-    virtual std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() = 0;
+    virtual std::vector<std::shared_ptr<chrono::ChLinkBase>>& GetUAVLinkList() = 0;
 
     // Finalize and add all UAV components into the Chrono physics system.
     virtual void AddUAVToSystem() = 0;
@@ -743,8 +770,8 @@ public:
     motorstruct& GetUAVMotor(size_t idx) override;
     aerodynamicstruct& GetUAVAerodynamics() override { return aerodynamics; }
 
-    std::vector<std::shared_ptr<chrono::ChBodyAuxRef>> GetUAVBodyList() override { return bodylist; }
-    std::vector<std::shared_ptr<chrono::ChLinkBase>> GetUAVLinkList() override { return linklist; }
+    std::vector<std::shared_ptr<chrono::ChBodyAuxRef>>& GetUAVBodyList() override { return bodylist; }
+    std::vector<std::shared_ptr<chrono::ChLinkBase>>& GetUAVLinkList() override { return linklist; }
     
     void AddUAVToSystem() override;
 
