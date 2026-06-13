@@ -110,8 +110,12 @@ addpath("functions/")
 % parameters.D = 0.1778;      % Diameter of the propeller
 
 % Antigravity MN5008 400Kv | T-motor 16x5.4" CF
-F = "antigravity_mn5008_400kv";
-parameters.D = 0.4064;      % Diameter of the propeller
+% F = "antigravity_mn5008_400kv";
+% parameters.D = 0.4064;      % Diameter of the propeller
+
+% Tmotor P2306 V3 2550Kv Motor | Tmotor P49436-3
+F = "p2306_v3_2550Kv";
+parameters.D = 0.12446;      % Diameter of the propeller
 
 %-------------------------------------------------------------------------
 % SET THE PARAMETERS FOR PROCESSING - Usually need not be modified

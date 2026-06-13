@@ -71,6 +71,7 @@
 #include "sim-qrbp.hpp"
 // #include "sim-x8copter.hpp"
 #include "sim-tailsitter.hpp"
+#include "sim-quadm.hpp"
 
 namespace _acsl_
 {
@@ -106,6 +107,7 @@ struct platforms {
     bool qrbp{};         // Quadrotor Biplane
     bool x8copter{};     // X8 coaxial drone
     bool tailsitter{};   // Tailsitter (scaled/lighter version of the QRBP)
+    bool quadm{};        // Medium Quadcopter
 
 
     // -------------------------------------------------------------------------
@@ -122,7 +124,8 @@ struct platforms {
         return {
             {"qrbp", qrbp},
             {"x8copter", x8copter},
-            {"tailsitter", tailsitter}
+            {"tailsitter", tailsitter},
+            {"quadm", quadm}
         };
     }
 
@@ -160,16 +163,20 @@ struct platforms {
             _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING QRBP TO THE PHYSICS SYSTEM");
             return std::unique_ptr< ::_acsl_::_uav_::simuavbase >( new ::_acsl_::_qrbp_::simqrbp(sys) );
         }
+        else if (active == "tailsitter") {
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING TAILSITTER TO THE PHYSICS SYSTEM");
+            return std::unique_ptr< ::_acsl_::_uav_::simuavbase >( new ::_acsl_::_tailsitter_::simtailsitter(sys) );
+        }
+        else if (active == "quadm") {
+            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING MEDIUM QUADCOPTER TO THE PHYSICS SYSTEM");
+            return std::unique_ptr< ::_acsl_::_uav_::simuavbase >( new ::_acsl_::_quadm_::simquadm(sys) );
+        }
         // else if (active == "x8copter") {
         //     _message_::SIMULATOR_INFO("ATTACHING X8COPTER TO THE PHYSICS SYSTEM");
         //     return std::unique_ptr< ::_acsl_::_uav_::simuavbase >(
         //         new ::_acsl_::_x8copter_::simx8copter(sys)
         //     );
         // }
-        else if (active == "tailsitter") {
-            _message_::SIMULATOR_INFO("[SIMBRG]: ATTACHING TAILSITTER TO THE PHYSICS SYSTEM");
-            return std::unique_ptr< ::_acsl_::_uav_::simuavbase >( new ::_acsl_::_tailsitter_::simtailsitter(sys) );
-        }
 
         _message_::SIMULATOR_ERROR("[SIMBRG]: ACTIVE PLATFORM NAME NOT RECOGNIZED: " + active);
         return nullptr;
