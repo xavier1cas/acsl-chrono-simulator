@@ -45,7 +45,7 @@ main:
   # (m) Distance the camera is placed in z (NED)
   mv_cam_chase_ht: 0.75
   # (m) Distance the camera is placed in x (NED) 
-  mv_cam_chase_dt: 0.5
+  mv_cam_chase_dt: 2.5
   
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene

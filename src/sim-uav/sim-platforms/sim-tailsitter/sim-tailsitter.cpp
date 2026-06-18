@@ -625,6 +625,7 @@ void simtailsitter::ConfigureTAILSITTERPayload()
     // Visualization shape
     auto box_shape = chrono_types::make_shared<chrono::ChVisualShapeModelFile>(); 
     box_shape->SetFilename(this->GetUAVShapesDir() + "box.obj");
+    box_shape->SetColor(chrono::ChColor(0.0f,0.1f,0.1f));
     box_shape->SetOpacity(0.3);
     box->AddVisualShape(box_shape, chrono::ChFramed(chrono::ChVector3d(0,0,0), chrono::ChQuaterniond(1,0,0,0)));
 
@@ -712,13 +713,13 @@ void simtailsitter::ConfigureTAILSITTERPayload()
 
     auto sphereBody = chrono_types::make_shared<chrono::ChBodyEasySphere>(
         0.015,
-        1.7 * 14147.1,
+        1.5 * 14147.1,
         sph_mat
     );
 
     auto sphereBody1 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
         0.015,
-        1.7 * 14147.1,
+        1.5 * 14147.1,
         sph_mat
     );
 
