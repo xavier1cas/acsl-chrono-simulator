@@ -426,7 +426,7 @@ void simquadm::ConfigureQUADMMotors()
     motor_properties.ct = 0.19972258741297011;
 
     // Cache the rps scaler value 
-    motor_properties.rps_scaler = 0.025;
+    motor_properties.rps_scaler = 0.015;
 
     // Cache the motor polynomial coefficients
     // Polynomial coefficients vector to evaluate the Commanded Thrust [-] based on the Thrust in Newton

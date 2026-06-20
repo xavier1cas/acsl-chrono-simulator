@@ -194,6 +194,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/si
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers/mrac-omega)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers/mrac-geometric)
 
 #-----------------------------------------------------------------------------
 # Fix for VS 2017 15.8 and newer to handle alignment specification with Eigen
@@ -243,6 +244,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-tailsitter/controllers/mrac-geometric/mrac-geometric-tailsitter.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-tailsitter/controllers/mrac-hybrid/mrac-hybrid-tailsitter.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-quadm/controllers/mrac-omega/mrac-omega-quadm.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-quadm/controllers/mrac-geometric/mrac-geometric-quadm.cpp
    )
 
 add_executable(acsl_sim ${SOURCES})
