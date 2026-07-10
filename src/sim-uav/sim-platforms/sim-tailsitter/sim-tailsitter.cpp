@@ -625,6 +625,7 @@ void simtailsitter::ConfigureTAILSITTERPayload()
     // Visualization shape
     auto box_shape = chrono_types::make_shared<chrono::ChVisualShapeModelFile>(); 
     box_shape->SetFilename(this->GetUAVShapesDir() + "box.obj");
+    box_shape->SetMutable(true);
     box_shape->SetColor(chrono::ChColor(0.0f,0.1f,0.1f));
     box_shape->SetOpacity(0.3);
     box->AddVisualShape(box_shape, chrono::ChFramed(chrono::ChVector3d(0,0,0), chrono::ChQuaterniond(1,0,0,0)));

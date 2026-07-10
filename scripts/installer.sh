@@ -206,6 +206,13 @@ check_packages() {
         output+="Irrlicht: Not installed\n"; IRRLICHT_FLAG=ON
     fi
 
+    # VSG
+    if [ -f "../libraries/third-party/vsg-install/lib/cmake/vsg/vsgConfig.cmake" ]; then
+        output+="VSG: Installed\n"; VSG_FLAG=OFF
+    else
+        output+="VSG: Not installed\n"; VSG_FLAG=ON
+    fi
+
     # Blaze
     if ls /usr/local/include/ | grep -q blaze; then
         output+="Blaze: Installed\n"; BLAZE_FLAG=OFF
@@ -287,6 +294,7 @@ run_installer() {
         "CMake" " " $CMAKE_FLAG \
         "Eigen3" " " $EIGEN3_FLAG \
         "Irrlicht" " " $IRRLICHT_FLAG \
+        "VSG" " " $VSG_FLAG \
         "Blaze" " " $BLAZE_FLAG \
         "Boost" " " $BOOST_FLAG \
         "GLM" " " $GLM_FLAG \
@@ -342,6 +350,40 @@ run_installer() {
             "Irrlicht")
                 echo "Installing Irrlicht..."
                 sudo apt install -y libirrlicht1.8 libirrlicht-dev libirrlicht-doc | tee /dev/tty
+                ;;
+            "VSG")
+                echo "Installing Vulkan runtime and shader compiler support..."
+                sudo apt install -y libvulkan-dev vulkan-tools mesa-vulkan-drivers \
+                                    glslang-tools libshaderc-dev | tee /dev/tty
+
+                echo "Building VulkanSceneGraph (VSG) and dependencies..."
+                VSG_BUILD_DIR="../libraries/third-party/vsg-build"
+                VSG_INSTALL_DIR_ABS="$(cd .. && pwd)/libraries/third-party/vsg-install"
+                SCRIPT_SRC="../libraries/chrono/contrib/build-scripts/vsg/buildVSG.sh"
+
+                if [ ! -f "$SCRIPT_SRC" ]; then
+                    echo "buildVSG.sh not found at $SCRIPT_SRC"
+                    exit 1
+                fi
+
+                mkdir -p "$VSG_BUILD_DIR"
+                cp "$SCRIPT_SRC" "$VSG_BUILD_DIR/buildVSG.sh"
+                cd "$VSG_BUILD_DIR" || exit 1
+
+                # Pin to versions confirmed compatible with this Chrono release
+                # (the shipped script's default vsgImGui pin is unpinned "latest",
+                #  which breaks against the vsg core version Chrono actually needs)
+                sed -i 's|--branch v1.1.4 "https://github.com/vsg-dev/VulkanSceneGraph"|--branch v1.1.4 "https://github.com/vsg-dev/VulkanSceneGraph"|' buildVSG.sh
+                sed -i 's|--branch v1.1.2 "https://github.com/vsg-dev/vsgXchange"|--branch v1.1.2 "https://github.com/vsg-dev/vsgXchange"|' buildVSG.sh
+                sed -i 's|git clone "https://github.com/vsg-dev/vsgImGui" "download_vsg/vsgImGui"|git clone -c advice.detachedHead=false --depth 1 --branch v0.6.0 "https://github.com/vsg-dev/vsgImGui" "download_vsg/vsgImGui"|' buildVSG.sh
+
+                sed -i "s|VSG_INSTALL_DIR=.*|VSG_INSTALL_DIR=\"$VSG_INSTALL_DIR_ABS\"|" buildVSG.sh
+                sed -i 's|BUILDSYSTEM=.*|BUILDSYSTEM="Ninja Multi-Config"|' buildVSG.sh
+
+                chmod +x buildVSG.sh
+                ./buildVSG.sh | tee /dev/tty
+
+                cd "$ORIG_DIR" || exit 1
                 ;;
             "Blaze")
                 echo "Installing Blaze headers..."
@@ -551,8 +593,7 @@ final_compilation_prompt() {
             fi
         done
     fi
-
-    local compile_cmd="cd ../libraries/chrono-build/ && source /opt/ros/$ros2_version/setup.bash && source ../chrono-ros-messages/install/local_setup.bash && ccmake ../chrono; exec bash"
+    local compile_cmd="cd ../libraries/chrono-build/ && source /opt/ros/$ros2_version/setup.bash && source ../chrono-ros-messages/install/local_setup.bash && cmake -DENABLE_MODULE_VSG=ON -Dvsg_DIR=\$(cd ../third-party/vsg-install/lib/cmake/vsg && pwd) -DvsgXchange_DIR=\$(cd ../third-party/vsg-install/lib/cmake/vsgXchange && pwd) -DvsgImGui_DIR=\$(cd ../third-party/vsg-install/lib/cmake/vsgImGui && pwd) ../chrono && ccmake ../chrono; exec bash"
 
     if [ -n "$ros2_version" ] && [ -d "/opt/ros/$ros2_version" ]; then
         if [ "$SUDO_USER" ]; then

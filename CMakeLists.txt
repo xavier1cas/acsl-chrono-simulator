@@ -90,6 +90,17 @@ if(NOT Chrono_DIR)
   set(Chrono_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/chrono-build/cmake" CACHE PATH "Chrono config directory")
 endif()
 
+# Set default paths for the Vulkan dependencied and cache it for GUI visibility
+if(NOT vsg_DIR)
+  set(vsg_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/vsg-install/lib/cmake/vsg" CACHE PATH "VSG config directory")
+endif()
+if(NOT vsgXchange_DIR)
+  set(vsgXchange_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/vsg-install/lib/cmake/vsgXchange" CACHE PATH "vsgXchange config directory")
+endif()
+if(NOT vsgImGui_DIR)
+  set(vsgImGui_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/vsg-install/lib/cmake/vsgImGui" CACHE PATH "vsgImGui config directory")
+endif()
+
 # Set default build type to Release and cache it for GUI visibility
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build (Debug, Release, RelWithDebInfo, MinSizeRel)" FORCE)
@@ -100,7 +111,7 @@ endif()
 find_package(Boost 1.71 REQUIRED COMPONENTS log log_setup system filesystem thread)
 
 find_package(Chrono
-             COMPONENTS Irrlicht
+             COMPONENTS Irrlicht VSG
              OPTIONAL_COMPONENTS PardisoMKL
              CONFIG)
 

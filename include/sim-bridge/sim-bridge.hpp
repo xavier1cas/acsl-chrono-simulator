@@ -140,6 +140,8 @@ private:
     // ------------------------------------------------------------------------
     // Function: Updates the visual system for the acsl physics simulator
     // ------------------------------------------------------------------------
+    void UpdateVisualizationSystemIrrlicht();
+    void UpdateVisualizationSystemVulkan();
     void UpdateVisualizationSystem();
 
     // ------------------------------------------------------------------------
