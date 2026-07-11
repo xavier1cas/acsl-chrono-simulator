@@ -99,6 +99,7 @@ void simsystem::ReadPhysicsConfigFile()
     phyconfig.MaxIterations  = config_file["solver"]["MaxIterations"].as_int();             // Max solver iterations
     phyconfig.EnableWarmStart = config_file["solver"]["EnableWarmStart"].as_bool();         // Warm start toggle
     phyconfig.StepSize = static_cast<double>(config_file["solver"]["StepSize"].as_float()); // Step size 
+    phyconfig.ThrottleRealTime = config_file["solver"]["ThrottleRealTime"].as_bool();       // Realtime throrttle
 
     // ------------------------------------------------------------------------
     // STEP 6 – Extract collision system parameters
@@ -163,25 +164,38 @@ void simsystem::ReadVisionConfigFile()
 
     // ------------------------------------------------------------------------
     // STEP 4 – Extract visualization "main" options
-    //   These control the overall visualization behavior, camera, and overlays.
+    //   These control the overall visualization engine, and target framerate.
     // ------------------------------------------------------------------------
-    visconfig.enable_vis             = config_file["main"]["enable_vis"].as_bool();                      // Enable 3D window
-    visconfig.enable_static_cam      = config_file["main"]["enable_static_cam"].as_bool();               // Fixed camera view
-    visconfig.mv_cam_chase_ht = static_cast<double>(config_file["main"]["mv_cam_chase_ht"].as_float());  // Moving camera chase height
-    visconfig.mv_cam_chase_dt = static_cast<double>(config_file["main"]["mv_cam_chase_dt"].as_float());  // Moving camera chase distance
-    visconfig.render_ned_frame       = config_file["main"]["render_ned_frame"].as_bool();                // Draw NED axes
-    visconfig.render_body_frame      = config_file["main"]["render_body_frame"].as_bool();               // Draw UAV body axes
-    visconfig.render_shadows         = config_file["main"]["render_shadows"].as_bool();                  // Enable shadow rendering
-    visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();          // Show collision zone meshes
-    visconfig.render_all_COG_frames  = config_file["main"]["render_all_COG_frames"].as_bool();           // Draw all COG frames
-    visconfig.render_prop_frames     = config_file["main"]["render_prop_frames"].as_bool();              // Draw all the propeller frames
-    visconfig.render_trajectory      = config_file["main"]["render_trajectory"].as_bool();               // Draw the trajectory in the scene
-    visconfig.render_biplane_frame   = config_file["main"]["render_biplane_frame"].as_bool();            // Draw the biplane frame in the scene
-    visconfig.render_chassis_drag_frame   = config_file["main"]["render_chassis_drag_frame"].as_bool();  // Draw the chassis drag frame in the scene
-    visconfig.render_wing_aero_frames   = config_file["main"]["render_wing_aero_frames"].as_bool();      // Draw the wing aerodynamic frames in the scene
+    visconfig.enable_vis             = config_file["main"]["enable_vis"].as_bool();                         // Enable 3D window
+    visconfig.enable_vulkan          = config_file["main"]["enable_vulkan"].as_bool();                      // Enable Vulkan visualization (default)
+    visconfig.enable_irrlicht        = config_file["main"]["enable_irrlicht"].as_bool();                    // Enable Irrlicht 
+    visconfig.target_frame_rate = static_cast<double>(config_file["main"]["target_frame_rate"].as_float()); // Target the required framerate.
 
     // ------------------------------------------------------------------------
-    // STEP 5 – Extract "window" options
+    // STEP 5 – Extract visualization "camera" options
+    //   These control the overall camera behavior, chase distance and height.
+    // ------------------------------------------------------------------------
+    visconfig.enable_static_cam      = config_file["camera"]["enable_static_cam"].as_bool();                  // Fixed camera view
+    visconfig.mv_cam_chase_ht = static_cast<double>(config_file["camera"]["mv_cam_chase_ht"].as_float());     // Moving camera chase height
+    visconfig.mv_cam_chase_dt = static_cast<double>(config_file["camera"]["mv_cam_chase_dt"].as_float());     // Moving camera chase distance
+
+    // ------------------------------------------------------------------------
+    // STEP 6 – Extract visualization "render" options
+    //   These control the overall visualization overlays.
+    // ------------------------------------------------------------------------
+    visconfig.render_ned_frame       = config_file["render"]["render_ned_frame"].as_bool();                   // Draw NED axes
+    visconfig.render_body_frame      = config_file["render"]["render_body_frame"].as_bool();                  // Draw UAV body axes
+    visconfig.render_shadows         = config_file["render"]["render_shadows"].as_bool();                     // Enable shadow rendering
+    visconfig.render_collision_zones = config_file["render"]["render_collision_zones"].as_bool();             // Show collision zone meshes
+    visconfig.render_all_COG_frames  = config_file["render"]["render_all_COG_frames"].as_bool();              // Draw all COG frames
+    visconfig.render_prop_frames     = config_file["render"]["render_prop_frames"].as_bool();                 // Draw all the propeller frames
+    visconfig.render_trajectory      = config_file["render"]["render_trajectory"].as_bool();                  // Draw the trajectory in the scene
+    visconfig.render_biplane_frame   = config_file["render"]["render_biplane_frame"].as_bool();               // Draw the biplane frame in the scene
+    visconfig.render_chassis_drag_frame   = config_file["render"]["render_chassis_drag_frame"].as_bool();     // Draw the chassis drag frame in the scene
+    visconfig.render_wing_aero_frames   = config_file["render"]["render_wing_aero_frames"].as_bool();         // Draw the wing aerodynamic frames in the scene
+
+    // ------------------------------------------------------------------------
+    // STEP 7 – Extract "window" options
     //   Defines resolution and window title for the visualization.
     // ------------------------------------------------------------------------
     visconfig.width  = static_cast<uint>(config_file["window"]["width"].as_int());   // Window width in pixels
@@ -304,6 +318,7 @@ void simsystem::SetupPhysicsSystem()
     _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [MaxIterations]: ", phyconfig.MaxIterations);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [EnableWarmStart]: ", ::_shared_::_conversions_::bool2string(phyconfig.EnableWarmStart));
     _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [StepSize]: ", phyconfig.StepSize); 
+    _message_::SIMULATOR_INFO("[SYMSYS]:  - SOLVER [ThrottleRealTime]", ::_shared_::_conversions_::bool2string(phyconfig.ThrottleRealTime));
 
     // Collision settings
     _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [BULLET]: ", ::_shared_::_conversions_::bool2string(phyconfig.BULLET));
@@ -343,42 +358,98 @@ void simsystem::SetupPhysicsSystem()
 // =====================================================================================================================
 void simsystem::SetupVisualizationSystem()
 {
+    
     // ------------------------------------------------------------------------
     // STEP 1 – Check if visualization is enabled
     //   If not, log status and exit early; simulation will run headless.
     // ------------------------------------------------------------------------
+    // Create a RenderBackend object to assign it later. 
+    ::_acsl_::_system_::RenderBackend backend;
+
     if (!visconfig.enable_vis) {
         _message_::SIMULATOR_INFO("[SIMSYS]: VISUALIZATION SYSTEM INACTIVE");
         return;
     }
+    else 
+    {   // In the case the user wants to visualize things
+        // ------------------------------------------------------------------------
+        // STEP 1.1 – Check which visualization render engine is picked
+        //          - If none are picked-default to irrlicht
+        //          - If both are picked-throw an error 
+        // ------------------------------------------------------------------------
+        if (visconfig.enable_vulkan && visconfig.enable_irrlicht) {
+            _message_::SIMULATOR_WARNING("[SYMSYS]: BOTH VULKAN AND IRRLICHT ARE SET TO TRUE, DEFAULTING TO IRRLICHT");
+            backend = RenderBackend::IRRLICHT;
+        }
+        else if (visconfig.enable_vulkan && !visconfig.enable_irrlicht) {
+            _message_::SIMULATOR_INFO("[SYMSYS]: VULKAN RENDER ENGINE ACTIVE. ATTACHING TO SYSTEM");
+            backend = RenderBackend::VULKAN;
+        }
+        else if (!visconfig.enable_vulkan && visconfig.enable_irrlicht) {
+            _message_::SIMULATOR_INFO("[SYMSYS]: IRRLICHT RENDER ENGINE ACTIVE. ATTACHING TO SYSTEM");
+            backend = RenderBackend::IRRLICHT;
+        }
+        else if (!visconfig.enable_vulkan && !visconfig.enable_irrlicht) {
+            _message_::SIMULATOR_WARNING("[SYMSYS]: BOTH VULKAN AND IRRLICHT ARE SET TO FALSE, DEFAULTING TO IRRLICHT");
+            backend = RenderBackend::IRRLICHT;
+        } 
+        else {
+            return;
+        }
+
+    }
     
-    // ------------------------------------------------------------------------
-    // STEP 1.5 – Force the driver type to use OpenGL.
-    //   If not, we receive a benign error at runtime before it defaults to 
-    //   OpenGL anyway.
-    // ------------------------------------------------------------------------
-    m_irrlicht.SetDriverType(irr::video::E_DRIVER_TYPE::EDT_OPENGL);
 
     // ------------------------------------------------------------------------
-    // STEP 2 – Main window setup: size, title, and initialization
+    // STEPS 1.5 - 3 depend on the RenderBackend
     // ------------------------------------------------------------------------
-    m_irrlicht.SetWindowSize(visconfig.width, visconfig.height); // Set window size (pixels)
-    m_irrlicht.SetWindowTitle(visconfig.title);                  // Set window title string
-    m_irrlicht.Initialize();                                     // Initialize Irrlicht for drawing
-
-    // ------------------------------------------------------------------------
-    // STEP 3 – Scene elements: add logo, skybox, and lights to environment
-    // ------------------------------------------------------------------------
-    m_irrlicht.AddLogo();          // Overlay Project Chrono logo (optional branding)
-    m_irrlicht.AddSkyBox();        // Add skybox textures for realistic environment
-    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, -100)), 
-                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, -100)), 
-                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, -100)), 
-                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
-    m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, -100)), 
-                                                         140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    if (backend == ::_acsl_::_system_::RenderBackend::VULKAN) {
+        // ------------------------------------------------------------------------
+        // STEP 2 – Main window setup: size, title, and initialization
+        // ------------------------------------------------------------------------
+        m_vsg.SetWindowSize(visconfig.width, visconfig.height); // Set window size (pixels)
+        m_vsg.SetWindowTitle(visconfig.title);                  // Set window title string
+        
+        // ------------------------------------------------------------------------
+        // STEP 3 – Scene elements: add logo, skybox, and lights to environment
+        // ------------------------------------------------------------------------
+        m_vsg.SetLogoVisible(true);    // Overlay Project Chrono logo (optional branding)
+        m_vsg.SetUseSkyBox(true);      // Add skybox textures for realistic environment
+        m_vsg.SetLightDirection(chrono::CH_PI / 4.0, chrono::CH_PI / 4.0);  // azimuth/elevation approximating the 4-corner setup
+        m_vsg.SetLightIntensity(1.0f);  // Light intensity. You can change it. It's hardcoded with the best setting so far - Xavi  
+    }
+    else if (backend == ::_acsl_::_system_::RenderBackend::IRRLICHT) {
+        // ------------------------------------------------------------------------
+        // STEP 1.5 – Force the driver type to use OpenGL.
+        //   If not, we receive a benign error at runtime before it defaults to 
+        //   OpenGL anyway.
+        // ------------------------------------------------------------------------
+        m_irrlicht.SetDriverType(irr::video::E_DRIVER_TYPE::EDT_OPENGL);
+    
+        // ------------------------------------------------------------------------
+        // STEP 2 – Main window setup: size, title, and initialization
+        // ------------------------------------------------------------------------
+        m_irrlicht.SetWindowSize(visconfig.width, visconfig.height); // Set window size (pixels)
+        m_irrlicht.SetWindowTitle(visconfig.title);                  // Set window title string
+        m_irrlicht.Initialize();                                     // Initialize Irrlicht for drawing
+        
+        // ------------------------------------------------------------------------
+        // STEP 3 – Scene elements: add logo, skybox, and lights to environment
+        // ------------------------------------------------------------------------
+        m_irrlicht.AddLogo();          // Overlay Project Chrono logo (optional branding)
+        m_irrlicht.AddSkyBox();        // Add skybox textures for realistic environment
+        m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, +30, -100)), 
+                                                             140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+        m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(+30, -30, -100)), 
+                                                             140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+        m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, +30, -100)), 
+                                                             140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+        m_irrlicht.AddLight(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-30, -30, -100)), 
+                                                             140, chrono::ChColor(0.7f, 0.7f, 0.7f));
+    }
+    else {
+        return;
+    }
 
     // ------------------------------------------------------------------------
     // STEP 4 – Log visualization configuration to the simulator output/log
@@ -403,45 +474,105 @@ void simsystem::SetupVisualizationSystem()
     _message_::SIMULATOR_INFO("[SIMSYS]:  - CAMERA CHASE DISTANCE: ", visconfig.mv_cam_chase_dt);
 
     // ------------------------------------------------------------------------
-    // STEP 5 – Attach the Chrono physics system for real-time rendering
-    //   This connects the visualization window to the simulation world.
+    // STEPS 5 - 6 depend on the RenderBackend
     // ------------------------------------------------------------------------
-    m_irrlicht.AttachSystem(&this->m_physics);
+    if (backend == ::_acsl_::_system_::RenderBackend::VULKAN) {
 
-    // ------------------------------------------------------------------------
-    // STEP 6 – Optional rendering features (camera, collision zones)
-    // ------------------------------------------------------------------------
+        // ------------------------------------------------------------------------
+        // STEP 5 – Attach the Chrono physics system for real-time rendering
+        //   This connects the visualization window to the simulation world.
+        // ------------------------------------------------------------------------
+        m_vsg.AttachSystem(&this->m_physics);
 
-    // Add a static camera if requested
-    // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
-    if (visconfig.enable_static_cam) {
-        m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
+        // ------------------------------------------------------------------------
+        // STEP 6 – Optional rendering features (camera, collision zones)
+        // ------------------------------------------------------------------------
+
+        // Add a static camera if requested
+        // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
+        if (visconfig.enable_static_cam) {
+            m_vsg.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
+        }
+        // Add a moving camera if requested
+        // Camera is placed placed at a specified distance from the yaml file
+        else
+        {
+            // Create the following camera attached to the chassis of the UAV. It is always names chassis
+            m_camera = chrono_types::make_shared<chrono::utils::ChChaseCamera>(this->m_physics.SearchBody("chassis"));
+            // Set the camera to always follow the chassis
+            m_camera->SetState(chrono::utils::ChChaseCamera::State::Follow);
+            // Intializet the camera
+            m_camera->Initialize(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0)),    // Attached to the COM of the drone
+                                this->m_physics.SearchBody("chassis")->GetCoordsys(),                             // Attached to the COM coordsys of the drone
+                                this->GetVisConfig().mv_cam_chase_dt,                                             // Chase distance
+                                this->GetVisConfig().mv_cam_chase_ht,                                             // Chase height
+                                _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0 , 0, -1)),  // The up direction for the camera
+                                _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(1 , 0,  0))   // The fws direction for the camera
+            );
+
+            // Add the camera to the system
+            m_vsg.AddCamera(m_camera->GetCameraPos(), m_camera->GetTargetPos());
+        }
+
+        m_vsg.SetCameraVertical(chrono::CameraVerticalDir::Y);  // match Irrlicht's Y-up convention
+        
+        m_vsg.Initialize();                                     // Initialize the Scene with Vulkan (must be at the end!) 
+
+        // Enable visualization of collision zones/boundaries if requested
+        // if (visconfig.render_collision_zones) {
+        //     m_vsg.SetCollisionVisibility(true);  // Not available in Chrono 9.0.1's VSG module — feature added in a later Chrono version
+        // }
+    } 
+    else if (backend == ::_acsl_::_system_::RenderBackend::IRRLICHT) {
+        
+        // ------------------------------------------------------------------------
+        // STEP 5 – Attach the Chrono physics system for real-time rendering
+        //   This connects the visualization window to the simulation world.
+        // ------------------------------------------------------------------------
+        m_irrlicht.AttachSystem(&this->m_physics);
+
+        // ------------------------------------------------------------------------
+        // STEP 6 – Optional rendering features (camera, collision zones)
+        // ------------------------------------------------------------------------
+
+        // Add a static camera if requested
+        // Camera is placed at (2, 2, -5) and looks toward (0, 1, 0) in global coordinates
+        if (visconfig.enable_static_cam) {
+            m_irrlicht.AddCamera(chrono::ChVector3d(2, 2, -5), chrono::ChVector3d(0, 1, 0));
+        }
+        // Add a moving camera if requested
+        // Camera is placed placed at a 
+        else
+        {
+            // Create the following camera attached to the chassis of the UAV. It is always names chassis
+            m_camera = chrono_types::make_shared<chrono::utils::ChChaseCamera>(this->m_physics.SearchBody("chassis"));
+            // Set the camera to always follow the chassis
+            m_camera->SetState(chrono::utils::ChChaseCamera::State::Follow);
+            // Intializet the camera
+            m_camera->Initialize(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0)),    // Attached to the COM of the drone
+                                this->m_physics.SearchBody("chassis")->GetCoordsys(),                             // Attached to the COM coordsys of the drone
+                                this->GetVisConfig().mv_cam_chase_dt,                                             // Chase distance
+                                this->GetVisConfig().mv_cam_chase_ht,                                             // Chase height
+                                _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0 , 0, -1)),  // The up direction for the camera
+                                _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(1 , 0,  0))   // The fws direction for the camera
+            );
+
+            // Add the camera to the system
+            m_irrlicht.AddCamera(m_camera->GetCameraPos(), m_camera->GetTargetPos());
+        }
+
+        // Enable visualization of collision zones/boundaries if requested
+        if (visconfig.render_collision_zones) {
+            m_irrlicht.EnableCollisionShapeDrawing(true);
+        }
     }
-    // Add a moving camera if requested
-    // Camera is placed placed at a 
-    else
-    {
-        // Create the following camera attached to the chassis of the UAV. It is always names chassis
-        m_camera = chrono_types::make_shared<chrono::utils::ChChaseCamera>(this->m_physics.SearchBody("chassis"));
-        // Set the camera to always follow the chassis
-        m_camera->SetState(chrono::utils::ChChaseCamera::State::Follow);
-        // Intializet the camera
-        m_camera->Initialize(_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0, 0, 0)),    // Attached to the COM of the drone
-                             this->m_physics.SearchBody("chassis")->GetCoordsys(),                             // Attached to the COM coordsys of the drone
-                             this->GetVisConfig().mv_cam_chase_dt,                                             // Chase distance
-                             this->GetVisConfig().mv_cam_chase_ht,                                             // Chase height
-                             _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0 , 0, -1)),  // The up direction for the camera
-                             _shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(1 , 0,  0))   // The fws direction for the camera
-        );
-
-        // Add the camera to the system
-        m_irrlicht.AddCamera(m_camera->GetCameraPos(), m_camera->GetTargetPos());
+    else {
+        return;
     }
 
-    // Enable visualization of collision zones/boundaries if requested
-    if (visconfig.render_collision_zones) {
-        m_irrlicht.EnableCollisionShapeDrawing(true);
-    }
+    // Update the active visualization method used
+    m_active_backend = backend;
+
 }
 
 }   // namespace _system_

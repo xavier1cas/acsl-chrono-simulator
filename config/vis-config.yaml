@@ -38,7 +38,17 @@ main:
   # Enable the interactive visualization window --------------------
   # Set to false for headless/speed mode
   enable_vis: true
+  # Set to true for Vulkan visualizaton (Default) 
+  enable_vulkan: false
+  # Set to true for Irrlicht visualizaton 
+  enable_irrlicht: true
+  # Target framerate
+  target_frame_rate: 30.0
 
+# ============================================================================
+# Camera options
+# ============================================================================
+camera:
   # Camera options -------------------------------------------------
   # true: fixed viewpoint; false: dynamic/follow
   enable_static_cam: false
@@ -47,6 +57,10 @@ main:
   # (m) Distance the camera is placed in x (NED) 
   mv_cam_chase_dt: 1.0
   
+# ============================================================================
+# Render options for assets
+# ============================================================================  
+render:
   # Frame overlays -------------------------------------------------
   # Show NED reference frame axes in the scene
   render_ned_frame: true

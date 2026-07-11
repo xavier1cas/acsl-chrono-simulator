@@ -47,12 +47,13 @@
 #include <sstream>
 #include <ctime>
 
-// ACSL physics sim includes
+// ACSL chrono sim includes
 #include "sim-helpers.hpp"
 #include "fkYAML/node.hpp"
 
 // Chrono includes
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
+#include "chrono_vsg/ChVisualSystemVSG.h"
 #include "chrono/physics/ChSystemNSC.h"
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/solver/ChSolverPSOR.h"
@@ -78,6 +79,7 @@ struct physicsonfig {
     double DefaultSuggestedMargin;
     double ContactBreakingThreshold;
     double StepSize;
+    bool ThrottleRealTime;
 };
 
 // Structure for storing the visualization configurations
@@ -99,7 +101,16 @@ struct visionconfig {
     bool render_biplane_frame;
     bool render_chassis_drag_frame;
     bool render_wing_aero_frames;
+    bool enable_vulkan;
+    bool enable_irrlicht;
+    double target_frame_rate;
 };
+
+// ------------------------------------------------------------------------
+// Render Backend
+// Lets the simulator switch between VULKAN and IRRLICHT
+// ------------------------------------------------------------------------
+enum class RenderBackend { VULKAN, IRRLICHT };
 
 // =====================================================================================================================
 // simsystem
@@ -130,7 +141,7 @@ public:
     {
         ReadPhysicsConfigFile();
         ReadVisionConfigFile();
-    }
+    } 
 
     // ------------------------------------------------------------------------
     // Sets up the Chrono physics system based on loaded config parameters.
@@ -154,7 +165,18 @@ public:
     // Accessor: Returns a reference to the underlying Irrlicht visualization
     // system for customizing the viewing environment.
     // ------------------------------------------------------------------------
-    chrono::irrlicht::ChVisualSystemIrrlicht& GetVisionSystem() { return m_irrlicht; }
+    chrono::irrlicht::ChVisualSystemIrrlicht& GetVisionSystemIrr() { return m_irrlicht; }
+
+    // ------------------------------------------------------------------------
+    // Accessor: Returns a reference to the underlying Vulkan visualization
+    // system for customizing the viewing environment.
+    // ------------------------------------------------------------------------
+    chrono::vsg3d::ChVisualSystemVSG& GetVisionSystemVsg() { return m_vsg; }
+
+    // ------------------------------------------------------------------------
+    // Accessor: Returns the active visualization backend
+    // ------------------------------------------------------------------------
+    RenderBackend GetActiveBackend() { return m_active_backend; }
 
     // ------------------------------------------------------------------------
     // Accessor: Returns the loaded physics configuration struct.
@@ -186,9 +208,19 @@ private:
     chrono::ChSystemNSC m_physics;
 
     // ------------------------------------------------------------------------
+    // Tis variable tracks which backend is active (Default: Vulkan)
+    // ------------------------------------------------------------------------
+    ::_acsl_::_system_::RenderBackend m_active_backend = ::_acsl_::_system_::RenderBackend::VULKAN;
+
+    // ------------------------------------------------------------------------
     // The Irrlicht-based visualization system for rendering the simulation.
     // ------------------------------------------------------------------------
     chrono::irrlicht::ChVisualSystemIrrlicht m_irrlicht;
+    
+    // ------------------------------------------------------------------------
+    // The Vulkan-based visualization system for rendering the simulation.
+    // ------------------------------------------------------------------------
+    chrono::vsg3d::ChVisualSystemVSG m_vsg;
 
     // ------------------------------------------------------------------------
     // The Irrlicht-based system camera for viewing the simulation.

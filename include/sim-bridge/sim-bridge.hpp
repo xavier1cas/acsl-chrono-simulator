@@ -140,6 +140,8 @@ private:
     // ------------------------------------------------------------------------
     // Function: Updates the visual system for the acsl physics simulator
     // ------------------------------------------------------------------------
+    void UpdateVisualizationSystemIrrlicht();
+    void UpdateVisualizationSystemVulkan();
     void UpdateVisualizationSystem();
 
     // ------------------------------------------------------------------------
@@ -230,6 +232,12 @@ private:
     double sim_stop_time;
     bool developer_mode;
     bool developer_mode_steps;
+
+    // ------------------------------------------------------------------------
+    // Variables to limit the render frame rate
+    // ------------------------------------------------------------------------
+    double m_last_render_time{0.0};
+    double m_render_period;
 
     // ------------------------------------------------------------------------
     // Chrono Physics and Visual system object.
