@@ -336,12 +336,17 @@ run_installer() {
                 sudo apt install -y clang | tee /dev/tty
                 ;;
             "CMake")
+                echo "Installing openssl ..."
+                sudo apt install -y openssl libssl-dev pkg-config
                 echo "Installing CMake from source..."
                 cd ../libraries/third-party/CMake || exit 1
                 ./bootstrap | tee /dev/tty
                 make -j$(nproc) | tee /dev/tty
                 sudo make install | tee /dev/tty
                 cd "$ORIG_DIR" || exit 1
+                sudo apt -y install cmake-curses-gui
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "Eigen3")
                 echo "Installing Eigen3..."
@@ -354,7 +359,7 @@ run_installer() {
             "VSG")
                 echo "Installing Vulkan runtime and shader compiler support..."
                 sudo apt install -y libvulkan-dev vulkan-tools mesa-vulkan-drivers \
-                                    glslang-tools libshaderc-dev | tee /dev/tty
+                                    glslang-tools libshaderc-dev ninja-build | tee /dev/tty
 
                 echo "Building VulkanSceneGraph (VSG) and dependencies..."
                 VSG_BUILD_DIR="../libraries/third-party/vsg-build"
@@ -383,14 +388,44 @@ run_installer() {
                 sed -i "s|VSG_INSTALL_DIR=.*|VSG_INSTALL_DIR=\"$VSG_INSTALL_DIR_ABS\"|" buildVSG.sh
                 sed -i 's|BUILDSYSTEM=.*|BUILDSYSTEM="Ninja Multi-Config"|' buildVSG.sh
 
+                # assimp builds with -Werror by default. On GCC 13 (Ubuntu 24.04 / noble),
+                # a -Warray-bounds false positive in assimp's legacy MDL loader
+                # (code/AssetLib/MDL/MDLLoader.cpp) turns into a hard build failure,
+                # which silently breaks the rest of the vsg dependency chain
+                # (assimp never installs libassimp.a -> vsgXchange's find_package(assimp)
+                # fails -> vsgXchange never configures or installs).
+                # Disable warnings-as-errors for assimp only.
+                perl -i -pe 's/(-S \$\{ASSIMP_SOURCE_DIR\} \\)/$1\n      -DASSIMP_WARNINGS_AS_ERRORS=OFF \\/' buildVSG.sh
+
                 chmod +x buildVSG.sh
                 ./buildVSG.sh | tee /dev/tty
+                BUILD_STATUS=${PIPESTATUS[0]}
+                if [ "$BUILD_STATUS" -ne 0 ]; then
+                    echo "buildVSG.sh failed with exit code $BUILD_STATUS. See log above for details."
+                    cd "$ORIG_DIR" || exit 1
+                    exit 1
+                fi
+
+                # buildVSG.sh itself doesn't abort on a failed sub-component (vsg/vsgXchange/vsgImGui),
+                # so also verify each expected CMake package config actually landed in /usr/local.
+                for pkg in vsg vsgXchange vsgImGui; do
+                    if [ ! -f "/usr/local/lib/cmake/${pkg}/${pkg}Config.cmake" ]; then
+                        echo "ERROR: ${pkg} did not install correctly — /usr/local/lib/cmake/${pkg}/${pkg}Config.cmake is missing."
+                        echo "Check the build output above for the CMake configure/build error for ${pkg}."
+                        cd "$ORIG_DIR" || exit 1
+                        exit 1
+                    fi
+                done
 
                 cd "$ORIG_DIR" || exit 1
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "Blaze")
                 echo "Installing Blaze headers..."
                 sudo cp -r ../libraries/third-party/blaze/blaze /usr/local/include/ | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "Boost")
                 echo "Installing Boost..."
@@ -400,11 +435,15 @@ run_installer() {
                 ./b2 --build-type=complete -j$(nproc) | tee /dev/tty
                 sudo ./b2 install -j$(nproc) | tee /dev/tty
                 cd "$ORIG_DIR" || exit 1
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "GLM")
                 echo "Installing GLM (from source)..."
                 GLM_SRC=../libraries/third-party/glm-0.9.9.8
                 sudo cp -r "$GLM_SRC/glm" /usr/local/include/ | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "GLFW")
                 echo "Installing GLFW (from source)..."
@@ -417,6 +456,8 @@ run_installer() {
                 sudo make install | tee /dev/tty
                 cd "$ORIG_DIR" || exit 1
                 rm -rf "$TEMP_DIR" | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "GLEW")
                 echo "Installing GLEW (from source)..."
@@ -432,10 +473,14 @@ run_installer() {
                 if [ -f "$GLEW_SRC/glew.pc" ]; then
                     rm -f "$GLEW_SRC/glew.pc" | tee /dev/tty
                 fi
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "OpenGL")
                 echo "Installing OpenGL..."
                 sudo apt install -y libglu1-mesa-dev freeglut3-dev mesa-common-dev | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "OpenCASCADE")
                 echo "Installing OpenCASCADE dependencies..."
@@ -460,6 +505,8 @@ run_installer() {
                 sudo make install | tee /dev/tty
                 cd "$ORIG_DIR" || { echo "Failed to return to original directory"; exit 1; }
                 rm -rf "$TMP_BUILD_DIR" | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
             "Librealsense")
                 echo "Installing Librealsense and dependencies..."
@@ -478,6 +525,8 @@ run_installer() {
                 rm -rf "$LIBREALSENSE_DIR/build" | tee /dev/tty
                 sudo cp "$LIBREALSENSE_DIR/config/99-realsense-libusb.rules" /etc/udev/rules.d/ | tee /dev/tty
                 sudo udevadm control --reload-rules && sudo udevadm trigger | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
                 ;;
         esac
     done
