@@ -308,17 +308,15 @@ void simbridge::UpdateVisualizationSystemIrrlicht()
     if (this->m_sys.GetVisConfig().enable_vis && this->m_sys.GetVisionSystemIrr().Run())
     {
         // ------------------------------------------------------------------------
-        // STEP 1 – Throttle rendering to ~60 FPS, independent of the 200Hz physics rate.
+        // STEP 1 – Throttle rendering to user defined FPS, independent of the 200Hz physics rate.
         // ------------------------------------------------------------------------
-        static double m_last_render_time{0.0};
-        static double m_render_period = 1.0 / this->m_sys.GetVisConfig().target_frame_rate;  // target ~60 FPS; adjust to taste
-
+        this->m_render_period = 1.0 / this->m_sys.GetVisConfig().target_frame_rate;
         double current_time = this->m_sys.GetPhysicsSystem().GetChTime();
-        if (current_time - m_last_render_time < m_render_period)
+        if (current_time - this->m_last_render_time < this->m_render_period)
         {
             return;  // Not time to render yet — skip this call, physics still steps normally elsewhere
         }
-        m_last_render_time = current_time;
+        this->m_last_render_time = current_time;
 
         // --------------------------------------------------------------------
         // STEP 2 – Begin a new scene to set up rendering for this step.
@@ -421,17 +419,15 @@ void simbridge::UpdateVisualizationSystemVulkan()
     if (this->m_sys.GetVisConfig().enable_vis && this->m_sys.GetVisionSystemVsg().Run())
     {
         // ------------------------------------------------------------------------
-        // STEP 1 – Throttle rendering to ~60 FPS, independent of the 200Hz physics rate.
+        // STEP 1 – Throttle rendering to user defined FPS, independent of the 200Hz physics rate.
         // ------------------------------------------------------------------------
-        static double m_last_render_time{0.0};
-        static double m_render_period = 1.0 / this->m_sys.GetVisConfig().target_frame_rate;  // target ~60 FPS; adjust to taste
-
+        this->m_render_period = 1.0 / this->m_sys.GetVisConfig().target_frame_rate;
         double current_time = this->m_sys.GetPhysicsSystem().GetChTime();
-        if (current_time - m_last_render_time < m_render_period)
+        if (current_time - this->m_last_render_time < this->m_render_period)
         {
             return;  // Not time to render yet — skip this call, physics still steps normally elsewhere
         }
-        m_last_render_time = current_time;
+        this->m_last_render_time = current_time;
 
         // --------------------------------------------------------------------
         // STEP 2 – If enabled, render the inertial NED frame in the visualization.
@@ -723,8 +719,9 @@ void simbridge::UpdatePhysicsSystem()
 
     // ------------------------------------------------------------------------
     // STEP 2 – Spin in place to maintain soft real-time pacing for this simulation tick.
+    // TODO: Needs to be handled properly, or else, it forces the simulation to run much slower.
     // ------------------------------------------------------------------------
-    this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
+    // this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
 
     // ------------------------------------------------------------------------
     // STEP 3 – Extract current UAV state variables for reporting and logging.

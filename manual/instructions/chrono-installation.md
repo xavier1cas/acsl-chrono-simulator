@@ -183,7 +183,6 @@ If you're developing on Windows via WSL2 (Ubuntu), a few platform-specific quirk
   ini   [wsl2]
   memory=28GB
   swap=16GB
-  swapFile=C:\\wsl-swap.vhdx
   kernelCommandLine = vsyscall=emulate
   ```
 

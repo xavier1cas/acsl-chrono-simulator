@@ -234,6 +234,12 @@ private:
     bool developer_mode_steps;
 
     // ------------------------------------------------------------------------
+    // Variables to limit the render frame rate
+    // ------------------------------------------------------------------------
+    double m_last_render_time{0.0};
+    double m_render_period;
+
+    // ------------------------------------------------------------------------
     // Chrono Physics and Visual system object.
     // ------------------------------------------------------------------------
     ::_acsl_::_system_::simsystem m_sys;

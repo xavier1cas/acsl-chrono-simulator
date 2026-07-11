@@ -206,8 +206,8 @@ check_packages() {
         output+="Irrlicht: Not installed\n"; IRRLICHT_FLAG=ON
     fi
 
-    # VSG
-    if [ -f "../libraries/third-party/vsg-install/lib/cmake/vsg/vsgConfig.cmake" ]; then
+    # VSG (installed globally to /usr/local)
+    if [ -f "/usr/local/lib/cmake/vsg/vsgConfig.cmake" ]; then
         output+="VSG: Installed\n"; VSG_FLAG=OFF
     else
         output+="VSG: Not installed\n"; VSG_FLAG=ON
@@ -358,7 +358,10 @@ run_installer() {
 
                 echo "Building VulkanSceneGraph (VSG) and dependencies..."
                 VSG_BUILD_DIR="../libraries/third-party/vsg-build"
-                VSG_INSTALL_DIR_ABS="$(cd .. && pwd)/libraries/third-party/vsg-install"
+                # Install globally to /usr/local so find_package(vsg/vsgXchange/vsgImGui CONFIG)
+                # resolves them automatically via CMake's default system search paths,
+                # with no need to set vsg_DIR/vsgXchange_DIR/vsgImGui_DIR anywhere.
+                VSG_INSTALL_DIR_ABS="/usr/local"
                 SCRIPT_SRC="../libraries/chrono/contrib/build-scripts/vsg/buildVSG.sh"
 
                 if [ ! -f "$SCRIPT_SRC" ]; then
@@ -593,7 +596,9 @@ final_compilation_prompt() {
             fi
         done
     fi
-    local compile_cmd="cd ../libraries/chrono-build/ && source /opt/ros/$ros2_version/setup.bash && source ../chrono-ros-messages/install/local_setup.bash && cmake -DENABLE_MODULE_VSG=ON -Dvsg_DIR=\$(cd ../third-party/vsg-install/lib/cmake/vsg && pwd) -DvsgXchange_DIR=\$(cd ../third-party/vsg-install/lib/cmake/vsgXchange && pwd) -DvsgImGui_DIR=\$(cd ../third-party/vsg-install/lib/cmake/vsgImGui && pwd) ../chrono && ccmake ../chrono; exec bash"
+    # VSG is now installed globally to /usr/local, so find_package(vsg/vsgXchange/vsgImGui CONFIG)
+    # resolves via CMake's default system search paths — no -D vsg*_DIR flags needed.
+    local compile_cmd="cd ../libraries/chrono-build/ && source /opt/ros/$ros2_version/setup.bash && source ../chrono-ros-messages/install/local_setup.bash && cmake -DENABLE_MODULE_VSG=ON ../chrono && ccmake ../chrono; exec bash"
 
     if [ -n "$ros2_version" ] && [ -d "/opt/ros/$ros2_version" ]; then
         if [ "$SUDO_USER" ]; then

@@ -163,28 +163,38 @@ void simsystem::ReadVisionConfigFile()
 
     // ------------------------------------------------------------------------
     // STEP 4 – Extract visualization "main" options
-    //   These control the overall visualization behavior, camera, and overlays.
+    //   These control the overall visualization engine, and target framerate.
     // ------------------------------------------------------------------------
     visconfig.enable_vis             = config_file["main"]["enable_vis"].as_bool();                         // Enable 3D window
     visconfig.enable_vulkan          = config_file["main"]["enable_vulkan"].as_bool();                      // Enable Vulkan visualization (default)
     visconfig.enable_irrlicht        = config_file["main"]["enable_irrlicht"].as_bool();                    // Enable Irrlicht 
     visconfig.target_frame_rate = static_cast<double>(config_file["main"]["target_frame_rate"].as_float()); // Target the required framerate.
-    visconfig.enable_static_cam      = config_file["main"]["enable_static_cam"].as_bool();                  // Fixed camera view
-    visconfig.mv_cam_chase_ht = static_cast<double>(config_file["main"]["mv_cam_chase_ht"].as_float());     // Moving camera chase height
-    visconfig.mv_cam_chase_dt = static_cast<double>(config_file["main"]["mv_cam_chase_dt"].as_float());     // Moving camera chase distance
-    visconfig.render_ned_frame       = config_file["main"]["render_ned_frame"].as_bool();                   // Draw NED axes
-    visconfig.render_body_frame      = config_file["main"]["render_body_frame"].as_bool();                  // Draw UAV body axes
-    visconfig.render_shadows         = config_file["main"]["render_shadows"].as_bool();                     // Enable shadow rendering
-    visconfig.render_collision_zones = config_file["main"]["render_collision_zones"].as_bool();             // Show collision zone meshes
-    visconfig.render_all_COG_frames  = config_file["main"]["render_all_COG_frames"].as_bool();              // Draw all COG frames
-    visconfig.render_prop_frames     = config_file["main"]["render_prop_frames"].as_bool();                 // Draw all the propeller frames
-    visconfig.render_trajectory      = config_file["main"]["render_trajectory"].as_bool();                  // Draw the trajectory in the scene
-    visconfig.render_biplane_frame   = config_file["main"]["render_biplane_frame"].as_bool();               // Draw the biplane frame in the scene
-    visconfig.render_chassis_drag_frame   = config_file["main"]["render_chassis_drag_frame"].as_bool();     // Draw the chassis drag frame in the scene
-    visconfig.render_wing_aero_frames   = config_file["main"]["render_wing_aero_frames"].as_bool();         // Draw the wing aerodynamic frames in the scene
 
     // ------------------------------------------------------------------------
-    // STEP 5 – Extract "window" options
+    // STEP 5 – Extract visualization "camera" options
+    //   These control the overall camera behavior, chase distance and height.
+    // ------------------------------------------------------------------------
+    visconfig.enable_static_cam      = config_file["camera"]["enable_static_cam"].as_bool();                  // Fixed camera view
+    visconfig.mv_cam_chase_ht = static_cast<double>(config_file["camera"]["mv_cam_chase_ht"].as_float());     // Moving camera chase height
+    visconfig.mv_cam_chase_dt = static_cast<double>(config_file["camera"]["mv_cam_chase_dt"].as_float());     // Moving camera chase distance
+
+    // ------------------------------------------------------------------------
+    // STEP 6 – Extract visualization "render" options
+    //   These control the overall visualization overlays.
+    // ------------------------------------------------------------------------
+    visconfig.render_ned_frame       = config_file["render"]["render_ned_frame"].as_bool();                   // Draw NED axes
+    visconfig.render_body_frame      = config_file["render"]["render_body_frame"].as_bool();                  // Draw UAV body axes
+    visconfig.render_shadows         = config_file["render"]["render_shadows"].as_bool();                     // Enable shadow rendering
+    visconfig.render_collision_zones = config_file["render"]["render_collision_zones"].as_bool();             // Show collision zone meshes
+    visconfig.render_all_COG_frames  = config_file["render"]["render_all_COG_frames"].as_bool();              // Draw all COG frames
+    visconfig.render_prop_frames     = config_file["render"]["render_prop_frames"].as_bool();                 // Draw all the propeller frames
+    visconfig.render_trajectory      = config_file["render"]["render_trajectory"].as_bool();                  // Draw the trajectory in the scene
+    visconfig.render_biplane_frame   = config_file["render"]["render_biplane_frame"].as_bool();               // Draw the biplane frame in the scene
+    visconfig.render_chassis_drag_frame   = config_file["render"]["render_chassis_drag_frame"].as_bool();     // Draw the chassis drag frame in the scene
+    visconfig.render_wing_aero_frames   = config_file["render"]["render_wing_aero_frames"].as_bool();         // Draw the wing aerodynamic frames in the scene
+
+    // ------------------------------------------------------------------------
+    // STEP 7 – Extract "window" options
     //   Defines resolution and window title for the visualization.
     // ------------------------------------------------------------------------
     visconfig.width  = static_cast<uint>(config_file["window"]["width"].as_int());   // Window width in pixels

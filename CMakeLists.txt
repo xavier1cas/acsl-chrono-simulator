@@ -90,16 +90,10 @@ if(NOT Chrono_DIR)
   set(Chrono_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/chrono-build/cmake" CACHE PATH "Chrono config directory")
 endif()
 
-# Set default paths for the Vulkan dependencied and cache it for GUI visibility
-if(NOT vsg_DIR)
-  set(vsg_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/vsg-install/lib/cmake/vsg" CACHE PATH "VSG config directory")
-endif()
-if(NOT vsgXchange_DIR)
-  set(vsgXchange_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/vsg-install/lib/cmake/vsgXchange" CACHE PATH "vsgXchange config directory")
-endif()
-if(NOT vsgImGui_DIR)
-  set(vsgImGui_DIR "${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/vsg-install/lib/cmake/vsgImGui" CACHE PATH "vsgImGui config directory")
-endif()
+# NOTE: vsg, vsgXchange, and vsgImGui are installed globally to /usr/local by installer.sh.
+# CMake's find_package(... CONFIG) automatically searches /usr/local/lib/cmake/<pkg>/ as
+# part of its default system prefix path, so no vsg_DIR/vsgXchange_DIR/vsgImGui_DIR
+# overrides are needed here anymore.
 
 # Set default build type to Release and cache it for GUI visibility
 if(NOT CMAKE_BUILD_TYPE)
@@ -165,7 +159,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/fkYAML/sin
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/nlohmann-json/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/rncarpio-linterp/src)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/libraries/third-party/d99kris-rapidcsv/src)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-interface)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-utilities)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-main)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-system)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav)
@@ -234,8 +228,8 @@ endif()
 set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-main/sim-main.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-system/sim-system.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-helpers.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/sim-logger.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-utilities/sim-helpers.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-utilities/sim-logger.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/sim-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-tailsitter/sim-tailsitter.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-quadm/sim-quadm.cpp
@@ -243,7 +237,7 @@ set(SOURCES
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-bridge/sim-bridge.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/piecewise-polynomial/piecewise-polynomial-trajectory.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-trajectory/sim-trajectories/vector-interpolation/vector-interpolation-trajectory.cpp
-   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-interface/continuous-lyapunov-equation.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-utilities/continuous-lyapunov-equation.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-aerofoil/sim-aerofoil.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/pid-omega/pid-omega-qrbp.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-qrbp/controllers/mrac-omega/mrac-omega-qrbp.cpp
