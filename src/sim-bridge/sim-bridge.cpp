@@ -300,49 +300,60 @@ void simbridge::ConfigureSimulatorFromConfig()
 //   - Camera and shadow updates provide enhanced realism and real-time following in visuals.
 //   - Visualization may be completely skipped if not enabled, preserving compute resources.
 // =====================================================================================================================
-void simbridge::UpdateVisualizationSystem()
+void simbridge::UpdateVisualizationSystemIrrlicht()
 {
     // ------------------------------------------------------------------------
-    // STEP 1 – Check if visualization is enabled for this simulator run.
+    // STEP 0 – Check if visualization is enabled for this simulator run.
     // ------------------------------------------------------------------------
-    if (this->m_sys.GetVisConfig().enable_vis && this->m_sys.GetVisionSystem().Run())
+    if (this->m_sys.GetVisConfig().enable_vis && this->m_sys.GetVisionSystemIrr().Run())
     {
+        // ------------------------------------------------------------------------
+        // STEP 1 – Throttle rendering to user defined FPS, independent of the 200Hz physics rate.
+        // ------------------------------------------------------------------------
+        this->m_render_period = 1.0 / this->m_sys.GetVisConfig().target_frame_rate;
+        double current_time = this->m_sys.GetPhysicsSystem().GetChTime();
+        if (current_time - this->m_last_render_time < this->m_render_period)
+        {
+            return;  // Not time to render yet — skip this call, physics still steps normally elsewhere
+        }
+        this->m_last_render_time = current_time;
+
         // --------------------------------------------------------------------
         // STEP 2 – Begin a new scene to set up rendering for this step.
         // --------------------------------------------------------------------
-        this->m_sys.GetVisionSystem().BeginScene();
+        this->m_sys.GetVisionSystemIrr().BeginScene();
 
         // --------------------------------------------------------------------
         // STEP 3 – Render the main simulator scene visuals.
         // --------------------------------------------------------------------
-        this->m_sys.GetVisionSystem().Render();
+        this->m_sys.GetVisionSystemIrr().Render();
 
         // --------------------------------------------------------------------
         // STEP 4 – If enabled, render the inertial NED frame in the visualization.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_ned_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetInertialNEDFrame(), 1);
+            this->m_sys.GetVisionSystemIrr().RenderFrame(m_uav->GetInertialNEDFrame(), 1);
         }
 
         // --------------------------------------------------------------------
         // STEP 5 – If enabled, render the NED body frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_body_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVChassis().body->GetFrameRefToAbs(), 0.6);
+            this->m_sys.GetVisionSystemIrr().RenderFrame(m_uav->GetUAVChassis().body->GetFrameRefToAbs(), 0.6);
         }
 
         // --------------------------------------------------------------------
         // STEP 5.1 – If enabled, render the biplane body frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_biplane_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVChassis().biplane_frame->GetAbsFrame(), 0.6);
+            this->m_sys.GetVisionSystemIrr().RenderFrame(m_uav->GetUAVChassis().biplane_frame->GetAbsFrame(), 0.6);
         }
 
         // --------------------------------------------------------------------
         // STEP 5.2 – If enabled, render the chassis drag frame of the UAV.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_chassis_drag_frame) {
-            this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVAerodynamics().chassis_drag_frame->GetAbsFrame(), 0.1);
+            this->m_sys.GetVisionSystemIrr().RenderFrame(m_uav->GetUAVAerodynamics().chassis_drag_frame->GetAbsFrame(), 0.1);
         }
 
         // --------------------------------------------------------------------
@@ -350,7 +361,7 @@ void simbridge::UpdateVisualizationSystem()
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_wing_aero_frames) {
             for (const auto& aero_frame : m_uav->GetUAVAerodynamics().aerodynamic_center_frames) {
-                this->m_sys.GetVisionSystem().RenderFrame(aero_frame->GetAbsFrame(), 0.1);
+                this->m_sys.GetVisionSystemIrr().RenderFrame(aero_frame->GetAbsFrame(), 0.1);
             }
         }
 
@@ -359,7 +370,7 @@ void simbridge::UpdateVisualizationSystem()
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_prop_frames) {
             for (int idx = 1; idx <= this->m_uav->GetPropCount(); ++idx) {
-                this->m_sys.GetVisionSystem().RenderFrame(m_uav->GetUAVProp(idx).body->GetFrameRefToAbs(), 0.3);
+                this->m_sys.GetVisionSystemIrr().RenderFrame(m_uav->GetUAVProp(idx).body->GetFrameRefToAbs(), 0.3);
             }
         }
 
@@ -367,7 +378,7 @@ void simbridge::UpdateVisualizationSystem()
         // STEP 7 – If enabled, render all center-of-gravity (COG) frames.
         // --------------------------------------------------------------------
         if (this->m_sys.GetVisConfig().render_all_COG_frames) {
-            this->m_sys.GetVisionSystem().RenderCOGFrames(1);
+            this->m_sys.GetVisionSystemIrr().RenderCOGFrames(1);
         }
 
         // --------------------------------------------------------------------
@@ -377,7 +388,7 @@ void simbridge::UpdateVisualizationSystem()
             // Get all bodies from the simulator and activate shadow rendering.
             auto bodies = this->m_sys.GetPhysicsSystem().GetBodies(); 
             for (auto& body : bodies) {
-                this->m_sys.GetVisionSystem().EnableShadows(body);
+                this->m_sys.GetVisionSystemIrr().EnableShadows(body);
             }
         }
 
@@ -387,17 +398,133 @@ void simbridge::UpdateVisualizationSystem()
         if (!this->m_sys.GetVisConfig().enable_static_cam)
         {
             this->m_sys.GetCamera()->Update(this->m_sys.GetPhyConfig().StepSize);
-            this->m_sys.GetVisionSystem().GetActiveCamera()->setPosition(
+            this->m_sys.GetVisionSystemIrr().GetActiveCamera()->setPosition(
                 irr::core::vector3dfCH(this->m_sys.GetCamera()->GetCameraPos()));
-            this->m_sys.GetVisionSystem().GetActiveCamera()->setTarget(
+            this->m_sys.GetVisionSystemIrr().GetActiveCamera()->setTarget(
                 irr::core::vector3dfCH(this->m_sys.GetCamera()->GetTargetPos()));
         }
 
         // --------------------------------------------------------------------
         // STEP 10 – End the scene; finalize rendering for this simulation step.
         // --------------------------------------------------------------------
-        this->m_sys.GetVisionSystem().EndScene();
+        this->m_sys.GetVisionSystemIrr().EndScene();
     }
+}
+
+void simbridge::UpdateVisualizationSystemVulkan()
+{
+    // ------------------------------------------------------------------------
+    // STEP 0 – Check if visualization is enabled for this simulator run.
+    // ------------------------------------------------------------------------
+    if (this->m_sys.GetVisConfig().enable_vis && this->m_sys.GetVisionSystemVsg().Run())
+    {
+        // ------------------------------------------------------------------------
+        // STEP 1 – Throttle rendering to user defined FPS, independent of the 200Hz physics rate.
+        // ------------------------------------------------------------------------
+        this->m_render_period = 1.0 / this->m_sys.GetVisConfig().target_frame_rate;
+        double current_time = this->m_sys.GetPhysicsSystem().GetChTime();
+        if (current_time - this->m_last_render_time < this->m_render_period)
+        {
+            return;  // Not time to render yet — skip this call, physics still steps normally elsewhere
+        }
+        this->m_last_render_time = current_time;
+
+        // --------------------------------------------------------------------
+        // STEP 2 – If enabled, render the inertial NED frame in the visualization.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_ned_frame) {
+            this->m_sys.GetVisionSystemVsg().RenderFrame(m_uav->GetInertialNEDFrame(), 1);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 3 – If enabled, render the NED body frame of the UAV.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_body_frame) {
+            this->m_sys.GetVisionSystemVsg().RenderFrame(m_uav->GetUAVChassis().body->GetFrameRefToAbs(), 0.6);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 3.1 – If enabled, render the biplane body frame of the UAV.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_biplane_frame) {
+            this->m_sys.GetVisionSystemVsg().RenderFrame(m_uav->GetUAVChassis().biplane_frame->GetAbsFrame(), 0.6);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 3.2 – If enabled, render the chassis drag frame of the UAV.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_chassis_drag_frame) {
+            this->m_sys.GetVisionSystemVsg().RenderFrame(m_uav->GetUAVAerodynamics().chassis_drag_frame->GetAbsFrame(), 0.1);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 3.3 – If enabled, render the wing aerodynamic frames of the UAV.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_wing_aero_frames) {
+            for (const auto& aero_frame : m_uav->GetUAVAerodynamics().aerodynamic_center_frames) {
+                this->m_sys.GetVisionSystemVsg().RenderFrame(aero_frame->GetAbsFrame(), 0.1);
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 4 – If enabled, render frames for all UAV propellers.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_prop_frames) {
+            for (int idx = 1; idx <= this->m_uav->GetPropCount(); ++idx) {
+                this->m_sys.GetVisionSystemVsg().RenderFrame(m_uav->GetUAVProp(idx).body->GetFrameRefToAbs(), 0.3);
+            }
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 5 – If enabled, render all center-of-gravity (COG) frames.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_all_COG_frames) {
+            this->m_sys.GetVisionSystemVsg().RenderCOGFrames(1);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 6 – If enabled, activate shadow rendering for all physics bodies.
+        // --------------------------------------------------------------------
+        if (this->m_sys.GetVisConfig().render_shadows) {
+            // Get all bodies from the simulator and activate shadow rendering.
+            this->m_sys.GetVisionSystemVsg().SetShadows(true);
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 7 – If the moving camera is enabled, update its position and target for real-time following.
+        // --------------------------------------------------------------------
+        if (!this->m_sys.GetVisConfig().enable_static_cam)
+        {
+            this->m_sys.GetCamera()->Update(this->m_sys.GetPhyConfig().StepSize);
+            this->m_sys.GetVisionSystemVsg().SetCameraPosition(this->m_sys.GetCamera()->GetCameraPos());
+            this->m_sys.GetVisionSystemVsg().SetCameraTarget(this->m_sys.GetCamera()->GetTargetPos());
+        }
+
+        // --------------------------------------------------------------------
+        // STEP 8 – Render the scene; for this simulation step.
+        // --------------------------------------------------------------------
+        this->m_sys.GetVisionSystemVsg().Render();
+    }
+}
+
+// =====================================================================================================================
+// Purpose:
+//   Updates and renders the visualization using Irrlicht or Vulkan depending on flags used in vsd-config.yaml.
+//   Maps to the fucions UpdateVisualizationSystemVulkan or UpdateVisualizationSystemIrrlicht using function pointers.
+//
+// Workflow:
+//   Define function to point to the right Update function according to the flag m_active_backend marked during setup. 
+//
+// =====================================================================================================================
+void simbridge::UpdateVisualizationSystem()
+{
+    using Fn = void (simbridge::*)();
+
+    Fn update = (m_sys.GetActiveBackend() == _acsl_::_system_::RenderBackend::VULKAN)
+        ? &simbridge::UpdateVisualizationSystemVulkan
+        : &simbridge::UpdateVisualizationSystemIrrlicht;
+
+    (this->*update)();
 }
 
 // =====================================================================================================================
@@ -586,14 +713,20 @@ void simbridge::UpdatePhysicsSystem()
 {
 
     // ------------------------------------------------------------------------
-    // STEP 1 – Advance Chrono physics simulation by one step using config step size.
+    // STEP 1 – Advance Chrono physics by one step using config step size.
     // ------------------------------------------------------------------------
     this->m_sys.GetPhysicsSystem().DoStepDynamics(this->m_sys.GetPhyConfig().StepSize);
 
     // ------------------------------------------------------------------------
-    // STEP 2 – Spin in place to maintain soft real-time pacing for this simulation tick.
+    // STEP 2 – Spin in place to maintain soft real-time pacing for this 
+    //          simulation tick.
+    // NOTE: Needs to be handled properly, or else, it forces the simulation to
+    //       run much slower as the computation time is already psuedo-realtime. 
+    //       recommended to be set off.
     // ------------------------------------------------------------------------
-    this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
+    if(this->m_sys.GetPhyConfig().ThrottleRealTime) {
+        this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
+    }
 
     // ------------------------------------------------------------------------
     // STEP 3 – Extract current UAV state variables for reporting and logging.

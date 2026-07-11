@@ -54,13 +54,17 @@ solver:
   # Solver iteration settings - Maximum solver iterations per timestep
   # NOTE: Depends on CPU architecture, you might have to increase this if
   #       you repeatedly encounter nan values in the states.
-  MaxIterations: 10000
+  MaxIterations: 50
   
   # Warm start option — speeds up convergence by using previous solutions
   EnableWarmStart: true
 
   # Step size - Size of each iteration step
   StepSize: 5e-3
+
+  # Set to true to maintain soft real-time pacing for every simulation tick.
+  # IMPORTANT: This feature is strongly recommended to be swithed off
+  ThrottleRealTime: false
 
 
 # ============================================================================

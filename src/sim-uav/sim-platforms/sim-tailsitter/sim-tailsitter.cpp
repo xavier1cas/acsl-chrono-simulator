@@ -472,7 +472,7 @@ void simtailsitter::ConfigureTAILSITTERMotors()
     motor_properties.ct = 0.542418958461701;
 
     // Cache the rps scaler value 
-    motor_properties.rps_scaler = 0.15;
+    motor_properties.rps_scaler = 0.25;
 
     // Cache the motor polynomial coefficients
     // Polynomial coefficients vector to evaluate the Commanded Thrust [-] based on the Thrust in Newton
@@ -625,8 +625,9 @@ void simtailsitter::ConfigureTAILSITTERPayload()
     // Visualization shape
     auto box_shape = chrono_types::make_shared<chrono::ChVisualShapeModelFile>(); 
     box_shape->SetFilename(this->GetUAVShapesDir() + "box.obj");
+    box_shape->SetMutable(true);
     box_shape->SetColor(chrono::ChColor(0.0f,0.1f,0.1f));
-    box_shape->SetOpacity(0.3);
+    box_shape->SetOpacity(0.2);
     box->AddVisualShape(box_shape, chrono::ChFramed(chrono::ChVector3d(0,0,0), chrono::ChQuaterniond(1,0,0,0)));
 
     // Collision model
