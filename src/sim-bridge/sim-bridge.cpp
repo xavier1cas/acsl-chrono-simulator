@@ -713,15 +713,20 @@ void simbridge::UpdatePhysicsSystem()
 {
 
     // ------------------------------------------------------------------------
-    // STEP 1 – Advance Chrono physics simulation by one step using config step size.
+    // STEP 1 – Advance Chrono physics by one step using config step size.
     // ------------------------------------------------------------------------
     this->m_sys.GetPhysicsSystem().DoStepDynamics(this->m_sys.GetPhyConfig().StepSize);
 
     // ------------------------------------------------------------------------
-    // STEP 2 – Spin in place to maintain soft real-time pacing for this simulation tick.
-    // TODO: Needs to be handled properly, or else, it forces the simulation to run much slower.
+    // STEP 2 – Spin in place to maintain soft real-time pacing for this 
+    //          simulation tick.
+    // NOTE: Needs to be handled properly, or else, it forces the simulation to
+    //       run much slower as the computation time is already psuedo-realtime. 
+    //       recommended to be set off.
     // ------------------------------------------------------------------------
-    // this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
+    if(this->m_sys.GetPhyConfig().ThrottleRealTime) {
+        this->realtimer.Spin(this->m_sys.GetPhyConfig().StepSize);
+    }
 
     // ------------------------------------------------------------------------
     // STEP 3 – Extract current UAV state variables for reporting and logging.

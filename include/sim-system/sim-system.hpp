@@ -79,6 +79,7 @@ struct physicsonfig {
     double DefaultSuggestedMargin;
     double ContactBreakingThreshold;
     double StepSize;
+    bool ThrottleRealTime;
 };
 
 // Structure for storing the visualization configurations

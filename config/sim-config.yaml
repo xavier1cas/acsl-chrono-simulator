@@ -137,7 +137,7 @@ controller:
     mrac: false
     tlmrac: false
   tailsitter:
-    mrac_geometric: false
+    mrac_geometric: false 
     mrac_hybrid: true
   quadm:
     mrac_omega: false

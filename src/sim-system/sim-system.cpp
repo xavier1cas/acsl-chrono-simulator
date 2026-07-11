@@ -99,6 +99,7 @@ void simsystem::ReadPhysicsConfigFile()
     phyconfig.MaxIterations  = config_file["solver"]["MaxIterations"].as_int();             // Max solver iterations
     phyconfig.EnableWarmStart = config_file["solver"]["EnableWarmStart"].as_bool();         // Warm start toggle
     phyconfig.StepSize = static_cast<double>(config_file["solver"]["StepSize"].as_float()); // Step size 
+    phyconfig.ThrottleRealTime = config_file["solver"]["ThrottleRealTime"].as_bool();       // Realtime throrttle
 
     // ------------------------------------------------------------------------
     // STEP 6 – Extract collision system parameters
@@ -317,6 +318,7 @@ void simsystem::SetupPhysicsSystem()
     _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [MaxIterations]: ", phyconfig.MaxIterations);
     _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [EnableWarmStart]: ", ::_shared_::_conversions_::bool2string(phyconfig.EnableWarmStart));
     _message_::SIMULATOR_INFO("[SIMSYS]:  - SOLVER [StepSize]: ", phyconfig.StepSize); 
+    _message_::SIMULATOR_INFO("[SYMSYS]:  - SOLVER [ThrottleRealTime]", ::_shared_::_conversions_::bool2string(phyconfig.ThrottleRealTime));
 
     // Collision settings
     _message_::SIMULATOR_INFO("[SIMSYS]:  - COLLISION [BULLET]: ", ::_shared_::_conversions_::bool2string(phyconfig.BULLET));
@@ -372,12 +374,12 @@ void simsystem::SetupVisualizationSystem()
     {   // In the case the user wants to visualize things
         // ------------------------------------------------------------------------
         // STEP 1.1 – Check which visualization render engine is picked
-        //          - If none are picked-default to vulkan
+        //          - If none are picked-default to irrlicht
         //          - If both are picked-throw an error 
         // ------------------------------------------------------------------------
         if (visconfig.enable_vulkan && visconfig.enable_irrlicht) {
-            _message_::SIMULATOR_WARNING("[SYMSYS]: BOTH VULKAN AND IRRLICHT ARE SET TO TRUE, DEFAULTING TO VULKAN");
-            backend = RenderBackend::VULKAN;
+            _message_::SIMULATOR_WARNING("[SYMSYS]: BOTH VULKAN AND IRRLICHT ARE SET TO TRUE, DEFAULTING TO IRRLICHT");
+            backend = RenderBackend::IRRLICHT;
         }
         else if (visconfig.enable_vulkan && !visconfig.enable_irrlicht) {
             _message_::SIMULATOR_INFO("[SYMSYS]: VULKAN RENDER ENGINE ACTIVE. ATTACHING TO SYSTEM");
@@ -388,8 +390,8 @@ void simsystem::SetupVisualizationSystem()
             backend = RenderBackend::IRRLICHT;
         }
         else if (!visconfig.enable_vulkan && !visconfig.enable_irrlicht) {
-            _message_::SIMULATOR_WARNING("[SYMSYS]: BOTH VULKAN AND IRRLICHT ARE SET TO FALSE, DEFAULTING TO VULKAN");
-            backend = RenderBackend::VULKAN;
+            _message_::SIMULATOR_WARNING("[SYMSYS]: BOTH VULKAN AND IRRLICHT ARE SET TO FALSE, DEFAULTING TO IRRLICHT");
+            backend = RenderBackend::IRRLICHT;
         } 
         else {
             return;
