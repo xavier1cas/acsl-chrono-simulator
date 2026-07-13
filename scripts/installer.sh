@@ -206,13 +206,6 @@ check_packages() {
         output+="Irrlicht: Not installed\n"; IRRLICHT_FLAG=ON
     fi
 
-    # VSG (installed globally to /usr/local)
-    if [ -f "/usr/local/lib/cmake/vsg/vsgConfig.cmake" ]; then
-        output+="VSG: Installed\n"; VSG_FLAG=OFF
-    else
-        output+="VSG: Not installed\n"; VSG_FLAG=ON
-    fi
-
     # Blaze
     if ls /usr/local/include/ | grep -q blaze; then
         output+="Blaze: Installed\n"; BLAZE_FLAG=OFF
@@ -269,6 +262,13 @@ check_packages() {
         output+="Librealsense: Installed\n"; LIBREALSENSE_FLAG=OFF
     else
         output+="Librealsense: Not installed\n"; LIBREALSENSE_FLAG=ON
+    fi
+
+    # VSG (installed globally to /usr/local)
+    if [ -f "/usr/local/lib/cmake/vsg/vsgConfig.cmake" ]; then
+        output+="VSG: Installed\n"; VSG_FLAG=OFF
+    else
+        output+="VSG: Not installed\n"; VSG_FLAG=ON
     fi
 
     cd "$ORIG_DIR" || exit 1
