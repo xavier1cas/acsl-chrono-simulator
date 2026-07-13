@@ -42,10 +42,24 @@ The installation is divided into **three major steps** and **requires access to 
 
 ## 0. Clone the Repository
 
-The repository uses Git LFS (Large File Storage) for large binary assets (meshes, textures, etc.) and includes several third-party libraries as submodules. Both must be set up correctly before running the installer.
+The repository uses Git LFS (Large File Storage) for large binary assets (meshes, textures, etc.), the ninja build tool to make VSG packages and includes several third-party libraries as submodules. They must be set up correctly before running the installer.
 
 ```bash
-sudo apt install git-lfs
+sudo apt install -y git-lfs ninja-build
+which ninja
+```
+If the terminal returns empty it means that the paths haven't been set up properly, if that is the case, just reboot your machine.
+* Shutdown the ubuntu machine:
+  ```bash
+  sudo shutdown -h now
+  ```
+
+  * If you are working on a wsl instance. Restart WSL2 so the environment reloads cleanly. In Powershell (not in Ubuntu), run:
+  ```powershell
+  wsl --shutdown
+  ```
+
+```bash
 git clone --recurse-submodules https://github.com/<your-fork-or-org>/acsl-chrono-simulator.git
 cd ./acsl-chrono-simulator/
 git-lfs install
@@ -76,8 +90,9 @@ sudo ./installer.sh
 ```
 
 > [!NOTE]
-> - This script installs common build tools (`cmake`, `g++`, `python3`, etc.), graphics dependencies (OpenGL, Vulkan, GLFW), and third-party libraries needed for Chrono — including building VulkanSceneGraph (VSG) from source under `libraries/third-party/vsg-install/`.
+> - This script installs common build tools (`cmake`, `g++`, `python3`, etc.), graphics dependencies (OpenGL, Vulkan, GLFW), and third-party libraries needed for Chrono — including building VulkanSceneGraph (VSG) from source.
 > - The installation may take a while depending on your system and internet speed — building the VSG dependency chain in particular can take a significant amount of time.
+> - After the script finishes, allways re-run it and check if all the dependencies are installed, if everything is there, just exit the installation GUI. If some are missing, install those. Sometimes VSG removes some previous dependencies in its install process.
 
 ## 2. Compile the Chrono Physics Engine
 
@@ -221,7 +236,7 @@ If you're developing on Windows via WSL2 (Ubuntu), a few platform-specific quirk
 
   * (Optionally run sudo dpkg-reconfigure locales for the interactive picker if you want to double-check en_US.UTF-8 UTF-8 is selected.)
 
-  * Shutdown wsl:
+  * Shutdown the ubuntu machine:
   ```bash
   sudo shutdown -h now
   ```
