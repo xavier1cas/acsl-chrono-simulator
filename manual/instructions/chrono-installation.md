@@ -46,8 +46,8 @@ The repository uses Git LFS (Large File Storage) for large binary assets (meshes
 
 ```bash
 sudo apt install git-lfs
-git clone -b dev --recurse-submodules https://github.com/<your-fork-or-org>/acsl-chrono-sim.git
-cd ./acsl-chrono-sim/
+git clone --recurse-submodules https://github.com/<your-fork-or-org>/acsl-chrono-simulator.git
+cd ./acsl-chrono-simulator/
 git-lfs install
 git-lfs pull
 ```
@@ -85,7 +85,7 @@ Once dependencies are installed, source your ROS2 environment and the Chrono ROS
 
 ```bash
 cd ../libraries
-source /opt/ros/humble/setup.bash
+source /opt/ros/<ROS2-version-name>/setup.bash
 source chrono-ros-messages/install/local_setup.bash
 cd chrono-build/
 ccmake ../chrono/
@@ -156,7 +156,9 @@ If you're developing on Windows via WSL2 (Ubuntu), a few platform-specific quirk
   wsl --shutdown
   ```
   then reopen your WSL terminal. -->
-- **Configure .wslconfig (memory + vsyscall)** Why. WSL2 runs Linux inside a lightweight VM with its own resource limits and kernel command line, separate from Windows itself, and you might run into two potential problems:
+- **Configure .wslconfig (memory + vsyscall)**
+
+  Why? WSL2 runs Linux inside a lightweight VM with its own resource limits and kernel command line, separate from Windows itself, and you might run into two potential problems:
 
   WSL2 defaults to allocating only ~50% of your total RAM to the Linux VM, with no swap file. Compiling the full codebase is a memory-hungry process, and sometimes, the default allocation is often not enough, causing the VM to OOM mid-build with cascading, confusing errors.
 
@@ -202,7 +204,68 @@ If you're developing on Windows via WSL2 (Ubuntu), a few platform-specific quirk
   ```
 
   You should see vsyscall=emulate in the output.
-- **Hardware-accelerated Vulkan (VSG) requires a newer Mesa than Ubuntu 22.04 ships by default.** Ubuntu 22.04's stock `mesa-vulkan-drivers` package does not include the `dzn` (Vulkan-over-D3D12) driver needed for WSL2 GPU acceleration. To get it:
+
+- **Install the locales package (if missing) and generate the locale**
+
+  ```bash
+  sudo apt update
+  sudo apt install -y locales
+  sudo locale-gen en_US.UTF-8
+  ```
+
+  * Set it as the system default:
+
+  ```bash
+  sudo update-locale LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+  ```
+
+  * (Optionally run sudo dpkg-reconfigure locales for the interactive picker if you want to double-check en_US.UTF-8 UTF-8 is selected.)
+
+  * Shutdown wsl:
+  ```bash
+  sudo shutdown -h now
+  ```
+
+  * Restart WSL2 so the environment reloads cleanly. In Powershell (not in Ubuntu), run:
+  ```powershell
+  wsl --shutdown
+  ```
+
+  * Reopen your Ubuntu terminal and verify:
+
+  ```bash
+  locale
+  ```
+
+  * All fields should show en_US.UTF-8 with no "cannot open" errors.
+- **Fixing GUI windows not showing**
+
+  * Minimal rootfs images often lack:
+  ```bash
+  sudo apt install -y dbus-x11 mesa-utils libgl1-mesa-glx
+  ```
+
+  * Install gedit to test:
+  ```bash
+  sudo apt install -y gedit
+  ```
+
+  * Shutdown wsl:
+  ```bash
+  sudo shutdown -h now
+  ```
+
+  * It is important that you shutdown wsl itself after this, so in Powershell (not in Ubuntu), run:
+  ```powershell
+  wsl --shutdown
+  ```
+
+  * Restart wsl and try launching gedit, it should now show on screen.
+  ```bash
+  gedit
+  ```
+
+- **Hardware-accelerated Vulkan (VSG) requires a newer Mesa than Ubuntu 22.04/24.04 ships by default.** Ubuntu 22.04/24.04's stock `mesa-vulkan-drivers` package does not include the `dzn` (Vulkan-over-D3D12) driver needed for WSL2 GPU acceleration. To get it:
   ```bash
   sudo add-apt-repository ppa:kisak/turtle
   sudo apt update
