@@ -206,13 +206,6 @@ check_packages() {
         output+="Irrlicht: Not installed\n"; IRRLICHT_FLAG=ON
     fi
 
-    # VSG (installed globally to /usr/local)
-    if [ -f "/usr/local/lib/cmake/vsg/vsgConfig.cmake" ]; then
-        output+="VSG: Installed\n"; VSG_FLAG=OFF
-    else
-        output+="VSG: Not installed\n"; VSG_FLAG=ON
-    fi
-
     # Blaze
     if ls /usr/local/include/ | grep -q blaze; then
         output+="Blaze: Installed\n"; BLAZE_FLAG=OFF
@@ -271,6 +264,13 @@ check_packages() {
         output+="Librealsense: Not installed\n"; LIBREALSENSE_FLAG=ON
     fi
 
+    # VSG (installed globally to /usr/local)
+    if [ -f "/usr/local/lib/cmake/vsg/vsgConfig.cmake" ]; then
+        output+="VSG: Installed\n"; VSG_FLAG=OFF
+    else
+        output+="VSG: Not installed\n"; VSG_FLAG=ON
+    fi
+
     cd "$ORIG_DIR" || exit 1
 
     export ROS2_INSTALLED
@@ -294,7 +294,6 @@ run_installer() {
         "CMake" " " $CMAKE_FLAG \
         "Eigen3" " " $EIGEN3_FLAG \
         "Irrlicht" " " $IRRLICHT_FLAG \
-        "VSG" " " $VSG_FLAG \
         "Blaze" " " $BLAZE_FLAG \
         "Boost" " " $BOOST_FLAG \
         "GLM" " " $GLM_FLAG \
@@ -303,6 +302,7 @@ run_installer() {
         "OpenGL" " " $OPENGL_FLAG \
         "OpenCASCADE" " " $OPENCASCADE_FLAG \
         "Librealsense" " " $LIBREALSENSE_FLAG \
+        "VSG" " " $VSG_FLAG \
         --ok-button "Proceed" \
         3>&1 1>&2 2>&3)
 
@@ -355,71 +355,6 @@ run_installer() {
             "Irrlicht")
                 echo "Installing Irrlicht..."
                 sudo apt install -y libirrlicht1.8 libirrlicht-dev libirrlicht-doc | tee /dev/tty
-                ;;
-            "VSG")
-                echo "Installing Vulkan runtime and shader compiler support..."
-                sudo apt install -y libvulkan-dev vulkan-tools mesa-vulkan-drivers \
-                                    glslang-tools libshaderc-dev ninja-build | tee /dev/tty
-
-                echo "Building VulkanSceneGraph (VSG) and dependencies..."
-                VSG_BUILD_DIR="../libraries/third-party/vsg-build"
-                # Install globally to /usr/local so find_package(vsg/vsgXchange/vsgImGui CONFIG)
-                # resolves them automatically via CMake's default system search paths,
-                # with no need to set vsg_DIR/vsgXchange_DIR/vsgImGui_DIR anywhere.
-                VSG_INSTALL_DIR_ABS="/usr/local"
-                SCRIPT_SRC="../libraries/chrono/contrib/build-scripts/vsg/buildVSG.sh"
-
-                if [ ! -f "$SCRIPT_SRC" ]; then
-                    echo "buildVSG.sh not found at $SCRIPT_SRC"
-                    exit 1
-                fi
-
-                mkdir -p "$VSG_BUILD_DIR"
-                cp "$SCRIPT_SRC" "$VSG_BUILD_DIR/buildVSG.sh"
-                cd "$VSG_BUILD_DIR" || exit 1
-
-                # Pin to versions confirmed compatible with this Chrono release
-                # (the shipped script's default vsgImGui pin is unpinned "latest",
-                #  which breaks against the vsg core version Chrono actually needs)
-                sed -i 's|--branch v1.1.4 "https://github.com/vsg-dev/VulkanSceneGraph"|--branch v1.1.4 "https://github.com/vsg-dev/VulkanSceneGraph"|' buildVSG.sh
-                sed -i 's|--branch v1.1.2 "https://github.com/vsg-dev/vsgXchange"|--branch v1.1.2 "https://github.com/vsg-dev/vsgXchange"|' buildVSG.sh
-                sed -i 's|git clone "https://github.com/vsg-dev/vsgImGui" "download_vsg/vsgImGui"|git clone -c advice.detachedHead=false --depth 1 --branch v0.6.0 "https://github.com/vsg-dev/vsgImGui" "download_vsg/vsgImGui"|' buildVSG.sh
-
-                sed -i "s|VSG_INSTALL_DIR=.*|VSG_INSTALL_DIR=\"$VSG_INSTALL_DIR_ABS\"|" buildVSG.sh
-                sed -i 's|BUILDSYSTEM=.*|BUILDSYSTEM="Ninja Multi-Config"|' buildVSG.sh
-
-                # assimp builds with -Werror by default. On GCC 13 (Ubuntu 24.04 / noble),
-                # a -Warray-bounds false positive in assimp's legacy MDL loader
-                # (code/AssetLib/MDL/MDLLoader.cpp) turns into a hard build failure,
-                # which silently breaks the rest of the vsg dependency chain
-                # (assimp never installs libassimp.a -> vsgXchange's find_package(assimp)
-                # fails -> vsgXchange never configures or installs).
-                # Disable warnings-as-errors for assimp only.
-                perl -i -pe 's/(-S \$\{ASSIMP_SOURCE_DIR\} \\)/$1\n      -DASSIMP_WARNINGS_AS_ERRORS=OFF \\/' buildVSG.sh
-
-                chmod +x buildVSG.sh
-                ./buildVSG.sh | tee /dev/tty
-                BUILD_STATUS=${PIPESTATUS[0]}
-                if [ "$BUILD_STATUS" -ne 0 ]; then
-                    echo "buildVSG.sh failed with exit code $BUILD_STATUS. See log above for details."
-                    cd "$ORIG_DIR" || exit 1
-                    exit 1
-                fi
-
-                # buildVSG.sh itself doesn't abort on a failed sub-component (vsg/vsgXchange/vsgImGui),
-                # so also verify each expected CMake package config actually landed in /usr/local.
-                for pkg in vsg vsgXchange vsgImGui; do
-                    if [ ! -f "/usr/local/lib/cmake/${pkg}/${pkg}Config.cmake" ]; then
-                        echo "ERROR: ${pkg} did not install correctly — /usr/local/lib/cmake/${pkg}/${pkg}Config.cmake is missing."
-                        echo "Check the build output above for the CMake configure/build error for ${pkg}."
-                        cd "$ORIG_DIR" || exit 1
-                        exit 1
-                    fi
-                done
-
-                cd "$ORIG_DIR" || exit 1
-                echo "Refreshing linker cache (ldconfig)..."
-                sudo ldconfig
                 ;;
             "Blaze")
                 echo "Installing Blaze headers..."
@@ -525,6 +460,71 @@ run_installer() {
                 rm -rf "$LIBREALSENSE_DIR/build" | tee /dev/tty
                 sudo cp "$LIBREALSENSE_DIR/config/99-realsense-libusb.rules" /etc/udev/rules.d/ | tee /dev/tty
                 sudo udevadm control --reload-rules && sudo udevadm trigger | tee /dev/tty
+                echo "Refreshing linker cache (ldconfig)..."
+                sudo ldconfig
+                ;;
+            "VSG")
+                echo "Installing Vulkan runtime and shader compiler support..."
+                sudo apt install -y libvulkan-dev vulkan-tools mesa-vulkan-drivers \
+                                    glslang-tools libshaderc-dev ninja-build | tee /dev/tty
+
+                echo "Building VulkanSceneGraph (VSG) and dependencies..."
+                VSG_BUILD_DIR="../libraries/third-party/vsg-build"
+                # Install globally to /usr/local so find_package(vsg/vsgXchange/vsgImGui CONFIG)
+                # resolves them automatically via CMake's default system search paths,
+                # with no need to set vsg_DIR/vsgXchange_DIR/vsgImGui_DIR anywhere.
+                VSG_INSTALL_DIR_ABS="/usr/local"
+                SCRIPT_SRC="../libraries/chrono/contrib/build-scripts/vsg/buildVSG.sh"
+
+                if [ ! -f "$SCRIPT_SRC" ]; then
+                    echo "buildVSG.sh not found at $SCRIPT_SRC"
+                    exit 1
+                fi
+
+                mkdir -p "$VSG_BUILD_DIR"
+                cp "$SCRIPT_SRC" "$VSG_BUILD_DIR/buildVSG.sh"
+                cd "$VSG_BUILD_DIR" || exit 1
+
+                # Pin to versions confirmed compatible with this Chrono release
+                # (the shipped script's default vsgImGui pin is unpinned "latest",
+                #  which breaks against the vsg core version Chrono actually needs)
+                sed -i 's|--branch v1.1.4 "https://github.com/vsg-dev/VulkanSceneGraph"|--branch v1.1.4 "https://github.com/vsg-dev/VulkanSceneGraph"|' buildVSG.sh
+                sed -i 's|--branch v1.1.2 "https://github.com/vsg-dev/vsgXchange"|--branch v1.1.2 "https://github.com/vsg-dev/vsgXchange"|' buildVSG.sh
+                sed -i 's|git clone "https://github.com/vsg-dev/vsgImGui" "download_vsg/vsgImGui"|git clone -c advice.detachedHead=false --depth 1 --branch v0.6.0 "https://github.com/vsg-dev/vsgImGui" "download_vsg/vsgImGui"|' buildVSG.sh
+
+                sed -i "s|VSG_INSTALL_DIR=.*|VSG_INSTALL_DIR=\"$VSG_INSTALL_DIR_ABS\"|" buildVSG.sh
+                sed -i 's|BUILDSYSTEM=.*|BUILDSYSTEM="Ninja Multi-Config"|' buildVSG.sh
+
+                # assimp builds with -Werror by default. On GCC 13 (Ubuntu 24.04 / noble),
+                # a -Warray-bounds false positive in assimp's legacy MDL loader
+                # (code/AssetLib/MDL/MDLLoader.cpp) turns into a hard build failure,
+                # which silently breaks the rest of the vsg dependency chain
+                # (assimp never installs libassimp.a -> vsgXchange's find_package(assimp)
+                # fails -> vsgXchange never configures or installs).
+                # Disable warnings-as-errors for assimp only.
+                perl -i -pe 's/(-S \$\{ASSIMP_SOURCE_DIR\} \\)/$1\n      -DASSIMP_WARNINGS_AS_ERRORS=OFF \\/' buildVSG.sh
+
+                chmod +x buildVSG.sh
+                ./buildVSG.sh | tee /dev/tty
+                BUILD_STATUS=${PIPESTATUS[0]}
+                if [ "$BUILD_STATUS" -ne 0 ]; then
+                    echo "buildVSG.sh failed with exit code $BUILD_STATUS. See log above for details."
+                    cd "$ORIG_DIR" || exit 1
+                    exit 1
+                fi
+
+                # buildVSG.sh itself doesn't abort on a failed sub-component (vsg/vsgXchange/vsgImGui),
+                # so also verify each expected CMake package config actually landed in /usr/local.
+                for pkg in vsg vsgXchange vsgImGui; do
+                    if [ ! -f "/usr/local/lib/cmake/${pkg}/${pkg}Config.cmake" ]; then
+                        echo "ERROR: ${pkg} did not install correctly — /usr/local/lib/cmake/${pkg}/${pkg}Config.cmake is missing."
+                        echo "Check the build output above for the CMake configure/build error for ${pkg}."
+                        cd "$ORIG_DIR" || exit 1
+                        exit 1
+                    fi
+                done
+
+                cd "$ORIG_DIR" || exit 1
                 echo "Refreshing linker cache (ldconfig)..."
                 sudo ldconfig
                 ;;
