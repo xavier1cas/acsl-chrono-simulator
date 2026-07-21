@@ -254,7 +254,7 @@ void minjerkpoly::updateUserDefinedYaw(double t)
         );
                 
         // Update the second derivative of the user-defined yaw angle
-        this->SetEulerRate(
+        this->SetEulerAcc(
             Eigen::Vector3d(
                 0.0,
                 0.0,

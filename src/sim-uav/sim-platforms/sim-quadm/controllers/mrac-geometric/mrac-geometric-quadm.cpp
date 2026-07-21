@@ -229,8 +229,8 @@ void mrac_geometric::update(double time,
     cim.r_ddot_user = m_traj.GetAcceleration();   
     cim.psi_user = m_traj.GetEulerAngle()(2);
     cim.psi_user_unwrapped = ::_shared_::_compute_::unwrapPsiSimple(cim.psi_user, this->psiState);
-    // cim.psi_dot_user = m_traj.GetEulerRate()(2);
-    cim.psi_dot_user = 0.0;
+    cim.psi_dot_user = m_traj.GetEulerRate()(2);
+    // cim.psi_dot_user = 0.0;
 
     // 3. Capture the time before the execution of the controller ------------------
     cim.alg_start_time = std::chrono::high_resolution_clock::now();
