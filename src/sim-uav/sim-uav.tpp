@@ -1232,8 +1232,10 @@ void simuav<nop>::ConfigureUAVTailSitterWingAeroCenters(int wing_id,
         //   - Note that these are set w.r.t to the NED frame as the drone is 
         //     imported in the NED frame, and we are applying the forces in the
         //     chassis' body frame of reference.
-        lift_force->SetRelDir(chrono::ChVector3d(-1, 0, 0));  // -X body
-        drag_force->SetRelDir(chrono::ChVector3d(0, 0, 1));   // +Z body
+        // -X UAV body frame | -Z Aero reference frame
+        lift_force->SetRelDir(chrono::ChVector3d(-1, 0, 0));  
+        // +Z UAV body frame | -X Aero reference frame
+        drag_force->SetRelDir(chrono::ChVector3d(0, 0, 1));   
 
         // Apply both forces at the aerodynamic center location in the body frame.
         // rel_pos_COM is already the aerodynamic center position relative to the
