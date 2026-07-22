@@ -229,8 +229,7 @@ void mrac_geometric::update(double time,
     cim.r_ddot_user = m_traj.GetAcceleration();   
     cim.psi_user = m_traj.GetEulerAngle()(2);
     cim.psi_user_unwrapped = ::_shared_::_compute_::unwrapPsiSimple(cim.psi_user, this->psiState);
-    // cim.psi_dot_user = m_traj.GetEulerRate()(2);
-    cim.psi_dot_user = 0.0;
+    cim.psi_dot_user = m_traj.GetEulerRate()(2);
 
     // 3. Capture the time before the execution of the controller ------------------
     cim.alg_start_time = std::chrono::high_resolution_clock::now();
@@ -494,9 +493,12 @@ void mrac_geometric::compute_u1_R_d()
                                          + cip.B_filter_omega_d * cim.omega_d(2);
 
     // Compute the desired angular acceleration
-    cim.alpha_d(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
-    cim.alpha_d(1) = cip.C_filter_omega_d * csm.state_omega_y_d_filter;
-    cim.alpha_d(2) = cip.C_filter_omega_d * csm.state_omega_z_d_filter;
+    Eigen::Matrix<double, 3, 1> omega_dot_d_J;
+    omega_dot_d_J(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
+    omega_dot_d_J(1) = cip.C_filter_omega_d * csm.state_omega_y_d_filter;
+    omega_dot_d_J(2) = cip.C_filter_omega_d * csm.state_omega_z_d_filter;
+
+    cim.alpha_d = omega_dot_d_J + cim.omega.cross(cim.omega_d);
 }
 
 // Compute the rotational control

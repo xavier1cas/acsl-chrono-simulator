@@ -494,10 +494,14 @@ void mrac_geometric::compute_u1_R_d()
                                          + cip.B_filter_omega_d * cim.omega_d(2);
 
     // Compute the desired angular acceleration
-    cim.alpha_d(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
-    cim.alpha_d(1) = cip.C_filter_omega_d * csm.state_omega_y_d_filter;
-    cim.alpha_d(2) = cip.C_filter_omega_d * csm.state_omega_z_d_filter;
+    Eigen::Matrix<double, 3, 1> omega_dot_d_J;
+    omega_dot_d_J(0) = cip.C_filter_omega_d * csm.state_omega_x_d_filter;
+    omega_dot_d_J(1) = cip.C_filter_omega_d * csm.state_omega_y_d_filter;
+    omega_dot_d_J(2) = cip.C_filter_omega_d * csm.state_omega_z_d_filter;
+
+    cim.alpha_d = omega_dot_d_J + cim.omega.cross(cim.omega_d);
 }
+
 
 // Compute the rotational control
 void mrac_geometric::compute_rotational_control()

@@ -140,8 +140,8 @@ controller:
     mrac_geometric: false 
     mrac_hybrid: false
   quadm:
-    mrac_omega: true
-    mrac_geometric: false
+    mrac_omega: false
+    mrac_geometric: true
 
 # ============================================================================
 # SIMULATION Environment Selection
@@ -167,7 +167,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: bean_trajectory0p3
+  filename: rollercoaster_trajectory1p5
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 
