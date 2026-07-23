@@ -4,8 +4,8 @@
 
 ## 📚 Overview
 
-This codebase is a C++ implementation of Project Chrono that provides a high-fidelity physics engine to perform model-in-the-loop for multi-rotor UAVs.
-This codebase is designed to work along with the freeware, open-source, PX4-compatible [**ACSL Flightstack Winged**](https://github.com/andrealaffly/ACSL-flightstack-winged). The codebase leverages the Chrono simulation environment to test various **GNC** (Guidance, Navigation and Control) algorithms prior to real-world flights, enabling debugging, optimization, and tuning of algorithms formulated at the Advanced Control Systems Lab (ACSL) at Virginia Tech.
+This codebase is a C++ implementation of Project Chrono that provides a high-fidelity physics engine to perform model-in-the-loop for multi-rotor UAVs (uncrewed aerial vehicles).
+This codebase is designed to work along with the freeware, open-source, PX4-compatible [**ACSL Flightstack Winged**](https://github.com/andrealaffly/ACSL-flightstack-winged). The codebase leverages the [Porject::Chrono](https://projectchrono.org/) simulation environment as a physics environment for enhanced realism of simulations during debugging, optimization, and tuning of control systems.
 
 ### System Requirements
 
