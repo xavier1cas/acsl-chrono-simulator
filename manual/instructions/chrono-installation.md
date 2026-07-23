@@ -1,5 +1,10 @@
 # ACSL Chrono Simulator - Installation Instructions
 
+> [!CAUTION]
+> **These instructions are deprecated. Please see our [Wiki](https://github.com/andrealaffly/acsl-chrono-simulator/wiki) for current instructions**.
+
+
+
 The **ACSL Chrono Simulator** is a modular simulation framework built to support **Hardware-in-the-Loop (HIL)**, **Software-in-the-Loop (SIL)**, and **Model-in-the-Loop (MIL)** simulations. It is developed and maintained by the Advanced Control Systems Lab (ACSL) and leverages [Project Chrono](https://projectchrono.org/) as its physics engine.
 
 To streamline installation and package requirement setup, a script-based installer is provided. This document outlines a step-by-step guide to install all required packages and successfully compile the simulator.
