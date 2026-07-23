@@ -1,5 +1,8 @@
 # Chrono SolidWorks Plugin – Improved Installation and Usage Instructions
 
+> [!CAUTION]
+> **These instructions are deprecated. Please see our [Wiki](https://github.com/andrealaffly/acsl-chrono-simulator/wiki) for current instructions**.
+
 The [Chrono::SolidWorks](https://api.projectchrono.org/9.0.0/chrono_solidworks_installation.html) add-in enables direct export of SolidWorks assemblies for multibody simulation in the Chrono C++ environment.
 
 ---
