@@ -78,12 +78,12 @@ debug:
 platform:
   # Set to true to import the QRBP
   qrbp: false
-  # Set to true to import the x8copter
-  x8copter: false
   # Set to true to import the tailsitter
   tailsitter: false
   # Set to true to import the medium quadcotper
   quadm: true
+  # Set to true to import the x8 cotper
+  x8: false
 
 # ============================================================================
 # UAV Aerodynamics Selection
@@ -142,6 +142,9 @@ controller:
   quadm:
     mrac_omega: false
     mrac_geometric: true
+  x8:
+    mrac_omega: false
+    mrac_geometric: false
 
 # ============================================================================
 # SIMULATION Environment Selection
@@ -167,7 +170,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: takeoff_1meter
+  filename: rollercoaster_trajectory1p5
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 
