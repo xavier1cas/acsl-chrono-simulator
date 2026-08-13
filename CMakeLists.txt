@@ -201,6 +201,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/si
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers/mrac-omega)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers/mrac-geometric)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-quadm/controllers/mrac-geometric-na-ebci)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-x8/controllers)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/sim-uav/sim-platforms/sim-x8/controllers/mrac-omega)
@@ -262,6 +263,7 @@ set(SOURCES
 
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-quadm/controllers/mrac-omega/mrac-omega-quadm.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-quadm/controllers/mrac-geometric/mrac-geometric-quadm.cpp
+   ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-quadm/controllers/mrac-geometric-na-ebci/mrac-geometric-na-ebci-quadm.cpp
 
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-x8/controllers/mrac-omega/mrac-omega-x8.cpp
    ${CMAKE_CURRENT_SOURCE_DIR}/src/sim-uav/sim-platforms/sim-x8/controllers/mrac-geometric/mrac-geometric-x8.cpp

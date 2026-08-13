@@ -81,9 +81,9 @@ platform:
   # Set to true to import the tailsitter
   tailsitter: false
   # Set to true to import the medium quadcotper
-  quadm: true
+  quadm: false
   # Set to true to import the x8 cotper
-  x8: false
+  x8: true
 
 # ============================================================================
 # UAV Aerodynamics Selection
@@ -132,19 +132,16 @@ controller:
     pid_quaternion: false
     pid_geometric: false
     mrac_geometric: false
-  x8copter: 
-    pid: false
-    mrac: false
-    tlmrac: false
   tailsitter:
     mrac_geometric: false 
     mrac_hybrid: false
   quadm:
     mrac_omega: false
-    mrac_geometric: true
+    mrac_geometric: false
+    mrac_geometric_na_ebci: false
   x8:
     mrac_omega: false
-    mrac_geometric: false
+    mrac_geometric: true
 
 # ============================================================================
 # SIMULATION Environment Selection
@@ -170,7 +167,7 @@ poly:
   # Set to true to use the segmented minimum-jerk polynomial trajectory module
   enabled: true
   # Type in the trajectory filename that needs to be imported
-  filename: rollercoaster_trajectory1p5
+  filename: bean_trajectory0p2
   # Type in the filetype of the trajectory filename that needs to be imported
   filetype: json
 

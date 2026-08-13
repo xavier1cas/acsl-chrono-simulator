@@ -655,6 +655,10 @@ void mrac_omega::compute_normalized_thrusts()
     control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(1));
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(2));
     control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(3));
+    control_input(4) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(4));
+    control_input(5) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(5));
+    control_input(6) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(6));
+    control_input(7) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(7));
 
 }
 

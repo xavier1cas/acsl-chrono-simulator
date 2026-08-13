@@ -82,6 +82,7 @@
 #include "mrac-hybrid-tailsitter.hpp"
 #include "mrac-omega-quadm.hpp"
 #include "mrac-geometric-quadm.hpp"
+#include "mrac-geometric-na-ebci-quadm.hpp"
 #include "mrac-omega-x8.hpp"
 #include "mrac-geometric-x8.hpp"
 
@@ -157,8 +158,9 @@ struct controllers
     // -------------------------------------------------------------------------
     struct quadm
     {
-        bool mrac_omega{};      // MRAC omega controller for QUADM
-        bool mrac_geometric{};  // MRAC geometric controller for QUADM
+        bool mrac_omega{};              // MRAC omega controller for QUADM
+        bool mrac_geometric{};          // MRAC geometric controller for QUADM
+        bool mrac_geometric_na_ebci{};  // MRAC geometric with non-adaptive ebci controller for QUADM
     } quadm;
     
     // -------------------------------------------------------------------------
@@ -192,6 +194,7 @@ struct controllers
             {"tailsitter", "mrac_hybrid", tailsitter.mrac_hybrid},
             {"quadm", "mrac_omega", quadm.mrac_omega},
             {"quadm", "mrac_geometric", quadm.mrac_geometric},
+            {"quadm", "mrac_geometric_na_ebci", quadm.mrac_geometric_na_ebci},
             {"x8", "mrac_omega", x8.mrac_omega},
             {"x8", "mrac_geometric", x8.mrac_geometric},
         };
@@ -276,6 +279,10 @@ struct controllers
         else if (active.first == "quadm" && active.second == "mrac_geometric") {
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC GEOMETRIC CONTROLLER TO QUADM");
             return std::make_unique< ::_acsl_::_quadm_::_mrac_geometric_::mrac_geometric >(logger, trajectory);
+        }
+        else if (active.first == "quadm" && active.second == "mrac_geometric_na_ebci") {
+            _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC GEOMETRIC NON-ADAPTIVE EBCI CONTROLLER TO QUADM");
+            return std::make_unique< ::_acsl_::_quadm_::_mrac_geometric_na_ebci_::mrac_geometric_na_ebci >(logger, trajectory);
         }
         else if (active.first == "x8" && active.second == "mrac_omega") {
             _message_::SIMULATOR_INFO("[SIMCTL]: ATTACHING MRAC OMEGA CONTROLLER TO X8");

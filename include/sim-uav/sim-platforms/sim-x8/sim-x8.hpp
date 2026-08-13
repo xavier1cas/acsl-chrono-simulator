@@ -83,14 +83,15 @@ public:
 
         SetUAVPlatformName("x8");                                                 // <- Baseclass function
         SetupInertialNEDFrame();                                                     // <- Baseclass function
-        SetUAVShapesDir("../chrono-assets/models/x8copter/X8copter_shapes/");        // <- Baseclass function
+        SetUAVShapesDir("../chrono-assets/models/x8/X8_shapes/");        // <- Baseclass function
         
         ConfigureX8Chassis();                                 // <- Compulsary derived class function
         ConfigureX8Props();                                   // <- Compulsary derived class function
         ConfigureX8Links();                                   // <- Compulsary derived class function
         ConfigureX8Motors();                                  // <- Compulsary derived class function
         ConfigureX8Aerodynamics();                            // <- Unique derived class function
-        
+        ConfigureX8Payload();                                 // <- Unique derived class function
+
         AddUAVToSystem();                                     // <- Baseclass function
 
     }
@@ -112,12 +113,14 @@ public:
     //
     // The unique functions are:
     //   - Function to setup the aerodynamics
+    //   - Function to setup the payload and payload-box
     // ------------------------------------------------------------------------
     void ConfigureX8Chassis();
     void ConfigureX8Props();
     void ConfigureX8Links();
     void ConfigureX8Motors();
     void ConfigureX8Aerodynamics();
+    void ConfigureX8Payload();
 };
 
 

@@ -393,7 +393,7 @@ void mrac_geometric::compute_translational_control_in_I()
 
     // Adaptive control law
     cim.mu_tran_adaptive << csm.K_hat_x_tran.transpose() * cim.x_tran
-                          + csm.K_hat_r_tran.transpose() * cim.r_cmd_tran;
+                          + csm.K_hat_r_tran.transpose() * cim.r_cmd_tran
                           - csm.Theta_hat_tran.transpose() * cim.augmented_outer_loop_regressor;
 
     // Compute with the dynamic inversion without aerodynamics
@@ -634,11 +634,19 @@ void mrac_geometric::compute_normalized_thrusts()
     control_input(1) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(1));
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(2));
     control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(3));
+    control_input(4) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(4));
+    control_input(5) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(5));
+    control_input(6) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(6));
+    control_input(7) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_x8, cim.Sat_Thrust(7));
 
     std::cout << "T1: " << control_input(0) 
               << "| T2: " << control_input(1)
               << "| T3: " << control_input(2)
               << "| T4: " << control_input(3) 
+              << "| T5: " << control_input(4) 
+              << "| T6: " << control_input(5) 
+              << "| T7: " << control_input(6) 
+              << "| T8: " << control_input(7) 
               << std::endl;
 }
 

@@ -735,5 +735,53 @@ std::dynamic_pointer_cast<chrono::ChLinkMateParallel>(link)->SetName("Distance1"
 linklist.push_back(link);
 
 
+// Auxiliary marker (coordinate system feature)
+auto marker_0_1 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_1->SetName("Coordinate System1");
+body_0->AddMarker(marker_0_1);
+marker_0_1->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(0.090651591965577,0.105370088769343,-0.0330000000000055),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_2 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_2->SetName("Coordinate System2");
+body_0->AddMarker(marker_0_2);
+marker_0_2->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(0.0911724945380793,-0.111566436084732,-0.033000000000004),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_3 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_3->SetName("Coordinate System3");
+body_0->AddMarker(marker_0_3);
+marker_0_3->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(-0.0845604352035955,-0.111812919951849,-0.0330000000000045),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_4 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_4->SetName("Coordinate System4");
+body_0->AddMarker(marker_0_4);
+marker_0_4->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(-0.085081337776099,0.105123604902229,-0.0330000000000043),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_5 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_5->SetName("Coordinate System5");
+body_0->AddMarker(marker_0_5);
+marker_0_5->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(0.0911724945380798,-0.111566436084732,0.0399999999999961),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_6 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_6->SetName("Coordinate System6");
+body_0->AddMarker(marker_0_6);
+marker_0_6->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(0.0906515919655775,0.105370088769343,0.0399999999999945),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_7 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_7->SetName("Coordinate System7");
+body_0->AddMarker(marker_0_7);
+marker_0_7->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(-0.0850813377760986,0.105123604902229,0.0399999999999957),chrono::ChQuaternion<>(1,0,0,0)));
+
+// Auxiliary marker (coordinate system feature)
+auto marker_0_8 = chrono_types::make_shared<chrono::ChMarker>();
+marker_0_8->SetName("Coordinate System8");
+body_0->AddMarker(marker_0_8);
+marker_0_8->ImposeAbsoluteTransform(chrono::ChFramed(chrono::ChVector3d(-0.084560435203595,-0.111812919951848,0.0399999999999955),chrono::ChQuaternion<>(1,0,0,0)));
+
 
 } // end function

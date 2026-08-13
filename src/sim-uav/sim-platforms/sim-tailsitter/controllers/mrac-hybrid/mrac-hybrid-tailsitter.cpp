@@ -437,7 +437,7 @@ void mrac_hybrid::compute_translational_control_in_I()
 
   // Adaptive control law
   cim.mu_tran_adaptive << csm.K_hat_x_tran.transpose() * cim.x_tran
-                        + csm.K_hat_r_tran.transpose() * cim.r_cmd_tran;
+                        + csm.K_hat_r_tran.transpose() * cim.r_cmd_tran
                         - csm.Theta_hat_tran.transpose() * cim.augmented_outer_loop_regressor;
 
   // Compute with the dynamic inversion without aerodynamics
