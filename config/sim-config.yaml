@@ -64,7 +64,7 @@ debug:
   sim_stop_time: 23.0
   # Set the value to true if you want the system to import model and not run 
   # anything else
-  developer_mode: true
+  developer_mode: false
   # Set the value to true if you want the system to update the physics for 
   # every timestep as you press the "ENTER" key
   developer_mode_steps: false
@@ -81,9 +81,9 @@ platform:
   # Set to true to import the tailsitter
   tailsitter: false
   # Set to true to import the medium quadcotper
-  quadm: false
+  quadm: true
   # Set to true to import the x8 cotper
-  x8: true
+  x8: false
 
 # ============================================================================
 # UAV Aerodynamics Selection
@@ -143,8 +143,9 @@ controller:
     mrac_omega: false
     mrac_geometric: false
     mrac_geometric_na_ebci: false
+    vsmrac_geometric_na_ebci: true
   x8:
-    mrac_omega: true
+    mrac_omega: false
     mrac_geometric: false
 
 # ============================================================================

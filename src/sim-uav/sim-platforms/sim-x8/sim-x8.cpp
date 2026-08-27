@@ -83,8 +83,8 @@ void simx8::ConfigureX8Chassis()
     mr(0,0)=-1;                     mr(1,0)=0;                      mr(2,0)=7.02385995171017E-15;
     mr(0,1)=-1.48723864357112E-16;  mr(1,1)=-1;                     mr(2,1)=-1.48723864357112E-16;
     mr(0,2)=7.02385995171017E-15;   mr(1,2)=-1.48723864357113E-16;  mr(2,2)=1;
-    pos = chrono::ChVector3d(0.00304557838099178,-0.00322141559125175,0.269749999999996);
-    dim = chrono::ChVector3d(0.245,0.373249790618444,0.0385);
+    pos = chrono::ChVector3d(0.00304557838099178,-0.00322141559125175,0.241700000000000);
+    dim = chrono::ChVector3d(0.245,0.373249790618444,0.0285);
     col = chrono_types::make_shared<chrono::ChCollisionShapeBox>(mat,dim);
     frame = chrono::ChFramed(pos, mr);
 
