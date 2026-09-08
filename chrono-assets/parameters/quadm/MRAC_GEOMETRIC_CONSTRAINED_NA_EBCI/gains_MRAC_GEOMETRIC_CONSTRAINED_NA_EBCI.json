@@ -244,11 +244,11 @@
   },
   "EBCI": {
     "use_error_bounding_control_input": true,
-    "xi_bar_d_tran":    20.0,
+    "xi_bar_d_tran":    1e-2,
     "lambda_bar_tran":  1.0,
-    "delta_ebci_tran":  1e-5,
-    "xi_bar_d_rot":     10.0,
+    "delta_ebci_tran":  1e-3,
+    "xi_bar_d_rot":     1e-2,
     "lambda_bar_rot":   1.0,
-    "delta_ebci_rot":   1e-5
+    "delta_ebci_rot":   1e-3
   }
 }

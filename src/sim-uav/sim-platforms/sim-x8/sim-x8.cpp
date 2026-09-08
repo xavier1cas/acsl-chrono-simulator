@@ -1007,77 +1007,77 @@ void simx8::ConfigureX8Payload()
     this->LinkUAVBodies(link_data_vec);
 
 
-    // Add the payload
-    auto sph_mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
-    sph_mat->SetFriction(1.0f);
-    sph_mat->SetDampingF(0.5f);
+    // // Add the payload
+    // auto sph_mat = chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    // sph_mat->SetFriction(1.0f);
+    // sph_mat->SetDampingF(0.5f);
 
-    auto sphereBody = chrono_types::make_shared<chrono::ChBodyEasySphere>(
-        0.015,
-        1.5 * 14147.1,
-        sph_mat
-    );
+    // auto sphereBody = chrono_types::make_shared<chrono::ChBodyEasySphere>(
+    //     0.015,
+    //     1.5 * 14147.1,
+    //     sph_mat
+    // );
 
-    auto sphereBody1 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
-        0.015,
-        1.5 * 14147.1,
-        sph_mat
-    );
+    // auto sphereBody1 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
+    //     0.015,
+    //     1.5 * 14147.1,
+    //     sph_mat
+    // );
 
-    auto sphereBody2 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
-        0.015,
-        0.5 * 14147.1,
-        sph_mat
-    );
+    // auto sphereBody2 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
+    //     0.015,
+    //     0.5 * 14147.1,
+    //     sph_mat
+    // );
 
-    auto sphereBody3 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
-        0.015,
-        0.5 * 14147.1,
-        sph_mat
-    );
+    // auto sphereBody3 = chrono_types::make_shared<chrono::ChBodyEasySphere>(
+    //     0.015,
+    //     0.5 * 14147.1,
+    //     sph_mat
+    // );
 
-    // sphereBody->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-0.820174613366277,
-    //                                                                                           0.138257774369255,
-    //                                                                                           0.0490871680500573)));
+    // // sphereBody->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(-0.820174613366277,
+    // //                                                                                           0.138257774369255,
+    // //                                                                                           0.0490871680500573)));
 
-    sphereBody->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161,
-                                                                                            -0.00300000000000006,
-                                                                                             0.205499999999996)));
+    // sphereBody->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161,
+    //                                                                                         -0.00300000000000006,
+    //                                                                                          0.205499999999996)));
 
-    sphereBody1->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161 + 0.02,
-                                                                                              -0.00300000000000006 + 0.02,
-                                                                                              0.205499999999996)));
+    // sphereBody1->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161 + 0.02,
+    //                                                                                           -0.00300000000000006 + 0.02,
+    //                                                                                           0.205499999999996)));
 
-    sphereBody2->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161 - 0.02,
-                                                                                              -0.00300000000000006 - 0.02,
-                                                                                              0.205499999999996)));
+    // sphereBody2->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161 - 0.02,
+    //                                                                                           -0.00300000000000006 - 0.02,
+    //                                                                                           0.205499999999996)));
 
-    sphereBody3->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161 + 0.02,
-                                                                                              -0.00300000000000006 - 0.02,
-                                                                                              0.205499999999996)));
+    // sphereBody3->SetPos(::_shared_::_transformations_::GetChronoPosFromNED(chrono::ChVector3d(0.00300000000000161 + 0.02,
+    //                                                                                           -0.00300000000000006 - 0.02,
+    //                                                                                           0.205499999999996)));
 
 
                                                                                           
-    sphereBody->GetVisualShape(0)->SetTexture(
-        chrono::GetChronoDataFile("textures/bluewhite.png")
-    );
+    // sphereBody->GetVisualShape(0)->SetTexture(
+    //     chrono::GetChronoDataFile("textures/bluewhite.png")
+    // );
                                                                                               
-    sphereBody1->GetVisualShape(0)->SetTexture(
-        chrono::GetChronoDataFile("textures/redwhite.png")
-    );
+    // sphereBody1->GetVisualShape(0)->SetTexture(
+    //     chrono::GetChronoDataFile("textures/redwhite.png")
+    // );
 
-    sphereBody2->GetVisualShape(0)->SetTexture(
-        chrono::GetChronoDataFile("textures/greenwhite.png")
-    );
+    // sphereBody2->GetVisualShape(0)->SetTexture(
+    //     chrono::GetChronoDataFile("textures/greenwhite.png")
+    // );
 
-    sphereBody3->GetVisualShape(0)->SetTexture(
-        chrono::GetChronoDataFile("textures/pinkwhite.png")
-    );
+    // sphereBody3->GetVisualShape(0)->SetTexture(
+    //     chrono::GetChronoDataFile("textures/pinkwhite.png")
+    // );
 
-    this->getPhysicsSystem().Add(sphereBody);
-    this->getPhysicsSystem().Add(sphereBody1);
-    this->getPhysicsSystem().Add(sphereBody2);
-    this->getPhysicsSystem().Add(sphereBody3);
+    // this->getPhysicsSystem().Add(sphereBody);
+    // this->getPhysicsSystem().Add(sphereBody1);
+    // this->getPhysicsSystem().Add(sphereBody2);
+    // this->getPhysicsSystem().Add(sphereBody3);
 
 
 }

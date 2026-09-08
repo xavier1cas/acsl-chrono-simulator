@@ -23,20 +23,20 @@
  **********************************************************************************************************************/
 
  /***********************************************************************************************************************
- * File:        vsmrac-geometric-na-ebci-quadm.hpp
+ * File:        mrac-geometric-constrained-na-ebci-quadm.hpp
  * Author:      Xavier Casanova
  * Date:        August 26, 2026
  * For info:    Andrea L'Afflitto 
  *              a.lafflitto@vt.edu
  * 
- * Description: Header file for variable structure mrac geometric controller with non-adaptive error bounding controll input 
+ * Description: Header file for constrained mrac geometric controller with non-adaptive error bounding control input 
  *              for the medium quadcopter.
  * 
  * GitHub:    https://github.com/xavier1cas/acsl-chrono-simulator.git
  **********************************************************************************************************************/
 
-#ifndef VSMRAC_GEOMETRIC_NA_EBCI_QUADM_HPP_
-#define VSMRAC_GEOMETRIC_NA_EBCI_QUADM_HPP_
+#ifndef MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI_QUADM_HPP_
+#define MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI_QUADM_HPP_
 
 #include "sim-control-base.hpp"     // Include for the base class of a controller defined in the simualtor 
 #include "quadm-parameter-file.hpp"  // Include for the hardcoded tailsitter parameters that are common for all controllers
@@ -47,7 +47,7 @@ namespace _acsl_
 namespace _quadm_
 {
 
-namespace _vsmrac_geometric_na_ebci_
+namespace _mrac_geometric_constrained_na_ebci_
 {
 
 // Define the number of states in the boost array for integration
@@ -247,12 +247,12 @@ struct controller_internal_members {
 };
 
 // =========================================================================================================
-// vsmrac_geometric_na_ebci.hpp   -- QUADM VSMRAC geometric controller
-//   - Implements a VSMRAC controller for rotation matrices and angular rates on the QUADM platform.
+// mrac-geometric-constrained-na-ebci-quadm.hpp   -- QUADM MRAC geometric constrained controller
+//   - Implements a MRAC controller for rotation matrices and constrains and angular rates on the QUADM platform.
 //   - Inherits base routines and actuator interface from controller_base.
 //   - Inherits base routines from blackbox to setup the logging.
 // =========================================================================================================
-class vsmrac_geometric_na_ebci : public ::_acsl_::_control_::controller_base , public ::_acsl_::_logger_::blackbox
+class mrac_geometric_constrained_na_ebci : public ::_acsl_::_control_::controller_base , public ::_acsl_::_logger_::blackbox
 {
 
 public:
@@ -261,18 +261,18 @@ public:
     //   - Accepts simlog reference for logging duties.
     //   - Passes simlog to controller_base for unified logging.
     // -------------------------------------------------------------------------
-    vsmrac_geometric_na_ebci(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory);
+    mrac_geometric_constrained_na_ebci(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory);
 
     // -------------------------------------------------------------------------
     // Destructor:
     //   - Allows cleanup in derived class.
     // -------------------------------------------------------------------------
-    virtual ~vsmrac_geometric_na_ebci() = default;
+    virtual ~mrac_geometric_constrained_na_ebci() = default;
 
     
     // -------------------------------------------------------------------------
     // Override: update()
-    //   - Update controller state (to be implemented in vsmrac_geometric_na_ebci.cpp).
+    //   - Update controller state (to be implemented in mrac-geometric-constrained-na-ebci-quadm.cpp).
     //   - Provide logic in the source file.
     // -------------------------------------------------------------------------
     void update([[maybe_unused]] double time,
@@ -353,13 +353,13 @@ private:
     boost::numeric::odeint::runge_kutta4<_control_::rk4_array<double, NSI>> rk4;
 
     // Define the internal parameter members of the controller 
-    ::_acsl_::_quadm_::_vsmrac_geometric_na_ebci_::controller_internal_parameters cip;
+    ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_internal_parameters cip;
 
     // Define the internal members of the controller
-    ::_acsl_::_quadm_::_vsmrac_geometric_na_ebci_::controller_internal_members cim;   
+    ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_internal_members cim;   
 
     // Define the internal integrated state members of the controller
-    ::_acsl_::_quadm_::_vsmrac_geometric_na_ebci_::controller_integrated_state_members csm;
+    ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_integrated_state_members csm;
 
     // Member to unwrap the heading for heading command
     ::_shared_::_compute_::SimplePsiUnwrapState psiState;
@@ -388,11 +388,11 @@ private:
 
 };
 
-}   // namespace _vsmrac_geometric_na_ebci_
+}   // namespace _mrac_geometric_constrained_na_ebci_
 
 }   // namespace _quadm_
     
 }   // namespace _acsl_
 
 
-#endif  //  VSMRAC_GEOMETRIC_NA_EBCI_QUADM_HPP_
+#endif  //  MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI_QUADM_HPP_

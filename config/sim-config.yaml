@@ -95,7 +95,7 @@ aerodynamics:
   # Set to true to import the chassis drag aerodynamics
   chassis_drag: true
   # Set to true to import the wing aerodynamics
-  wing_aero: true
+  wing_aero: false
   # Set to true to print the wing aerodynamic state data to the terminal screen
   aero_terminal: false
 
@@ -132,10 +132,6 @@ controller:
     pid_quaternion: false
     pid_geometric: false
     mrac_geometric: false
-  x8copter: 
-    pid: false
-    mrac: false
-    tlmrac: false
   tailsitter:
     mrac_geometric: false
     mrac_hybrid: false
@@ -143,7 +139,7 @@ controller:
     mrac_omega: false
     mrac_geometric: false
     mrac_geometric_na_ebci: false
-    vsmrac_geometric_na_ebci: true
+    mrac_geometric_constrained_na_ebci: true
   x8:
     mrac_omega: false
     mrac_geometric: false

@@ -49,15 +49,15 @@ namespace _x8_
 // HARDCODED - HARDCODED - HARDCODED - HARDCODED - HARDCODED - HARDCODED - HARDCODED
 // ##################################################################################
 
-inline constexpr double MASS = 1.54952076;  // mass [Kg]
+inline constexpr double MASS = 1.90581492;  // mass [Kg]
 
 // Matrix of inertia of the quadcopter frame 
 // [kg*m^2] inertia matrix of the vehicle system expressed in
 // Pixhawk coordinate system (FRD - x-Front, y-Right, z-Down), computed at the vehicle center of mass
 const Eigen::Matrix3d inertia_matrix_q = (Eigen::Matrix3d() << 
-                                                0.01589049,	0.00001170,-0.00071388,
-                                                0.00001170,	0.01390128,-0.00001036,
-                                               -0.00071388,-0.00001036,	0.01399882).finished();
+                                                0.02545721,	0.00001216,-0.00110838,
+                                                0.00001216,	0.02348943,-0.00001876,
+                                               -0.00110838,-0.00001876,	0.01786270).finished();
 
 // Constants -------------------------------------------------------------------------------------------------------
 inline constexpr double G = 9.81;
@@ -199,44 +199,66 @@ const Eigen::VectorXd thrust_polynomial_coeff_x8 = (Eigen::VectorXd(8) <<
 // [ l_y, l_y, -l_y, -l_y,  l_y,  l_y, -l_y, -l_y]
 // [-l_x, l_x,  l_x, -l_x, -l_x,  l_x,  l_x, -l_x]
 // [-c_t, c_t, -c_t,  c_t,  c_t, -c_t,  c_t, -c_t]
+
+// [1/8, -1/(8*l_y),  1/(8*l_x),  1/(8*c_t)]
+// [1/8,  1/(8*l_y),  1/(8*l_x), -1/(8*c_t)]
+// [1/8,  1/(8*l_y), -1/(8*l_x),  1/(8*c_t)]
+// [1/8, -1/(8*l_y), -1/(8*l_x), -1/(8*c_t)]
+// [1/8,  1/(8*l_y),  1/(8*l_x),  1/(8*c_t)]
+// [1/8, -1/(8*l_y),  1/(8*l_x), -1/(8*c_t)]
+// [1/8, -1/(8*l_y), -1/(8*l_x),  1/(8*c_t)]
+// [1/8,  1/(8*l_y), -1/(8*l_x), -1/(8*c_t)]
+
+//     # Moore-Penrose pseudo-inverse of X8copter mixer matrix
+//     self.U_mat_inv = np.array([
+//       [1/8,  1/(8*l_y), -1/(8*l_x), -1/(8*c_t)],
+//       [1/8,  1/(8*l_y),  1/(8*l_x),  1/(8*c_t)],
+//       [1/8, -1/(8*l_y),  1/(8*l_x), -1/(8*c_t)],
+//       [1/8, -1/(8*l_y), -1/(8*l_x),  1/(8*c_t)],
+//       [1/8,  1/(8*l_y), -1/(8*l_x),  1/(8*c_t)],
+//       [1/8,  1/(8*l_y),  1/(8*l_x), -1/(8*c_t)],
+//       [1/8, -1/(8*l_y),  1/(8*l_x),  1/(8*c_t)],
+//       [1/8, -1/(8*l_y), -1/(8*l_x), -1/(8*c_t)]
+//     ])
+
 const Eigen::Matrix<double,8,4> mixer_matrix_x8 = []() {
     Eigen::Matrix<double,8,4> mat; // 8 rows, 4 columns
-        
+
     // Assign values element-by-element
     mat(0, 0) =  1.0 / 8.0;
     mat(0, 1) = -1.0 / (8.0 * LY);
     mat(0, 2) =  1.0 / (8.0 * LX);
-    mat(0, 3) = -1.0 / (8.0 * CT_MOTOR); 
+    mat(0, 3) = -1.0 / (8.0 * CT_MOTOR);
 
     mat(1, 0) =  1.0 / 8.0;
     mat(1, 1) =  1.0 / (8.0 * LY);
     mat(1, 2) =  1.0 / (8.0 * LX);
-    mat(1, 3) =  1.0 / (8.0 * CT_MOTOR); 
+    mat(1, 3) =  1.0 / (8.0 * CT_MOTOR);
 
     mat(2, 0) =  1.0 / 8.0;
     mat(2, 1) =  1.0 / (8.0 * LY);
     mat(2, 2) = -1.0 / (8.0 * LX);
-    mat(2, 3) = -1.0 / (8.0 * CT_MOTOR); 
+    mat(2, 3) = -1.0 / (8.0 * CT_MOTOR);
 
     mat(3, 0) =  1.0 / 8.0;
     mat(3, 1) = -1.0 / (8.0 * LY);
     mat(3, 2) = -1.0 / (8.0 * LX);
-    mat(3, 3) =  1.0 / (8.0 * CT_MOTOR); 
-    
+    mat(3, 3) =  1.0 / (8.0 * CT_MOTOR);
+
     mat(4, 0) =  1.0 / 8.0;
     mat(4, 1) =  1.0 / (8.0 * LY);
     mat(4, 2) =  1.0 / (8.0 * LX);
-    mat(4, 3) = -1.0 / (8.0 * CT_MOTOR); 
+    mat(4, 3) = -1.0 / (8.0 * CT_MOTOR);
 
     mat(5, 0) =  1.0 / 8.0;
     mat(5, 1) = -1.0 / (8.0 * LY);
     mat(5, 2) =  1.0 / (8.0 * LX);
-    mat(5, 3) =  1.0 / (8.0 * CT_MOTOR); 
+    mat(5, 3) =  1.0 / (8.0 * CT_MOTOR);
 
     mat(6, 0) =  1.0 / 8.0;
     mat(6, 1) = -1.0 / (8.0 * LY);
     mat(6, 2) = -1.0 / (8.0 * LX);
-    mat(6, 3) = -1.0 / (8.0 * CT_MOTOR); 
+    mat(6, 3) = -1.0 / (8.0 * CT_MOTOR);
 
     mat(7, 0) =  1.0 / 8.0;
     mat(7, 1) =  1.0 / (8.0 * LY);

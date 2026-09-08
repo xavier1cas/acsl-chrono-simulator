@@ -418,7 +418,7 @@ void mrac_geometric_na_ebci::compute_translational_control_in_I()
     } else {
         double sum_Pe_tran = (cip.P_tran * cim.e_tran).cwiseAbs().sum();
         cim.mu_ebci_tran = -(cip.xi_bar_d_tran / cip.lambda_bar_tran)
-                        * (BPe_tran / BPe_tran_norm)
+                        * (BPe_tran / std::pow(BPe_tran_norm, 2))
                         * sum_Pe_tran;
         
         std::cout << "Outer Loop EBCI computed" << std::endl;
@@ -651,7 +651,7 @@ void mrac_geometric_na_ebci::compute_rotational_control()
     } else {
         double sum_Pe_rot = (cip.P_rot * cim.omega_e).cwiseAbs().sum();
         cim.tau_ebci_rot = -(cip.xi_bar_d_rot / cip.lambda_bar_rot)
-                        * (BPe_rot / BPe_rot_norm)
+                        * (BPe_rot / std::pow(BPe_rot_norm, 2))
                         * sum_Pe_rot;
         std::cout << "Inner Loop EBCI computed" << std::endl;
     }

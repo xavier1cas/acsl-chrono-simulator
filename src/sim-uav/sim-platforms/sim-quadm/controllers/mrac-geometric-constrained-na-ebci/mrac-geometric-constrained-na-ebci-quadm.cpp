@@ -23,19 +23,19 @@
  **********************************************************************************************************************/
 
  /***********************************************************************************************************************
- * File:        vsmrac-geometric-na-ebci-quadm.cpp
+ * File:        mrac-geometric-constrained-na-ebci-quadm.cpp
  * Author:      Xavier Casanova
  * Date:        August 26, 2026
  * For info:    Andrea L'Afflitto 
  *              a.lafflitto@vt.edu
  * 
- * Description: VSMRAC with geometric and angular velocities with error bounding control input for the QUADM.
+ * Description: MRAC with geometric and angular velocities with error bounding control input and constrans for the QUADM.
  *              Inherts the class controller_base for the basic functionality that is to be used for all control algorithms.
  * 
  * GitHub:    https://github.com/xavier1cas/acsl-chrono-simulator.git
  **********************************************************************************************************************/
 
-#include "vsmrac-geometric-na-ebci-quadm.hpp"
+#include "mrac-geometric-constrained-na-ebci-quadm.hpp"
 
 namespace _acsl_
 {
@@ -43,7 +43,7 @@ namespace _acsl_
 namespace _quadm_
 {
 
-namespace _vsmrac_geometric_na_ebci_
+namespace _mrac_geometric_constrained_na_ebci_
 {
 
 // -------------------------------------------------------------------------
@@ -51,7 +51,7 @@ namespace _vsmrac_geometric_na_ebci_
 //   - Calls the base (controller_base) constructor and passes 
 //     both logger and trajectory.
 // -------------------------------------------------------------------------
-vsmrac_geometric_na_ebci::vsmrac_geometric_na_ebci(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
+mrac_geometric_constrained_na_ebci::mrac_geometric_constrained_na_ebci(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
                               : ::_acsl_::_control_::controller_base(logger, trajectory)
 {
     // Initial Conditions
@@ -62,7 +62,7 @@ vsmrac_geometric_na_ebci::vsmrac_geometric_na_ebci(_acsl_::_logger_::simlog& log
 // read_params Implementation:
 // - Takes the hardcoded path for the gains and parameters and reads it in
 // -------------------------------------------------------------------------
-void vsmrac_geometric_na_ebci::read_params(const std::string& jsonFile)
+void mrac_geometric_constrained_na_ebci::read_params(const std::string& jsonFile)
 {
     // Implementation here
     std::ifstream file(jsonFile);
@@ -137,9 +137,9 @@ void vsmrac_geometric_na_ebci::read_params(const std::string& jsonFile)
 }
 
 // Implementing virutal functions from controller_base
-void vsmrac_geometric_na_ebci::init(){
+void mrac_geometric_constrained_na_ebci::init(){
     // Reading in the parameters
-    read_params("../chrono-assets/parameters/quadm/VSMRAC_GEOMETRIC_NA_EBCI/gains_VSMRAC_GEOMETRIC_NA_EBCI.json");
+    read_params("../chrono-assets/parameters/quadm/MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI/gains_MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI.json");
 
     // Set the inital conditions
     y.fill(0.0);
@@ -192,7 +192,7 @@ void vsmrac_geometric_na_ebci::init(){
 }
 
 // Update function for the controller
-void vsmrac_geometric_na_ebci::update(double time, 
+void mrac_geometric_constrained_na_ebci::update(double time, 
                             double x,
                             double y,
                             double z,
@@ -247,7 +247,7 @@ void vsmrac_geometric_na_ebci::update(double time,
 }
 
 // Function to assign elements from the rk4 integrator
-void vsmrac_geometric_na_ebci::assign_from_rk4()
+void mrac_geometric_constrained_na_ebci::assign_from_rk4()
 {
     int index = 0;
 
@@ -274,7 +274,7 @@ void vsmrac_geometric_na_ebci::assign_from_rk4()
 }
 
 // Model function for integration
-void vsmrac_geometric_na_ebci::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
+void mrac_geometric_constrained_na_ebci::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
 {
     int index = 0;
     
@@ -303,7 +303,7 @@ void vsmrac_geometric_na_ebci::model(const _control_::rk4_array<double, NSI> &y,
 
 
 // Function to compute the outerloop control in I
-void vsmrac_geometric_na_ebci::compute_translational_control_in_I()
+void mrac_geometric_constrained_na_ebci::compute_translational_control_in_I()
 {
     // Compute the error in the states
     cim.e_tran_pos << cim.x_tran_pos - csm.x_tran_ref.head<3>();
@@ -414,14 +414,14 @@ void vsmrac_geometric_na_ebci::compute_translational_control_in_I()
 
     if (!cip.use_ebci || BPe_tran_norm < cip.delta_ebci_tran) {
         cim.mu_ebci_tran.setZero();
-        std::cout << "Outer Loop VSMRAC EBCI pass" << std::endl;
+        std::cout << "Outer Loop MRAC CONSTRAINED EBCI pass" << std::endl;
     } else {
         double sum_Pe_tran = (cip.P_tran * cim.e_tran).cwiseAbs().sum();
         cim.mu_ebci_tran = -(cip.xi_bar_d_tran / cip.lambda_bar_tran)
-                        * (BPe_tran / BPe_tran_norm)
+                        * (BPe_tran / std::pow(BPe_tran_norm, 2))
                         * sum_Pe_tran;
         
-        std::cout << "Outer Loop VSMRAC EBCI computed" << std::endl;
+        std::cout << "Outer Loop MRAC CONSTRAINED EBCI computed" << std::endl;
     }
 
     // Compute with the dynamic inversion without aerodynamics
@@ -429,7 +429,7 @@ void vsmrac_geometric_na_ebci::compute_translational_control_in_I()
 }
 
 // Function to compute the outerloop translational control rate in I using the differentiator
-void vsmrac_geometric_na_ebci::compute_translational_control_rate()
+void mrac_geometric_constrained_na_ebci::compute_translational_control_rate()
 {
     // Compute the internal state for rate of change of mu
     cim.internal_state_mu_x_filter << cip.A_filter_mu * csm.state_mu_x_filter
@@ -448,7 +448,7 @@ void vsmrac_geometric_na_ebci::compute_translational_control_rate()
 }
 
 // Compute the orientation commands and the desired total thrust
-void vsmrac_geometric_na_ebci::compute_u1_R_d()
+void mrac_geometric_constrained_na_ebci::compute_u1_R_d()
 {
 	// Compute the desired total thrust
     cim.u(0) = cim.mu_tran_I.norm();
@@ -530,7 +530,7 @@ void vsmrac_geometric_na_ebci::compute_u1_R_d()
 }
 
 // Compute the rotational control
-void vsmrac_geometric_na_ebci::compute_rotational_control()
+void mrac_geometric_constrained_na_ebci::compute_rotational_control()
 {
     // Compute the error in the attitude
     Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
@@ -647,13 +647,13 @@ void vsmrac_geometric_na_ebci::compute_rotational_control()
 
     if (!cip.use_ebci || BPe_rot_norm < cip.delta_ebci_rot) {
         cim.tau_ebci_rot.setZero();
-        std::cout << "Inner Loop VSMRAC EBCI pass" << std::endl;
+        std::cout << "Inner Loop MRAC CONSTRAINED EBCI pass" << std::endl;
     } else {
         double sum_Pe_rot = (cip.P_rot * cim.omega_e).cwiseAbs().sum();
         cim.tau_ebci_rot = -(cip.xi_bar_d_rot / cip.lambda_bar_rot)
-                        * (BPe_rot / BPe_rot_norm)
+                        * (BPe_rot / std::pow(BPe_rot_norm, 2))
                         * sum_Pe_rot;
-        std::cout << "Inner Loop VSMRAC EBCI computed" << std::endl;
+        std::cout << "Inner Loop MRAC CONSTRAINED EBCI computed" << std::endl;
     }
 
 	// Total rotational control input
@@ -666,7 +666,7 @@ void vsmrac_geometric_na_ebci::compute_rotational_control()
 }
 
 // Function to compute the normalized thrusts
-void vsmrac_geometric_na_ebci::compute_normalized_thrusts()
+void mrac_geometric_constrained_na_ebci::compute_normalized_thrusts()
 {
     // Compute the individual thrusts in Newtons
     cim.Thrust << mixer_matrix_quadm * cim.u;
@@ -688,7 +688,7 @@ void vsmrac_geometric_na_ebci::compute_normalized_thrusts()
 }
 
 // Function that is called in sim-bridge.cpp
-void vsmrac_geometric_na_ebci::run(const double time_step_rk4_) {
+void mrac_geometric_constrained_na_ebci::run(const double time_step_rk4_) {
 
     // Process the dynamics --------------------------------------------------------
     // 1. Compute the aerodynamics
@@ -709,7 +709,7 @@ void vsmrac_geometric_na_ebci::run(const double time_step_rk4_) {
     compute_normalized_thrusts();
 
     // 7. Do the integration
-    rk4.do_step(boost::bind(&vsmrac_geometric_na_ebci::model, this, bph::_1, bph::_2, bph::_3),
+    rk4.do_step(boost::bind(&mrac_geometric_constrained_na_ebci::model, this, bph::_1, bph::_2, bph::_3),
                 y, cim.t, time_step_rk4_);
     
     // Capture the time after the execution of the controller
@@ -725,14 +725,14 @@ void vsmrac_geometric_na_ebci::run(const double time_step_rk4_) {
 }
 
 // Function that is called during the constructor. 
-bool vsmrac_geometric_na_ebci::InitiateLogging()
+bool mrac_geometric_constrained_na_ebci::InitiateLogging()
 {
-    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "quadm" ,"VSMRAC_GEOMETRIC_NA_EBCI");
+    auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "quadm" ,"MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI");
     return status;
 }
 
 // Funciton that setups up the headers for the log file
-void vsmrac_geometric_na_ebci::ConfigureHeaders()
+void mrac_geometric_constrained_na_ebci::ConfigureHeaders()
 {
 
     // Create the oss object
@@ -867,15 +867,15 @@ void vsmrac_geometric_na_ebci::ConfigureHeaders()
 
         BOOST_LOG(m_logger.GetControlLogger()) << oss.str();
 
-        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE MRAC GEOMETRIC LOG HEADER DATA");
+        _message_::SIMULATOR_INFO("[SIMCTL]: WROTE MRAC GEOMETRIC CONSTRAINED NON_ADAPTIVE EBCI LOG HEADER DATA");
     }
     catch (const std::exception& e) {
-        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC GEOMETRIC LOG HEADER DATA", e.what());
+        _message_::SIMULATOR_ERROR("[SIMCTL]: FAILED TO WRITE MRAC GEOMETRIC CONSTRAINED NON_ADAPTIVE EBCI LOG HEADER DATA", e.what());
     }
 
 }
 
-void vsmrac_geometric_na_ebci::LogData()
+void mrac_geometric_constrained_na_ebci::LogData()
 {
     // Log the data
     std::ostringstream oss;
@@ -1015,7 +1015,7 @@ void vsmrac_geometric_na_ebci::LogData()
 }
 
 
-}   // namespace _vsmrac_geometric_na_ebci_
+}   // namespace _mrac_geometric_constrained_na_ebci_
 
 }   // namespace quadm_
     
