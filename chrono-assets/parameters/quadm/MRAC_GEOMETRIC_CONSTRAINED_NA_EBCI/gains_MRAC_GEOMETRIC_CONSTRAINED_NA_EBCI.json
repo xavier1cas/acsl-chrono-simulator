@@ -247,8 +247,32 @@
     "xi_bar_d_tran":    1e-2,
     "lambda_bar_tran":  1.0,
     "delta_ebci_tran":  1e-3,
+    "use_constraint_translational": true,
+    "QM_translational": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+      ]
+    },
+    "e_max_translational": 1.0,
+
     "xi_bar_d_rot":     1e-2,
     "lambda_bar_rot":   1.0,
-    "delta_ebci_rot":   1e-3
+    "delta_ebci_rot":   1e-3,
+    "use_constraint_rotational": true,
+    "QM_rotational": {
+      "scaling_coef": 1.0,
+      "matrix": [
+        [1.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0],
+        [0.0, 0.0, 1.0]
+      ]
+    },
+    "e_max_rotational": 1.0
   }
 }

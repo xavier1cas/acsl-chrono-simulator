@@ -1,18 +1,18 @@
 /***********************************************************************************************************************
  * Copyright (c) 2025 Giri M. Kumar, Mattia Gramuglia, Andrea L'Afflitto. All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
  *    disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
  *    following disclaimer in the documentation and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
  *    products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
@@ -26,12 +26,14 @@
  * File:        mrac-geometric-constrained-na-ebci-quadm.cpp
  * Author:      Xavier Casanova
  * Date:        August 26, 2026
- * For info:    Andrea L'Afflitto 
+ * For info:    Andrea L'Afflitto
  *              a.lafflitto@vt.edu
- * 
- * Description: MRAC with geometric and angular velocities with error bounding control input and constrans for the QUADM.
+ *
+ * Description: MRAC with geometric and angular velocities with error bounding control input and the Section 10.6 /
+ *              Theorem 10.6 time-invariant trajectory-error constraint for the QUADM, applied independently to the
+ *              translational (outer) and rotational (inner) loops.
  *              Inherts the class controller_base for the basic functionality that is to be used for all control algorithms.
- * 
+ *
  * GitHub:    https://github.com/xavier1cas/acsl-chrono-simulator.git
  **********************************************************************************************************************/
 
@@ -48,14 +50,14 @@ namespace _mrac_geometric_constrained_na_ebci_
 
 // -------------------------------------------------------------------------
 // Constructor Implementation:
-//   - Calls the base (controller_base) constructor and passes 
+//   - Calls the base (controller_base) constructor and passes
 //     both logger and trajectory.
 // -------------------------------------------------------------------------
 mrac_geometric_constrained_na_ebci::mrac_geometric_constrained_na_ebci(_acsl_::_logger_::simlog& logger, ::_acsl_::_trajectory_::trajectorybase& trajectory)
                               : ::_acsl_::_control_::controller_base(logger, trajectory)
 {
     // Initial Conditions
-    init();   
+    init();
 }
 
 // -------------------------------------------------------------------------
@@ -119,7 +121,7 @@ void mrac_geometric_constrained_na_ebci::read_params(const std::string& jsonFile
     cip.sigma_x_rotational = j["ROBUSTIFICATION"]["sigma_x_rotational"];
 	cip.sigma_r_rotational = j["ROBUSTIFICATION"]["sigma_r_rotational"];
 	cip.sigma_Theta_rotational = j["ROBUSTIFICATION"]["sigma_Theta_rotational"];
-    cip.projection_x_max_x_rotational = j["ROBUSTIFICATION"]["projection_x_max_x_rotational"]; 
+    cip.projection_x_max_x_rotational = j["ROBUSTIFICATION"]["projection_x_max_x_rotational"];
 	cip.projection_epsilon_x_rotational = j["ROBUSTIFICATION"]["projection_epsilon_x_rotational"];
     cip.projection_x_max_r_rotational = j["ROBUSTIFICATION"]["projection_x_max_r_rotational"];
 	cip.projection_epsilon_r_rotational = j["ROBUSTIFICATION"]["projection_epsilon_r_rotational"];
@@ -134,6 +136,19 @@ void mrac_geometric_constrained_na_ebci::read_params(const std::string& jsonFile
     cip.xi_bar_d_rot      = j["EBCI"]["xi_bar_d_rot"];
     cip.lambda_bar_rot    = j["EBCI"]["lambda_bar_rot"];
     cip.delta_ebci_rot    = j["EBCI"]["delta_ebci_rot"];
+
+    // Constraint Parameters
+    // Translational
+    cip.use_constraint_tran  = j["EBCI"]["use_constraint_translational"];
+    cip.QM_tran              = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["EBCI"]["QM_translational"], 6, 6);
+    cip.e_max_tran           = j["EBCI"]["e_max_translational"];
+    cip.del_h_del_alpha_tran = -1.0;   // dh/dalpha = -1, constant
+
+    // Rotational
+    cip.use_constraint_rot  = j["EBCI"]["use_constraint_rotational"];
+    cip.QM_rot              = ::_shared_::_deserialize_::jsonToScaledMatrixXd(j["EBCI"]["QM_rotational"], 3, 3);
+    cip.e_max_rot           = j["EBCI"]["e_max_rotational"];
+    cip.del_h_del_alpha_rot = -1.0;    // dh/dalpha = -1, constant
 }
 
 // Implementing virutal functions from controller_base
@@ -178,9 +193,9 @@ void mrac_geometric_constrained_na_ebci::init(){
 	// Intialize to zero the 3x3 matrix
 	::_shared_::_initiate_::initMat(cip.A_rot);
 
-	// Initlize to identity the 3x3 matrix 
+	// Initlize to identity the 3x3 matrix
 	cip.B_rot = Eigen::Matrix3d::Identity();
-	
+
 	// Set the 3x3 matrix as follows
 	cip.A_ref_rot << -cip.Kp_omega_ref;
 
@@ -189,10 +204,24 @@ void mrac_geometric_constrained_na_ebci::init(){
 
 	// Solve the continuous Lyapunov eequation to compute P_rotational
 	cip.P_rot = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_rot, cip.Q_rot);
+
+    // Initialize the M-matrix, P-tilde and constrained-quantity
+	cip.M_tran = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_tran, cip.QM_tran); // Ensures eq. (10.61) is verified
+    cim.h_tran = cip.e_max_tran;
+    cim.V_e_tran = 0.0;
+    cim.P_tilde_tran.setZero();
+    cim.P_eff_tran = cip.P_tran;
+
+	cip.M_rot = ::_lyapunov_solver_::RealContinuousLyapunovEquation(cip.A_ref_rot, cip.QM_rot); // Ensures eq. (10.61) is verified
+    cim.h_rot = cip.e_max_rot;
+    cim.V_e_rot = 0.0;
+    cim.P_tilde_rot.setZero();
+    cim.P_eff_rot = cip.P_rot;
+    
 }
 
 // Update function for the controller
-void mrac_geometric_constrained_na_ebci::update(double time, 
+void mrac_geometric_constrained_na_ebci::update(double time,
                             double x,
                             double y,
                             double z,
@@ -208,7 +237,7 @@ void mrac_geometric_constrained_na_ebci::update(double time,
                             double yaw,
                             double w_x,
                             double w_y,
-                            double w_z)     
+                            double w_z)
 {
     // 1. Assign all the states ----------------------------------------------------
     cim.t = time;
@@ -234,7 +263,7 @@ void mrac_geometric_constrained_na_ebci::update(double time,
     m_traj.UpdateModule(time);
     cim.r_user = m_traj.GetPosition();
     cim.r_dot_user = m_traj.GetVelocity();
-    cim.r_ddot_user = m_traj.GetAcceleration();   
+    cim.r_ddot_user = m_traj.GetAcceleration();
     cim.psi_user = m_traj.GetEulerAngle()(2);
     cim.psi_user_unwrapped = ::_shared_::_compute_::unwrapPsiSimple(cim.psi_user, this->psiState);
     cim.psi_dot_user = m_traj.GetEulerRate()(2);
@@ -277,7 +306,7 @@ void mrac_geometric_constrained_na_ebci::assign_from_rk4()
 void mrac_geometric_constrained_na_ebci::model(const _control_::rk4_array<double, NSI> &y, _control_::rk4_array<double, NSI> &dy, double t)
 {
     int index = 0;
-    
+
     //------------ Fill up the dy for integration  ------------//
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_x_filter, dy, index);
     ::_shared_::_serialize_::assignElementsToDxdt(cim.internal_state_mu_y_filter, dy, index);
@@ -336,18 +365,44 @@ void mrac_geometric_constrained_na_ebci::compute_translational_control_in_I()
     Eigen::Matrix<double, 3, 1> v_J = cim.Rij * cim.x_tran_vel;
     double v_J_norm = v_J.norm();
     cim.outer_loop_regressor << -0.5 * v_J * v_J_norm;
-                                   
+
     // Compute the augmented regressor vector
     cim.augmented_outer_loop_regressor << cim.mu_tran_baseline,
 										  cim.outer_loop_regressor;
 
-    // Cache the transpose of the tracking error * P * B
-	Eigen::Matrix<double, 1, 3> e_transpose_p_b = cim.e_tran.transpose() * cip.P_tran * cip.B_tran;
+    // -----------------------------------------------------------------------------------------------------------
+    // Constrained VSMRAC -- barrier-weighted P_tilde(e_tran) (Book: Section 10.6, "A Formulation with
+    // Constraints"; Theorem 10.6). Constraint set: E_bar = { e : h(e^T M e) >= 0 }, with
+    //     h(alpha) = e_max_tran - alpha,   dh/dalpha = -1  (constant, per constraint_function.m)
+    //     V_e(e)      = e^T P e / h(e)                                                    (eq. 10.56)
+    //     P_tilde(e)  = [ P - V_e(e) * (dh/dalpha) * M ] / h(e)                            (eq. 10.55)
+    // h_tran/V_e_tran are computed unconditionally (cheap, and useful for logging/verification even when the
+    // constraint is disabled); only P_eff_tran actually switches which matrix feeds the adaptive laws and EBCI.
+    // -----------------------------------------------------------------------------------------------------------
+    double e_tran_M_e_tran = cim.e_tran.transpose() * cip.M_tran * cim.e_tran;   // scalar quadratic form e^T M e
+    cim.h_tran = cip.e_max_tran - e_tran_M_e_tran;
+
+    if (cip.use_constraint_tran && cim.h_tran <= 1e-9) {
+        // Should not occur if e_tran(t0) starts in the interior of E_bar and Theorem 10.6's hypotheses hold.
+        _message_::SIMULATOR_ERROR("[SIMCTL]: TRANSLATIONAL CONSTRAINT VIOLATION - h_tran <= 0",
+                                    std::to_string(cim.h_tran));
+    }
+    double h_tran_safe = std::max(cim.h_tran, 1e-9);   // Guard against division by (near-)zero
+
+    double e_tran_P_e_tran = cim.e_tran.transpose() * cip.P_tran * cim.e_tran;   // scalar quadratic form e^T P e
+    cim.V_e_tran     = e_tran_P_e_tran / h_tran_safe;
+    cim.P_tilde_tran = (cip.P_tran - cim.V_e_tran * cip.del_h_del_alpha_tran * cip.M_tran) / h_tran_safe;
+
+    // Realization of the switch to enable the constrained part
+    cim.P_eff_tran = cip.use_constraint_tran ? cim.P_tilde_tran : cip.P_tran;
+
+    // Cache the transpose of the tracking error * P_eff * B  (P_eff_tran = P_tran when unconstrained)
+	Eigen::Matrix<double, 1, 3> e_transpose_p_b = cim.e_tran.transpose() * cim.P_eff_tran * cip.B_tran;
 
 	// Computing the scalar value output from the dead-zone modification modulation function
 	cim.dead_zone_value_translational = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(cim.e_tran.transpose(),
-																   						 cip.dead_zone_delta_translational,
-																   							cip.dead_zone_e0_translational);
+																	   						 cip.dead_zone_delta_translational,
+																	   							cip.dead_zone_e0_translational);
 
 	// Adaptive laws
 	cim.K_hat_x_tran_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_x_tran,
@@ -373,24 +428,24 @@ void mrac_geometric_constrained_na_ebci::compute_translational_control_in_I()
 
     // Projection operator - Ball
     // Projection operator K_hat_x
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_tran)> proj_op_output_K_hat_x_translational = 
-        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_tran, 
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_tran)> proj_op_output_K_hat_x_translational =
+        ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_tran,
                                                                     cim.K_hat_x_tran_dot,
                                                                     cip.projection_x_max_x_translational,
                                                                     cip.projection_epsilon_x_translational);
 
     cim.K_hat_x_tran_dot = proj_op_output_K_hat_x_translational.projected_matrix;
     cim.proj_op_activated_K_hat_x_translational = proj_op_output_K_hat_x_translational.projection_operator_activated;
-    
+
     // Projection operator K_hat_r
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_tran)> proj_op_output_K_hat_r_translational = 
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_tran)> proj_op_output_K_hat_r_translational =
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_r_tran,
                                                                     cim.K_hat_r_tran_dot,
                                                                     cip.projection_x_max_r_translational,
                                                                     cip.projection_epsilon_r_translational);
 
     cim.K_hat_r_tran_dot = proj_op_output_K_hat_r_translational.projected_matrix;
-    cim.proj_op_activated_K_hat_r_translational = proj_op_output_K_hat_r_translational.projection_operator_activated;															 
+    cim.proj_op_activated_K_hat_r_translational = proj_op_output_K_hat_r_translational.projection_operator_activated;
 
     // Projection operator Theta_hat
     ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_tran)> proj_op_output_Theta_hat_translational =
@@ -407,20 +462,20 @@ void mrac_geometric_constrained_na_ebci::compute_translational_control_in_I()
                           + csm.K_hat_r_tran.transpose() * cim.r_cmd_tran
                           - csm.Theta_hat_tran.transpose() * cim.augmented_outer_loop_regressor;
 
-    // EBCI outer loop
-    // B^T * P * e  (shape: 3x1)
-    Eigen::Matrix<double, 3, 1> BPe_tran = cip.B_tran.transpose() * cip.P_tran * cim.e_tran;
+    // EBCI outer loop (uses P_eff_tran = P_tilde_tran when constrained, P_tran otherwise)
+    // B^T * P_eff * e  (shape: 3x1)
+    Eigen::Matrix<double, 3, 1> BPe_tran = cip.B_tran.transpose() * cim.P_eff_tran * cim.e_tran;
     double BPe_tran_norm = BPe_tran.norm();
 
     if (!cip.use_ebci || BPe_tran_norm < cip.delta_ebci_tran) {
         cim.mu_ebci_tran.setZero();
         std::cout << "Outer Loop MRAC CONSTRAINED EBCI pass" << std::endl;
     } else {
-        double sum_Pe_tran = (cip.P_tran * cim.e_tran).cwiseAbs().sum();
+        double sum_Pe_tran = (cim.P_eff_tran * cim.e_tran).cwiseAbs().sum();
         cim.mu_ebci_tran = -(cip.xi_bar_d_tran / cip.lambda_bar_tran)
                         * (BPe_tran / std::pow(BPe_tran_norm, 2))
                         * sum_Pe_tran;
-        
+
         std::cout << "Outer Loop MRAC CONSTRAINED EBCI computed" << std::endl;
     }
 
@@ -456,7 +511,7 @@ void mrac_geometric_constrained_na_ebci::compute_u1_R_d()
     // Compute the desired body frame z axis
     cim.b3d = -cim.mu_tran_I / cim.u(0);
 
-    // Compute the desired "heading" vector 
+    // Compute the desired "heading" vector
     cim.c1 << std::cos(cim.psi_user),
               std::sin(cim.psi_user),
                0.0;
@@ -475,10 +530,10 @@ void mrac_geometric_constrained_na_ebci::compute_u1_R_d()
 
     // Compute R_d_dot
     Eigen::Matrix3d I = Eigen::Matrix3d::Identity();
-    
+
     // compute b3d_dot
     cim.b3d_dot = -1.0 * (1/cim.mu_tran_I.norm()) * (I - cim.b3d * cim.b3d.transpose()) * cim.mu_tran_I_dot;
-    
+
     // compute b2d_dot
     cim.c1_dot << -1.0 * cim.psi_dot_user * std::sin(cim.psi_user),
                    cim.psi_dot_user * std::cos(cim.psi_user),
@@ -561,7 +616,7 @@ void mrac_geometric_constrained_na_ebci::compute_rotational_control()
     // Cache the feedforward term
     Eigen::Vector3d fft;
     fft = inertia_matrix_q * ( cim.omega.cross(inertia_matrix_q * cim.omega) - cim.alpha_d );
-    
+
     // Compute the baseline control input
     cim.tau_rot_baseline << inertia_matrix_q * ( - cip.Kp_att * cim.Xi_e        // Proportional term
                                                  - cip.Kd_att * cim.omega_e)    // Derivative term
@@ -575,13 +630,33 @@ void mrac_geometric_constrained_na_ebci::compute_rotational_control()
     // Compute the augmented regressor vector
     cim.augmented_inner_loop_regressor << cim.tau_rot_baseline, cim.inner_loop_regressor;
 
-    // Cache the transpose of the tracking error * P * B
-    Eigen::Matrix<double, 1, 3> e_transpose_p_b = cim.omega_e.transpose() * cip.P_rot * cip.B_rot;
+    // -----------------------------------------------------------------------------------------------------------
+    // Constrained VSMRAC -- barrier-weighted P_tilde(omega_e), same mechanism as the translational loop above but
+    // with the rotational error omega_e = omega - omega_ref and the rotational (M_rot, e_max_rot, P_rot) triple.
+    // -----------------------------------------------------------------------------------------------------------
+    double omega_e_M_omega_e = cim.omega_e.transpose() * cip.M_rot * cim.omega_e;   // scalar quadratic form
+    cim.h_rot = cip.e_max_rot - omega_e_M_omega_e;
+
+    if (cip.use_constraint_rot && cim.h_rot <= 1e-9) {
+        _message_::SIMULATOR_ERROR("[SIMCTL]: ROTATIONAL CONSTRAINT VIOLATION - h_rot <= 0",
+                                    std::to_string(cim.h_rot));
+    }
+    double h_rot_safe = std::max(cim.h_rot, 1e-9);
+
+    double omega_e_P_omega_e = cim.omega_e.transpose() * cip.P_rot * cim.omega_e;   // scalar quadratic form omega_e^T P omega_e
+    cim.V_e_rot     = omega_e_P_omega_e / h_rot_safe;
+    cim.P_tilde_rot = (cip.P_rot - cim.V_e_rot * cip.del_h_del_alpha_rot * cip.M_rot) / h_rot_safe;
+
+    // Realization of the switch to enable the constrained part
+    cim.P_eff_rot = cip.use_constraint_rot ? cim.P_tilde_rot : cip.P_rot;
+
+    // Cache the transpose of the tracking error * P_eff * B  (P_eff_rot = P_rot when unconstrained)
+    Eigen::Matrix<double, 1, 3> e_transpose_p_b = cim.omega_e.transpose() * cim.P_eff_rot * cip.B_rot;
 
     // Computing the scalar value output from the dead-zone modification modulation function
 	cim.dead_zone_value_rotational = ::_shared_::_deadzone_operator_::deadZoneModulationFunction(cim.omega_e.transpose(),
-																								 cip.dead_zone_delta_rotational,
-																								 cip.dead_zone_e0_rotational);
+																									 cip.dead_zone_delta_rotational,
+																									 cip.dead_zone_e0_rotational);
 
 	// Adaptive laws
 	cim.K_hat_x_rot_dot = ::_shared_::_adaptive_laws_::AdaptiveLawDeadZoneEMod(-cip.Gamma_x_rot,
@@ -603,11 +678,11 @@ void mrac_geometric_constrained_na_ebci::compute_rotational_control()
 																				  cim.augmented_inner_loop_regressor,
 																				  e_transpose_p_b,
 																				  cip.sigma_Theta_rotational,
-																				  csm.Theta_hat_rot);	
+																				  csm.Theta_hat_rot);
 
     // Projection operator - Ball
     // Projection operator K_hat_x
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_rot)> proj_op_output_K_hat_x_rotational = 
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_x_rot)> proj_op_output_K_hat_x_rotational =
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_x_rot,
                                                                     cim.K_hat_x_rot_dot,
                                                                     cip.projection_x_max_x_rotational,
@@ -617,17 +692,17 @@ void mrac_geometric_constrained_na_ebci::compute_rotational_control()
     cim.proj_op_activated_K_hat_x_rotational = proj_op_output_K_hat_x_rotational.projection_operator_activated;
 
     // Projection operator K_hat_r
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_rot)> proj_op_output_K_hat_r_rotational = 
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.K_hat_r_rot)> proj_op_output_K_hat_r_rotational =
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.K_hat_r_rot,
                                                                     cim.K_hat_r_rot_dot,
                                                                     cip.projection_x_max_r_rotational,
                                                                     cip.projection_epsilon_r_rotational);
-                                
+
     cim.K_hat_r_rot_dot = proj_op_output_K_hat_r_rotational.projected_matrix;
     cim.proj_op_activated_K_hat_r_rotational = proj_op_output_K_hat_r_rotational.projection_operator_activated;
 
     // Projection operator Theta_hat
-    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_rot)> proj_op_output_Theta_hat_rotational = 
+    ::_shared_::_projection_operator_::MatrixProjectionOutput<decltype(csm.Theta_hat_rot)> proj_op_output_Theta_hat_rotational =
         ::_shared_::_projection_operator_::_ball_::projectionMatrix(csm.Theta_hat_rot,
                                                                     cim.Theta_hat_rot_dot,
                                                                     cip.projection_x_max_Theta_rotational,
@@ -641,15 +716,15 @@ void mrac_geometric_constrained_na_ebci::compute_rotational_control()
 						  + csm.K_hat_r_rot.transpose() * cim.omega_cmd
 						  - csm.Theta_hat_rot.transpose() * cim.augmented_inner_loop_regressor;
 
-    // EBCI inner loop
-    Eigen::Matrix<double, 3, 1> BPe_rot = cip.B_rot.transpose() * cip.P_rot * cim.omega_e;
+    // EBCI inner loop (uses P_eff_rot = P_tilde_rot when constrained, P_rot otherwise)
+    Eigen::Matrix<double, 3, 1> BPe_rot = cip.B_rot.transpose() * cim.P_eff_rot * cim.omega_e;
     double BPe_rot_norm = BPe_rot.norm();
 
     if (!cip.use_ebci || BPe_rot_norm < cip.delta_ebci_rot) {
         cim.tau_ebci_rot.setZero();
         std::cout << "Inner Loop MRAC CONSTRAINED EBCI pass" << std::endl;
     } else {
-        double sum_Pe_rot = (cip.P_rot * cim.omega_e).cwiseAbs().sum();
+        double sum_Pe_rot = (cim.P_eff_rot * cim.omega_e).cwiseAbs().sum();
         cim.tau_ebci_rot = -(cip.xi_bar_d_rot / cip.lambda_bar_rot)
                         * (BPe_rot / std::pow(BPe_rot_norm, 2))
                         * sum_Pe_rot;
@@ -680,10 +755,10 @@ void mrac_geometric_constrained_na_ebci::compute_normalized_thrusts()
     control_input(2) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_quadm, cim.Sat_Thrust(2));
     control_input(3) = ::_shared_::_compute_::evaluatePolynomial(thrust_polynomial_coeff_quadm, cim.Sat_Thrust(3));
 
-    std::cout << "T1: " << control_input(0) 
+    std::cout << "T1: " << control_input(0)
               << "| T2: " << control_input(1)
               << "| T3: " << control_input(2)
-              << "| T4: " << control_input(3) 
+              << "| T4: " << control_input(3)
               << std::endl;
 }
 
@@ -711,20 +786,20 @@ void mrac_geometric_constrained_na_ebci::run(const double time_step_rk4_) {
     // 7. Do the integration
     rk4.do_step(boost::bind(&mrac_geometric_constrained_na_ebci::model, this, bph::_1, bph::_2, bph::_3),
                 y, cim.t, time_step_rk4_);
-    
+
     // Capture the time after the execution of the controller
     cim.alg_end_time = std::chrono::high_resolution_clock::now();
-    
-    // Calculate the duration of the execution 
+
+    // Calculate the duration of the execution
     cim.alg_duration = std::chrono::duration_cast<std::chrono::microseconds>(
                             cim.alg_end_time - cim.alg_start_time).count();
 
     // 8. Log the Data after all the calculataions
     this->LogData();
-    
+
 }
 
-// Function that is called during the constructor. 
+// Function that is called during the constructor.
 bool mrac_geometric_constrained_na_ebci::InitiateLogging()
 {
     auto status = _logger_::_filesystem_::setupControllerLogging(this->m_logger, "quadm" ,"MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI");
@@ -783,9 +858,9 @@ void mrac_geometric_constrained_na_ebci::ConfigureHeaders()
         << "Reference Command in x [-], "
         << "Reference Command in y [-], "
         << "Reference Command in z [-], "
-        << "mu_baseline x [N], " 
-        << "mu_baseline y [N], " 
-        << "mu_baseline z [N], " 
+        << "mu_baseline x [N], "
+        << "mu_baseline y [N], "
+        << "mu_baseline z [N], "
         << "mu_adaptive x [N], "
         << "mu_adaptive y [N], "
         << "mu_adaptive z [N], "
@@ -848,6 +923,10 @@ void mrac_geometric_constrained_na_ebci::ConfigureHeaders()
         << "proj_op_activated_K_hat_x_rotational [-], "
         << "proj_op_activated_K_hat_r_rotational [-], "
         << "proj_op_activated_Theta_hat_rotational [-], "
+        << "h_tran [-], "
+        << "V_e_tran [-], "
+        << "h_rot [-], "
+        << "V_e_rot [-], "
         ;
 
         // Use the helper function to create the header for the matrix data
@@ -859,7 +938,7 @@ void mrac_geometric_constrained_na_ebci::ConfigureHeaders()
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_translational", csm.Theta_hat_tran, "[-]");
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_x_rotational", csm.K_hat_x_rot, "[-]");
         ::_shared_::_serialize_::generateMatrixHeaders(oss, "K_hat_r_rotational", csm.K_hat_r_rot, "[-]");
-        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_rotational", csm.Theta_hat_rot, "[-]");    
+        ::_shared_::_serialize_::generateMatrixHeaders(oss, "Theta_hat_rotational", csm.Theta_hat_rot, "[-]");
 
 
     try {
@@ -990,6 +1069,10 @@ void mrac_geometric_constrained_na_ebci::LogData()
         << cim.proj_op_activated_K_hat_x_rotational << ", "
         << cim.proj_op_activated_K_hat_r_rotational << ", "
         << cim.proj_op_activated_Theta_hat_rotational << ", "
+        << cim.h_tran << ", "
+        << cim.V_e_tran << ", "
+        << cim.h_rot << ", "
+        << cim.V_e_rot << ", "
         ;
 
         // User helper functions to output the matrix data
@@ -1018,5 +1101,5 @@ void mrac_geometric_constrained_na_ebci::LogData()
 }   // namespace _mrac_geometric_constrained_na_ebci_
 
 }   // namespace quadm_
-    
+
 }   // namespace _acsl_

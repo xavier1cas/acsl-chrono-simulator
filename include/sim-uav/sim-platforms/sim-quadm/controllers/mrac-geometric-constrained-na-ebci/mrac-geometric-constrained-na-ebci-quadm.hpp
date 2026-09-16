@@ -1,18 +1,18 @@
 /***********************************************************************************************************************
  * Copyright (c) 2025 Giri M. Kumar, Mattia Gramuglia, Andrea L'Afflitto. All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
  * following conditions are met:
- * 
+ *
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following
  *    disclaimer.
- * 
+ *
  * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
  *    following disclaimer in the documentation and/or other materials provided with the distribution.
- * 
+ *
  * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote
  *    products derived from this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” AND ANY EXPRESS OR IMPLIED WARRANTIES,
  * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
@@ -26,19 +26,21 @@
  * File:        mrac-geometric-constrained-na-ebci-quadm.hpp
  * Author:      Xavier Casanova
  * Date:        August 26, 2026
- * For info:    Andrea L'Afflitto 
+ * For info:    Andrea L'Afflitto
  *              a.lafflitto@vt.edu
- * 
- * Description: Header file for constrained mrac geometric controller with non-adaptive error bounding control input 
- *              for the medium quadcopter.
- * 
+ *
+ * Description: Header file for the MRAC geometric controller with non-adaptive error bounding control input AND the
+ *              Section 10.6 / Theorem 10.6 time-invariant trajectory-error constraint (barrier-weighted P_tilde(e))
+ *              applied independently to the translational (outer) and rotational (inner) loops of the medium
+ *              quadcopter.
+ *
  * GitHub:    https://github.com/xavier1cas/acsl-chrono-simulator.git
  **********************************************************************************************************************/
 
 #ifndef MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI_QUADM_HPP_
 #define MRAC_GEOMETRIC_CONSTRAINED_NA_EBCI_QUADM_HPP_
 
-#include "sim-control-base.hpp"     // Include for the base class of a controller defined in the simualtor 
+#include "sim-control-base.hpp"      // Include for the base class of a controller defined in the simualtor
 #include "quadm-parameter-file.hpp"  // Include for the hardcoded tailsitter parameters that are common for all controllers
 
 namespace _acsl_
@@ -85,7 +87,7 @@ struct controller_internal_parameters {
     double projection_epsilon_r_translational;   	// Translational Projection tolerance for Kr_hat
     double projection_x_max_Theta_translational; 	// Translational Projection limit for Theta_hat
     double projection_epsilon_Theta_translational; 	// Translational Projection tolerance for Theta_hat
-    
+
     Eigen::Matrix<double, 2, 2> A_filter_mu;        // Differentiator A matrix for \mu
     Eigen::Matrix<double, 2, 1> B_filter_mu;        // Differentiator B matrix for \mu
     Eigen::Matrix<double, 1, 2> C_filter_mu;        // Differentiator C matrix for q_d
@@ -117,8 +119,8 @@ struct controller_internal_parameters {
     double projection_x_max_r_rotational;        	// Rotational Projection limit for Kr_hat
     double projection_epsilon_r_rotational;      	// Rotational Projection tolerance for Kr_hat
     double projection_x_max_Theta_rotational;    	// Rotational Projection limit for Theta_hat
-    double projection_epsilon_Theta_rotational;  	// Rotational Projection tolerance for Theta_hat 
-    
+    double projection_epsilon_Theta_rotational;  	// Rotational Projection tolerance for Theta_hat
+
     // Non-Adaptive EBCI Parameters
     bool   use_ebci;
     double xi_bar_d_tran;
@@ -128,6 +130,22 @@ struct controller_internal_parameters {
     double lambda_bar_rot;
     double delta_ebci_rot;
 
+    // ---------------------------------------------------------------------------------------------------------------
+    // Constrained VSMRAC Parameters (Book: Section 10.6, "A Formulation with Constraints"; Theorem 10.6)
+    //   Constraint set: E_bar = { e : h(e^T M e) >= 0 }, with h(alpha) = e_max - alpha, so dh/dalpha = -1 (constant).
+    //   Applied independently to the translational error e_tran = [e_pos; e_vel] and the rotational error omega_e.
+    // ---------------------------------------------------------------------------------------------------------------
+    bool   use_constraint_tran;                 // Toggle: constrained (P_tilde) vs. plain P_tran, translational loop
+    Eigen::Matrix<double, 6, 6> QM_tran;         // User-defined, symmetric, positive-definite weighting matrix M
+    Eigen::Matrix<double, 6, 6> M_tran;         // User-defined, symmetric, positive-definite weighting matrix M
+    double e_max_tran;                          // Constraint bound: h(e_tran) = e_max_tran - e_tran^T M_tran e_tran
+    double del_h_del_alpha_tran;                // dh/dalpha for h(alpha) = e_max_tran - alpha  (constant, = -1.0)
+
+    bool   use_constraint_rot;                  // Toggle: constrained (P_tilde) vs. plain P_rot, rotational loop
+    Eigen::Matrix<double, 3, 3> QM_rot;          // User-defined, symmetric, positive-definite weighting matrix M
+    Eigen::Matrix<double, 3, 3> M_rot;          // User-defined, symmetric, positive-definite weighting matrix M
+    double e_max_rot;                           // Constraint bound: h(omega_e) = e_max_rot - omega_e^T M_rot omega_e
+    double del_h_del_alpha_rot;                 // dh/dalpha for h(alpha) = e_max_rot - alpha  (constant, = -1.0)
 };
 
 // Structure for all the members that are mapped to the rk4 vector AFTER integration
@@ -138,7 +156,7 @@ struct controller_integrated_state_members {
 	Eigen::Matrix<double, 6, 3> K_hat_x_tran;   			// Translational Adaptive gains for x
 	Eigen::Matrix<double, 3, 3> K_hat_r_tran;	    		// Translational Adaptive gains for r
 	Eigen::Matrix<double, 6, 3> Theta_hat_tran;	    	    // Translational Adaptive gains for Theta
-	
+
     Eigen::Matrix<double, 2, 1> state_mu_x_filter;          // States for filter
     Eigen::Matrix<double, 2, 1> state_mu_y_filter;          // States for filter
     Eigen::Matrix<double, 2, 1> state_mu_z_filter;          // States for filter
@@ -158,7 +176,7 @@ struct controller_internal_members {
     double t;                                                      // Time
     Eigen::Matrix<double, 3, 1> r_user;                            // Translational user position command
     Eigen::Matrix<double, 3, 1> r_dot_user;                        // Translational user veloctiy command
-    Eigen::Matrix<double, 3, 1> r_ddot_user;                       // Translational user acceleration command 
+    Eigen::Matrix<double, 3, 1> r_ddot_user;                       // Translational user acceleration command
     double psi_user;                                               // Rotational command for psi
     double psi_user_unwrapped;                                     // Rotational command for psi without the -pi to pi jumps but as a continuous signal
     double psi_dot_user;                                           // Rotational command for psi rate
@@ -185,7 +203,7 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 1> mu_tran_I;                         // Virtual control action in the inertial frame
     Eigen::Matrix<double, 3, 1> mu_tran_I_dot;                     // Rate of virtual control action in the inertial frame
     Eigen::Matrix<double, 3, 1> mu_tran_J;                         // Virtual control action in the body frame
-    
+
     Eigen::Matrix<double, 3, 3> Rji;                               // Rotation matrix from the body to the inertial frame
     Eigen::Matrix<double, 3, 3> Rij;                               // Rotation matrix from the inertial to the body frame
     Eigen::Matrix<double, 3, 1> c1;                                // Desired "heading" vector in the inertial frame
@@ -212,7 +230,7 @@ struct controller_internal_members {
 
 
     Eigen::Matrix<double, 3, 1> omega_d_in_K;                      // Desired angular velocity in the desired frame
-    Eigen::Matrix<double, 3, 1> omega_d;                           // Desired angular velocity 
+    Eigen::Matrix<double, 3, 1> omega_d;                           // Desired angular velocity
     Eigen::Matrix<double, 3, 1> alpha_d;                           // Desired angular acceleration
 
     Eigen::Quaterniond q;                                          // Quaternion
@@ -223,9 +241,9 @@ struct controller_internal_members {
     Eigen::Matrix<double, 3, 1> omega_e;                           // Error in the angular velocities
     Eigen::Matrix<double, 3, 1> Xi_e;                              // Error in the attitude states
     Eigen::Matrix<double, 3, 1> inner_loop_regressor;			   // Inner loop regressor vector
-	Eigen::Matrix<double, 6, 1> augmented_inner_loop_regressor;    // Inner loop augmented regressor vector    
-    Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input 
-    Eigen::Matrix<double, 3, 1> tau_rot_adaptive;                  // Adaptive rotational control input 
+	Eigen::Matrix<double, 6, 1> augmented_inner_loop_regressor;    // Inner loop augmented regressor vector
+    Eigen::Matrix<double, 3, 1> tau_rot_baseline;                  // Baseline rotational control input
+    Eigen::Matrix<double, 3, 1> tau_rot_adaptive;                  // Adaptive rotational control input
     Eigen::Matrix<double, 3, 1> tau_rot;                           // Rotational Control action
     Eigen::Matrix<double, 3, 3> K_hat_x_rot_dot;				   // Adaptive gain to be integrated
 	Eigen::Matrix<double, 3, 3> K_hat_r_rot_dot;				   // Adaptive gain to be integrated
@@ -237,18 +255,35 @@ struct controller_internal_members {
 
     Eigen::Matrix<double, 4, 1> u;                                 // [thrust; mx; my; mz]
     Eigen::Matrix<double, 4, 1> Thrust;                            // Newtons
-    Eigen::Matrix<double, 4, 1> Sat_Thrust;                        // Saturated thrust 
+    Eigen::Matrix<double, 4, 1> Sat_Thrust;                        // Saturated thrust
     double alg_duration;                                           // Control execution duration
     std::chrono::high_resolution_clock::time_point alg_start_time; // Algorithm Start timepoint
     std::chrono::high_resolution_clock::time_point alg_end_time;   // Algorithm End timepoint
 
     Eigen::Matrix<double, 3, 1> mu_ebci_tran;                      // EBCI outer loop contribution
     Eigen::Matrix<double, 3, 1> tau_ebci_rot;                      // EBCI inner loop contribution
+
+    // ---------------------------------------------------------------------------------------------------------------
+    // Constrained VSMRAC quantities (Section 10.6, Theorem 10.6) -- recomputed every control-loop iteration from the
+    // *current* tracking error, so these live in controller_internal_members (not controller_internal_parameters).
+    // ---------------------------------------------------------------------------------------------------------------
+    double h_tran;                                    // h(e_tran) = e_max_tran - e_tran^T M_tran e_tran
+    double V_e_tran;                                  // V_e(e_tran) = e_tran^T P_tran e_tran / h_tran
+    Eigen::Matrix<double, 6, 6> P_tilde_tran;         // Barrier-weighted matrix P_tilde(e_tran), eq. (10.55)
+    Eigen::Matrix<double, 6, 6> P_eff_tran;           // Effective P fed to the adaptive laws / EBCI: P_tilde_tran if
+                                                       // use_constraint_tran, else plain P_tran (unconstrained)
+
+    double h_rot;                                     // h(omega_e) = e_max_rot - omega_e^T M_rot omega_e
+    double V_e_rot;                                   // V_e(omega_e) = omega_e^T P_rot omega_e / h_rot
+    Eigen::Matrix<double, 3, 3> P_tilde_rot;          // Barrier-weighted matrix P_tilde(omega_e), eq. (10.55)
+    Eigen::Matrix<double, 3, 3> P_eff_rot;            // Effective P fed to the adaptive laws / EBCI: P_tilde_rot if
+                                                       // use_constraint_rot, else plain P_rot (unconstrained)
 };
 
 // =========================================================================================================
-// mrac-geometric-constrained-na-ebci-quadm.hpp   -- QUADM MRAC geometric constrained controller
-//   - Implements a MRAC controller for rotation matrices and constrains and angular rates on the QUADM platform.
+// mrac-geometric-constrained-na-ebci-quadm.hpp   -- QUADM MRAC geometric controller, constrained + NA-EBCI
+//   - Implements the Theorem 10.6 constrained variable-structure MRAC law for rotation matrices and angular
+//     rates on the QUADM platform, applied independently to the translational and rotational loops.
 //   - Inherits base routines and actuator interface from controller_base.
 //   - Inherits base routines from blackbox to setup the logging.
 // =========================================================================================================
@@ -269,7 +304,7 @@ public:
     // -------------------------------------------------------------------------
     virtual ~mrac_geometric_constrained_na_ebci() = default;
 
-    
+
     // -------------------------------------------------------------------------
     // Override: update()
     //   - Update controller state (to be implemented in mrac-geometric-constrained-na-ebci-quadm.cpp).
@@ -313,15 +348,15 @@ public:
 
     // -------------------------------------------
     // Function: ConfigureHeaders
-    //   - Simple function that has an oss stream 
+    //   - Simple function that has an oss stream
     //     and writes the headers to the log file
     // -------------------------------------------
     void ConfigureHeaders() override;
-        
+
     // -------------------------------------------
     // Function: LogData
-    //   - Simple function that has an oss stream 
-    //     and writes the data corresponding to 
+    //   - Simple function that has an oss stream
+    //     and writes the data corresponding to
     //     the headers to the log file.
     // ------------------------------------------
     void LogData() override;
@@ -352,11 +387,11 @@ private:
     // Create a RungeKutta object for integration functionality.
     boost::numeric::odeint::runge_kutta4<_control_::rk4_array<double, NSI>> rk4;
 
-    // Define the internal parameter members of the controller 
+    // Define the internal parameter members of the controller
     ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_internal_parameters cip;
 
     // Define the internal members of the controller
-    ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_internal_members cim;   
+    ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_internal_members cim;
 
     // Define the internal integrated state members of the controller
     ::_acsl_::_quadm_::_mrac_geometric_constrained_na_ebci_::controller_integrated_state_members csm;
@@ -391,7 +426,7 @@ private:
 }   // namespace _mrac_geometric_constrained_na_ebci_
 
 }   // namespace _quadm_
-    
+
 }   // namespace _acsl_
 
 
